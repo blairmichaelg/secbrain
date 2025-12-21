@@ -24,6 +24,9 @@ ETH_PRICE_DEFAULT = 3000.0
 # Maximum gas cost as fraction of profit before warning (50%)
 MAX_GAS_COST_RATIO = 0.5
 
+# Default gas price in wei (50 gwei)
+DEFAULT_GAS_PRICE_WEI = 50e9
+
 
 @dataclass(frozen=True)
 class TokenSpec:
@@ -291,9 +294,10 @@ class ProfitCalculator:
             decimals: Token decimals (-1 for no normalization, 0-77 for valid decimals)
 
         Returns:
-            Normalized amount as float
+            Normalized amount as float. If decimals is negative, returns raw_amount unchanged.
         """
         if decimals < 0:
+            # Special case: negative decimals means no normalization
             return float(raw_amount)
         return self.normalize_amount(raw_amount, decimals)
 
@@ -460,7 +464,7 @@ class ProfitCalculator:
 
         Args:
             gas_used: Gas units used (None = no gas)
-            gas_price_wei: Gas price in wei (default: 50 gwei)
+            gas_price_wei: Gas price in wei (default: DEFAULT_GAS_PRICE_WEI)
 
         Returns:
             Tuple of (gas_cost_eth, gas_cost_usd)
@@ -469,7 +473,7 @@ class ProfitCalculator:
             return (0.0, 0.0)
 
         if gas_price_wei is None:
-            gas_price_wei = 50e9  # 50 gwei default
+            gas_price_wei = DEFAULT_GAS_PRICE_WEI
 
         # Calculate gas cost in ETH
         gas_cost_eth = (gas_used * gas_price_wei) / 1e18
@@ -495,10 +499,21 @@ class ProfitCalculator:
         Returns:
             Dict with 'decision', 'reason', and 'net_usd' keys
         """
-        net_usd = max_profit_usd - gas_cost_usd
+        # Validate inputs
+        try:
+            max_profit = float(max_profit_usd)
+            gas_cost = float(gas_cost_usd)
+        except (TypeError, ValueError):
+            return {
+                'decision': 'SKIP',
+                'reason': 'Invalid profit or gas cost values',
+                'net_usd': 0.0,
+            }
+
+        net_usd = max_profit - gas_cost
 
         # Check if gas cost is too high (>MAX_GAS_COST_RATIO of profit)
-        if max_profit_usd > 0 and gas_cost_usd / max_profit_usd > MAX_GAS_COST_RATIO:
+        if max_profit > 0 and gas_cost / max_profit > MAX_GAS_COST_RATIO:
             return {
                 'decision': 'SKIP',
                 'reason': 'Gas cost too high relative to profit',
