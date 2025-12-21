@@ -79,9 +79,14 @@ async def test_research_orchestrator_queue():
 
     # Check that results are in priority order (highest first)
     assert len(results) == 3
-    assert "High priority" in results[0].answer
-    assert "Medium priority" in results[1].answer
-    assert "Low priority" in results[2].answer
+
+    # Validate that the underlying research client was called in priority order
+    called_questions = [call["question"] for call in mock_client.calls]
+    assert called_questions == [
+        "High priority question",
+        "Medium priority question",
+        "Low priority question",
+    ]
 
 
 @pytest.mark.asyncio
@@ -210,20 +215,30 @@ async def test_hypothesis_enhancer_calibrate_confidence():
     conf = enhancer.calibrate_confidence(hyp, research_validated=True, similar_exploits_found=True)
     assert conf == 0.5 * 1.25 * 1.15
 
-    # Test with failure feedback
+    # Test with failure feedback - new diminishing near-miss logic
     conf = enhancer.calibrate_confidence(
-        hyp,
+        hypothesis=hyp,
         research_validated=False,
         similar_exploits_found=False,
         failure_feedback={"attempt_count": 2, "near_miss_count": 1},
     )
-    expected = 0.5 * (0.95 ** 2) * 1.1
+    # New formula: 0.5 * (0.95^2) * (1.0 + 0.1/(1+2))
+    expected = 0.5 * (0.95 ** 2) * (1.0 + 0.1 / 3)
     assert abs(conf - expected) < 0.001
+
+    # Test with invalid confidence value (should default to 0.5)
+    hyp_invalid = {"confidence": "invalid"}
+    conf = enhancer.calibrate_confidence(
+        hypothesis=hyp_invalid,
+        research_validated=False,
+        similar_exploits_found=False,
+    )
+    assert conf == 0.5
 
     # Test capping at 0.95
     hyp_high = {"confidence": 0.9}
     conf = enhancer.calibrate_confidence(
-        hyp_high,
+        hypothesis=hyp_high,
         research_validated=True,
         similar_exploits_found=True,
     )
@@ -262,6 +277,14 @@ async def test_hypothesis_enhancer_enhance_contract_hypotheses():
 
     # Should have 2 hypotheses
     assert len(enhanced) == 2
+
+    # Check that confidence was boosted for research-validated hypotheses
+    # Both should be boosted since mock returns both keywords
+    for hyp in enhanced:
+        if hyp.get("research_validated"):
+            # Confidence should be boosted (original * 1.3, capped at 0.95)
+            assert hyp["confidence"] > 0.6  # Original was 0.6 or 0.7
+            assert "research_context" in hyp
 
     # Check that research context was added to high-confidence hypothesis
     oracle_hyp = next(h for h in enhanced if h["vuln_type"] == "oracle")
@@ -329,10 +352,49 @@ async def test_hypothesis_enhancer_refine_from_failures():
         original_hypothesis,
     )
 
-    # Should have refinements for both failure types
-    assert len(refinements) >= 1
+    # Should have refinements for both failure types (insufficient_profit and access_control)
+    assert len(refinements) == 2
 
     # Check that refinements have updated properties
+    refinement_types = set()
     for refinement in refinements:
         assert "refined-" in refinement["id"]
         assert refinement["confidence"] > 0
+
+        # Track refinement type to verify both were created
+        if "access_control_bypass" in refinement.get("vuln_type", ""):
+            refinement_types.add("access_control")
+        else:
+            refinement_types.add("insufficient_profit")
+
+    # Verify both refinement types were created
+    assert "access_control" in refinement_types
+    assert "insufficient_profit" in refinement_types
+
+
+@pytest.mark.asyncio
+async def test_hypothesis_enhancer_refine_from_failures_missing_keys():
+    """Test refine_from_failures with missing required keys."""
+    mock_client = MockPerplexityResearch()
+    mock_context = MockRunContext()
+    orchestrator = ResearchOrchestrator(mock_client, mock_context)
+    enhancer = HypothesisEnhancer(orchestrator)
+
+    # Hypothesis missing required keys
+    incomplete_hypothesis = {
+        "confidence": 0.7,
+        # Missing 'id' and 'vuln_type'
+    }
+
+    failed_attempts = [
+        {"revert_reason": "Insufficient profit"},
+    ]
+
+    refinements = await enhancer.refine_from_failures(
+        failed_attempts,
+        incomplete_hypothesis,
+    )
+
+    # Should return empty list when required keys are missing
+    assert len(refinements) == 0
+

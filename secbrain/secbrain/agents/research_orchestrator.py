@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from secbrain.core.context import RunContext
     from secbrain.tools.perplexity_research import PerplexityResearch
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -87,6 +90,18 @@ class ResearchOrchestrator:
                 self._results.append(result)
 
             except Exception as e:
+                # Log the exception with context
+                logger.error(
+                    "Research query failed",
+                    exc_info=True,
+                    extra={
+                        "question": query.question[:100],
+                        "context": query.context,
+                        "priority": query.priority,
+                        "phase": query.phase,
+                        "exception_type": type(e).__name__,
+                    },
+                )
                 # Create an error result
                 error_result = ResearchResult(
                     query=query,

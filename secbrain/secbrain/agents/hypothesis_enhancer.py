@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from eth_utils import is_address  # type: ignore[attr-defined]
+
 from secbrain.agents.research_orchestrator import ResearchOrchestrator, ResearchQuery
 
 # Confidence threshold for high-confidence hypotheses
@@ -45,16 +47,19 @@ class HypothesisEnhancer:
 
             # Boost confidence for hypotheses matching research
             for hyp in static_hypotheses:
-                if hyp["vuln_type"] in research_vulns:
-                    hyp["confidence"] = min(hyp["confidence"] * 1.3, 0.95)
+                vuln_type = hyp.get("vuln_type", "")
+                if vuln_type in research_vulns:
+                    hyp["confidence"] = min(hyp.get("confidence", 0.5) * 1.3, 0.95)
                     hyp["research_validated"] = True
                     hyp["research_context"] = protocol_research.answer[:300]
 
         # Research each high-confidence hypothesis
         for hyp in static_hypotheses:
-            if hyp["confidence"] >= HIGH_CONFIDENCE_THRESHOLD:
+            vuln_type = hyp.get("vuln_type", "")
+            confidence = hyp.get("confidence", 0)
+            if confidence >= HIGH_CONFIDENCE_THRESHOLD and vuln_type:
                 pattern_research = await self.research.research_vulnerability_pattern(
-                    vuln_type=hyp["vuln_type"],
+                    vuln_type=vuln_type,
                     contract_context=f"{protocol_type} with {len(functions)} functions",
                     priority=7,
                 )
@@ -71,6 +76,13 @@ class HypothesisEnhancer:
         original_hypothesis: dict[str, Any],
     ) -> list[dict[str, Any]]:
         """Generate refined hypotheses from failed exploit attempts."""
+
+        # Validate required keys in original_hypothesis
+        required_keys = ["vuln_type", "id"]
+        for key in required_keys:
+            if key not in original_hypothesis:
+                # Return empty list if required keys are missing
+                return []
 
         refinements = []
 
@@ -99,14 +111,14 @@ class HypothesisEnhancer:
                 refinements.append({
                     **original_hypothesis,
                     "id": f"refined-{original_hypothesis['id']}",
-                    "confidence": min(original_hypothesis["confidence"] * 1.2, 0.95),
+                    "confidence": min(original_hypothesis.get("confidence", 0.5) * 1.2, 0.95),
                     "exploit_notes": [
                         *original_hypothesis.get("exploit_notes", []),
                         "Add flash loan leverage",
                         "Consider multi-hop arbitrage",
                         results[0].answer[:200],
                     ],
-                    "expected_profit_hint_eth": original_hypothesis.get("expected_profit_hint_eth", 0) * 10,
+                    "expected_profit_hint_eth": original_hypothesis.get("expected_profit_hint_eth", 0) * 3,
                 })
 
         if "access_control" in failure_types:
@@ -146,6 +158,11 @@ class HypothesisEnhancer:
         protocol_type = contract_metadata.get("classification", {}).get("protocol_type", "generic")
         functions = contract_metadata.get("functions", [])[:20]
         address = contract_metadata.get("address", "")
+
+        # Validate and sanitize address
+        if address and not is_address(address):
+            # If address is invalid, use placeholder
+            address = "0x0000000000000000000000000000000000000000"
 
         # Get protocol-specific patterns from research
         protocol_patterns = self._extract_patterns_from_research(research_context)
@@ -240,7 +257,12 @@ Return ONLY a JSON array of 3-5 hypotheses. No markdown, no prose."""
     ) -> float:
         """Calibrate hypothesis confidence using multiple signals."""
 
-        base_confidence = float(hypothesis.get("confidence", 0.5))
+        # Safely extract and validate confidence value
+        raw_confidence = hypothesis.get("confidence", 0.5)
+        try:
+            base_confidence = float(raw_confidence)
+        except (TypeError, ValueError):
+            base_confidence = 0.5
 
         # Boost for research validation
         if research_validated:
@@ -252,15 +274,16 @@ Return ONLY a JSON array of 3-5 hypotheses. No markdown, no prose."""
 
         # Adjust based on failure feedback
         if failure_feedback:
-            failure_count = failure_feedback.get("attempt_count", 0)
+            failure_count = int(failure_feedback.get("attempt_count", 0) or 0)
             if failure_count > 0:
                 # Penalize if many attempts failed
                 base_confidence *= (0.95 ** failure_count)
 
-            near_misses = failure_feedback.get("near_miss_count", 0)
+            near_misses = int(failure_feedback.get("near_miss_count", 0) or 0)
             if near_misses > 0:
-                # Boost if we had near-misses
-                base_confidence *= 1.1
+                # Boost if we had near-misses, with diminishing effect as failures grow
+                near_miss_boost = 1.0 + 0.1 / (1 + failure_count)
+                base_confidence *= near_miss_boost
 
         # Cap at 0.95
         return min(base_confidence, 0.95)

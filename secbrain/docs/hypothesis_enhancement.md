@@ -98,7 +98,7 @@ prompt = await enhancer.generate_targeted_llm_prompt(
 
 # Calibrate confidence
 confidence = enhancer.calibrate_confidence(
-    hypothesis,
+    hypothesis=hypothesis,
     research_validated=True,
     similar_exploits_found=True,
     failure_feedback={"attempt_count": 2, "near_miss_count": 1},
