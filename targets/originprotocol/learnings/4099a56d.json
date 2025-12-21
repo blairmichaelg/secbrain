@@ -1,0 +1,36 @@
+{
+  "run_id": "4099a56d",
+  "program": "Origin Protocol",
+  "timestamp": "2025-12-20T23:33:55.297112",
+  "metrics": {
+    "recon": {
+      "assets_discovered": 25,
+      "live_hosts": 0
+    },
+    "hypotheses": {
+      "total_generated": 0,
+      "by_type": {}
+    },
+    "exploitation": {
+      "tested": 0,
+      "confirmed": 0,
+      "confirmation_rate": 0
+    },
+    "findings": {
+      "total": 0,
+      "by_severity": {}
+    }
+  },
+  "analysis": {
+    "effective_types": {},
+    "ineffective_types": {},
+    "success_rates": {},
+    "top_performing": [],
+    "hypothesis_effectiveness": {}
+  },
+  "recommendations": [
+    "Low confirmation rate - consider improving hypothesis quality or testing methodology",
+    "No findings - consider expanding attack surface or trying new techniques",
+    "AI Insights: [WORKER_MODEL_ERROR] Error code: 400 - {'error': {'message': 'The model `mixtral-8x7b-32768` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': '"
+  ]
+}

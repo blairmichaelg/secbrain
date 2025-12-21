@@ -1,0 +1,144 @@
+contracts:
+  - name: Proxy
+    address: "0x85b78aca6dEAE198fBf201c82dAf6CA21942aCc6"
+    chain_id: 1
+    foundry_profile: "contract_Proxy_85b7"
+    verified: true
+  - name: ConvexEthMetaStrategyProxy
+    address: "0x1827F9eA98E0bf96550b2FC20F7233277FcD7E63"
+    chain_id: 1
+    foundry_profile: "contract_ConvexEthMetaStrategyProxy_1827"
+    verified: true
+  - name: VaultProxy
+    address: "0xe75d77b1865ae93c7eaa3040b038d7aa7bc02f70"
+    chain_id: 1
+    foundry_profile: "contract_VaultProxy_e75d"
+    verified: true
+  - name: OETHCurveAMOProxy
+    address: "0xaF04828Ed923216c77dC22a2fc8E077FDaDAA87d"
+    chain_id: 1
+    foundry_profile: "contract_OETHCurveAMOProxy_af04"
+    verified: true
+  - name: FixedRateRewardsSourceProxy
+    address: "0x7609c88e5880e934dd3a75bcfef44e31b1badb8b"
+    chain_id: 1
+    foundry_profile: "contract_FixedRateRewardsSourceProxy_7609"
+    verified: true
+  - name: ExponentialStakingProxy
+    address: "0x63898b3b6ef3d39332082178656e9862bee45c57"
+    chain_id: 1
+    foundry_profile: "contract_ExponentialStakingProxy_6389"
+    verified: true
+  - name: InitializeGovernedUpgradeabilityProxy
+    address: "0x501804B374EF06fa9C427476147ac09F1551B9A0"
+    chain_id: 1
+    foundry_profile: "contract_InitializeGovernedUpgradeabilityProxy_5018"
+    verified: true
+  - name: WOETHProxy
+    address: "0xDcEe70654261AF21C44c093C300eD3Bb97b78192"
+    chain_id: 1
+    foundry_profile: "contract_WOETHProxy_dcee"
+    verified: true
+  - name: Governance
+    address: "0x1D3Fbd4d129Ddd2372EA85c5Fa00b2682081c9EC"
+    chain_id: 1
+    foundry_profile: "contract_Governance_1d3f"
+    verified: true
+  - name: CompoundingStakingStrategyView
+    address: "0xEDf495F92c2eBdEE8B797E9C503aA7A3302A9c88"
+    chain_id: 1
+    foundry_profile: "contract_CompoundingStakingStrategyView_edf4"
+    verified: true
+  - name: BeaconProofs
+    address: "0xc4444C5D9e7C1a5A0a01c5E4b11692d589DcAF22"
+    chain_id: 1
+    foundry_profile: "contract_BeaconProofs_c444"
+    verified: true
+  - name: MigratorProxy
+    address: "0x95c347d6214614a780847b8aaf4f96eb84f4da6d"
+    chain_id: 1
+    foundry_profile: "contract_MigratorProxy_95c3"
+    verified: true
+  - name: OETHVaultProxy
+    address: "0x39254033945AA2E4809Cc2977E7087BEE48bd7Ab"
+    chain_id: 1
+    foundry_profile: "contract_OETHVaultProxy_3925"
+    verified: true
+  - name: InitializeGovernedUpgradeabilityProxy_v2
+    address: "0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86"
+    chain_id: 1
+    foundry_profile: "contract_InitializeGovernedUpgradeabilityProxy_2a8e"
+    verified: true
+  - name: LidoARM
+    address: "0xc0297a0e39031f09406f0987c9d9d41c5dfbc3df"
+    chain_id: 1
+    foundry_profile: "contract_LidoARM_c029"
+    verified: true
+  - name: ConvexEthMetaStrategy
+    address: "0x5c93e05783ea4d0d968c7a2c0cdffcefc711b213"
+    chain_id: 1
+    foundry_profile: "contract_ConvexEthMetaStrategy_5c93"
+    verified: true
+  - name: VaultCore
+    address: "0x6b89f2410c45701e1456f9e2c5c3f8fab5137b7a"
+    chain_id: 1
+    foundry_profile: "contract_VaultCore_6b89"
+    verified: true
+  - name: CompoundingStakingSSVStrategy
+    address: "0x452bb04d113478578dd23026e4f86a8ffb0118ca"
+    chain_id: 1
+    foundry_profile: "contract_CompoundingStakingSSVStrategy_452b"
+    verified: true
+  - name: FixedRateRewardsSource
+    address: "0x16890bdd817ed1c4654430d67329cb20b0b71bb0"
+    chain_id: 1
+    foundry_profile: "contract_FixedRateRewardsSource_1689"
+    verified: true
+  - name: ExponentialStaking
+    address: "0x97711c7a5d64a064a95d10e37f786d2bd8b1f3c8"
+    chain_id: 1
+    foundry_profile: "contract_ExponentialStaking_9771"
+    verified: true
+  - name: SingleAssetStaking
+    address: "0x3675c3521f8a6876c8287e9bb51e056862d1399b"
+    chain_id: 1
+    foundry_profile: "contract_SingleAssetStaking_3675"
+    verified: true
+  - name: WOETH
+    address: "0x388782b21275f75255f3ee08e23bd3991d4eb830"
+    chain_id: 1
+    foundry_profile: "contract_WOETH_3887"
+    verified: true
+  - name: Migrator
+    address: "0x936b7855c3f20b09685770467f7621ac41b03063"
+    chain_id: 1
+    foundry_profile: "contract_Migrator_936b"
+    verified: true
+  - name: OETHVaultCore
+    address: "0x22431cc134bd24171d71ba1470ea037b36a950d7"
+    chain_id: 1
+    foundry_profile: "contract_OETHVaultCore_2243"
+    verified: true
+  - name: OUSD
+    address: "0xa7b7c59a1705e4a624ea8a4ad8a06f9de22dcc33"
+    chain_id: 1
+    foundry_profile: "contract_OUSD_a7b7"
+    verified: true
+
+foundry_root: "c:\\Users\\Michael\\CascadeProjects\\windsurf-project-2\\targets\\originprotocol\\instascope"
+
+domains: []
+urls: []
+ips: []
+
+excluded_paths: []
+allowed_methods:
+  - GET
+  - POST
+  - PUT
+  - HEAD
+  - OPTIONS
+
+max_requests_per_second: 5
+respect_robots_txt: true
+avoid_logout_endpoints: true

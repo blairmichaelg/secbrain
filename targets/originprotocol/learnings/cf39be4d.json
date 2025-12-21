@@ -1,0 +1,68 @@
+{
+  "run_id": "cf39be4d",
+  "program": "Origin Protocol",
+  "timestamp": "2025-12-20T23:02:49.109126",
+  "metrics": {
+    "recon": {
+      "assets_discovered": 25,
+      "live_hosts": 0
+    },
+    "hypotheses": {
+      "total_generated": 10,
+      "by_type": {
+        "generic_contract": 10
+      }
+    },
+    "exploitation": {
+      "tested": 0,
+      "confirmed": 0,
+      "confirmation_rate": 0
+    },
+    "findings": {
+      "total": 0,
+      "by_severity": {}
+    }
+  },
+  "analysis": {
+    "effective_types": {},
+    "ineffective_types": {
+      "generic_contract": 10
+    },
+    "success_rates": {
+      "generic_contract": 0.0
+    },
+    "top_performing": [
+      [
+        "generic_contract",
+        0.0
+      ]
+    ],
+    "hypothesis_effectiveness": {
+      "generic_contract": {
+        "generated": 10,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.3,
+        "hypothesis_ids": [
+          "hyp-f2e2560d",
+          "hyp-138bbd7b",
+          "hyp-94a71163",
+          "hyp-31c28f7d",
+          "hyp-50cd925f",
+          "hyp-d650ddac",
+          "hyp-f78568a4",
+          "hyp-14b14d38",
+          "hyp-01baa73d",
+          "hyp-cd94b1c1"
+        ],
+        "finding_ids": []
+      }
+    }
+  },
+  "recommendations": [
+    "Low confirmation rate - consider improving hypothesis quality or testing methodology",
+    "Focus on generic_contract vulnerabilities - highest success rate",
+    "No findings - consider expanding attack surface or trying new techniques",
+    "AI Insights: [WORKER_MODEL_ERROR] {'error': \"Client error '404 Not Found' for url 'https://api.together.xyz/v1/chat/completions'\\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404\"}"
+  ]
+}

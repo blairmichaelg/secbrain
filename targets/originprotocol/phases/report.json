@@ -1,11 +1,83 @@
 {
-  "run_id": "b59e85f0",
+  "run_id": "6cde20bf",
   "phase": "report",
   "success": true,
-  "duration_seconds": 0.00057,
+  "duration_seconds": 0.868049,
   "errors": [],
   "data": {
-    "reports": []
+    "reports": [
+      {
+        "id": "finding-df1a9d9a",
+        "title": "GENERIC_CONTRACT vulnerability in ConvexEthMetaStrategyProxy@0x1827F9eA98E0bf96550b2FC20F7233277FcD7E63",
+        "severity": "critical",
+        "vuln_type": "generic_contract",
+        "target": "ConvexEthMetaStrategyProxy@0x1827F9eA98E0bf96550b2FC20F7233277FcD7E63",
+        "cwe": "",
+        "cvss": "",
+        "content": "[WORKER_MODEL_ERROR] Error code: 400 - {'error': {'message': 'The model `mixtral-8x7b-32768` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}",
+        "poc": "[WORKER_MODEL_ERROR] Error code: 400 - {'error': {'message': 'The model `mixtral-8x7b-32768` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}",
+        "generated_at": "2025-12-21T01:28:12.903643"
+      },
+      {
+        "id": "finding-520da18b",
+        "title": "GENERIC_CONTRACT vulnerability in VaultProxy@0xE75D77B1865Ae93c7eaa3040B038D7aA7BC02F70",
+        "severity": "critical",
+        "vuln_type": "generic_contract",
+        "target": "VaultProxy@0xE75D77B1865Ae93c7eaa3040B038D7aA7BC02F70",
+        "cwe": "",
+        "cvss": "",
+        "content": "[WORKER_MODEL_ERROR] Error code: 400 - {'error': {'message': 'The model `mixtral-8x7b-32768` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}",
+        "poc": "[WORKER_MODEL_ERROR] Error code: 400 - {'error': {'message': 'The model `mixtral-8x7b-32768` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}",
+        "generated_at": "2025-12-21T01:28:13.137226"
+      },
+      {
+        "id": "finding-3dd4b562",
+        "title": "GENERIC_CONTRACT vulnerability in OETHCurveAMOProxy@0xaF04828Ed923216c77dC22a2fc8E077FDaDAA87d",
+        "severity": "critical",
+        "vuln_type": "generic_contract",
+        "target": "OETHCurveAMOProxy@0xaF04828Ed923216c77dC22a2fc8E077FDaDAA87d",
+        "cwe": "",
+        "cvss": "",
+        "content": "[WORKER_MODEL_ERROR] Error code: 400 - {'error': {'message': 'The model `mixtral-8x7b-32768` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}",
+        "poc": "[WORKER_MODEL_ERROR] Error code: 400 - {'error': {'message': 'The model `mixtral-8x7b-32768` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}",
+        "generated_at": "2025-12-21T01:28:13.276620"
+      },
+      {
+        "id": "finding-649d02a7",
+        "title": "GENERIC_CONTRACT vulnerability in FixedRateRewardsSourceProxy@0x7609c88E5880e934dd3A75bCFef44E31b1Badb8b",
+        "severity": "critical",
+        "vuln_type": "generic_contract",
+        "target": "FixedRateRewardsSourceProxy@0x7609c88E5880e934dd3A75bCFef44E31b1Badb8b",
+        "cwe": "",
+        "cvss": "",
+        "content": "[WORKER_MODEL_ERROR] Error code: 400 - {'error': {'message': 'The model `mixtral-8x7b-32768` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}",
+        "poc": "[WORKER_MODEL_ERROR] Error code: 400 - {'error': {'message': 'The model `mixtral-8x7b-32768` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}",
+        "generated_at": "2025-12-21T01:28:13.414692"
+      },
+      {
+        "id": "finding-eb0bb8ae",
+        "title": "GENERIC_CONTRACT vulnerability in ExponentialStakingProxy@0x63898b3b6Ef3d39332082178656E9862bee45C57",
+        "severity": "critical",
+        "vuln_type": "generic_contract",
+        "target": "ExponentialStakingProxy@0x63898b3b6Ef3d39332082178656E9862bee45C57",
+        "cwe": "",
+        "cvss": "",
+        "content": "[WORKER_MODEL_ERROR] Error code: 400 - {'error': {'message': 'The model `mixtral-8x7b-32768` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}",
+        "poc": "[WORKER_MODEL_ERROR] Error code: 400 - {'error': {'message': 'The model `mixtral-8x7b-32768` has been decommissioned and is no longer supported. Please refer to https://console.groq.com/docs/deprecations for a recommendation on which model to use instead.', 'type': 'invalid_request_error', 'code': 'model_decommissioned'}}",
+        "generated_at": "2025-12-21T01:28:13.563828"
+      }
+    ],
+    "summary": {
+      "total_reports": 5,
+      "by_severity": {
+        "critical": 5
+      },
+      "by_type": {
+        "generic_contract": 5
+      },
+      "generated_at": "2025-12-21T01:28:13.564828"
+    },
+    "report_path": "targets\\originprotocol\\reports"
   },
-  "timestamp": "2025-12-20T05:43:33.363652"
+  "timestamp": "2025-12-21T01:28:13.668479"
 }

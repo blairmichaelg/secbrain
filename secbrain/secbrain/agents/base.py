@@ -7,6 +7,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from secbrain.core.model_manager import get_model_manager
+
 if TYPE_CHECKING:
     import structlog
 
@@ -62,6 +64,12 @@ class BaseAgent(ABC):
         self.storage = storage
         self.logger = logger
         self._reasoning_chain: list[dict[str, Any]] = []
+        # Centralized model manager (Groq/Perplexity/RPC)
+        try:
+            self.model_manager = get_model_manager()
+        except Exception:
+            # Fallback to legacy per-agent models
+            self.model_manager = None
 
     def _check_kill_switch(self) -> bool:
         """Check if kill-switch is activated."""
@@ -88,14 +96,18 @@ class BaseAgent(ABC):
         self._reasoning_chain.clear()
         return chain
 
-    def _log_error(self, error: str, **kwargs: Any) -> None:
+    def _log_error(self, msg: str, **kwargs: Any) -> None:
         """Log an error if logger is available."""
         if self.logger:
-            if "agent" not in kwargs:
-                kwargs["agent"] = self.name
-            if "phase" not in kwargs:
-                kwargs["phase"] = self.phase
-            self.logger.error(error, **kwargs)
+            payload = dict(kwargs)
+            if "agent" not in payload:
+                payload["agent"] = self.name
+            if "phase" not in payload:
+                payload["phase"] = self.phase
+            # Normalize keys to avoid collision with positional arg name
+            if "error" in payload:
+                payload["error_detail"] = payload.pop("error")
+            self.logger.error(msg, **payload)
 
     async def _call_worker(
         self,
@@ -104,6 +116,18 @@ class BaseAgent(ABC):
         **kwargs: Any,
     ) -> str:
         """Call the worker model."""
+        # Prefer centralized model manager if available
+        if self.model_manager:
+            messages: list[dict[str, str]] = []
+            if system:
+                messages.append({"role": "system", "content": system})
+            messages.append({"role": "user", "content": prompt})
+            try:
+                return await self.model_manager.call_worker(messages, **kwargs)
+            except Exception as e:
+                self._log_error("worker_model_error", exc=str(e))
+                return f"[WORKER_MODEL_ERROR] {e}"
+
         if not self.worker_model:
             return "[NO WORKER MODEL] " + prompt[:100]
 
@@ -123,6 +147,17 @@ class BaseAgent(ABC):
             system=system,
             **kwargs,
         )
+
+        if not response.success:
+            # Surface model failures with context for debugging (without leaking secrets)
+            self._log_error(
+                "worker_model_error",
+                model=response.model,
+                finish_reason=response.finish_reason,
+                raw_response=response.raw_response,
+            )
+            return f"[WORKER_MODEL_ERROR] {response.raw_response}"
+
         content = response.content
 
         if cache_key:
@@ -140,6 +175,17 @@ class BaseAgent(ABC):
         **kwargs: Any,
     ) -> str:
         """Call the advisor model for critical decisions."""
+        if self.model_manager:
+            messages: list[dict[str, str]] = []
+            if system:
+                messages.append({"role": "system", "content": system})
+            messages.append({"role": "user", "content": prompt})
+            try:
+                return await self.model_manager.call_advisor(messages, **kwargs)
+            except Exception as e:
+                self._log_error("advisor_model_error", exc=str(e))
+                return f"[ADVISOR_MODEL_ERROR] {e}"
+
         if not self.advisor_model:
             return "[NO ADVISOR MODEL] " + prompt[:100]
 

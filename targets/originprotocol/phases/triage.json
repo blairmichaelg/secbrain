@@ -1,17 +1,237 @@
 {
-  "run_id": "b59e85f0",
+  "run_id": "6cde20bf",
   "phase": "triage",
   "success": true,
-  "duration_seconds": 0.000467,
+  "duration_seconds": 0.000967,
   "errors": [],
   "data": {
-    "findings": [],
-    "triaged": 0,
+    "findings": [
+      {
+        "id": "finding-df1a9d9a",
+        "title": "Exploit success for ConvexEthMetaStrategyProxy@0x1827F9eA98E0bf96550b2FC20F7233277FcD7E63",
+        "severity": "critical",
+        "status": "confirmed",
+        "vuln_type": "generic_contract",
+        "target": "ConvexEthMetaStrategyProxy@0x1827F9eA98E0bf96550b2FC20F7233277FcD7E63",
+        "description": "Generic on-chain testing hypothesis",
+        "verified": true,
+        "confidence_score": 0.3,
+        "evidence": [
+          "Error: Compiler run failed:",
+          "Error: Compiler error (C:\\Users\\circleci\\project\\libsolidity\\codegen\\LValue.cpp:54):Stack too deep, try removing local variables.",
+          "  --> test/secbrain/SecBrainExploit_hyp-410fa794_100.t.sol:63:27:",
+          "   |",
+          "63 |     uint256 totalBefore = initialBalance;",
+          "   |                           ^^^^^^^^^^^^^^"
+        ],
+        "profit_logs": [
+          "63 |     uint256 totalBefore = initialBalance;"
+        ],
+        "token_transfers": [],
+        "profit_eth": null,
+        "profit_tokens": {},
+        "profit_eth_equiv": 0.0,
+        "profit_breakdown": {},
+        "profit_usd_estimate": null,
+        "execution_trace": "Error: Compiler run failed:\nError: Compiler error (C:\\Users\\circleci\\project\\libsolidity\\codegen\\LValue.cpp:54):Stack too deep, try removing local variables.\n  --> test/secbrain/SecBrainExploit_hyp-410fa794_100.t.sol:63:27:\n   |\n63 |     uint256 totalBefore = initialBalance;\n   |                           ^^^^^^^^^^^^^^\n",
+        "state_changes": {},
+        "root_cause": {
+          "contract": "0x1827F9eA98E0bf96550b2FC20F7233277FcD7E63",
+          "function": "admin()",
+          "vulnerability_pattern": "generic_contract",
+          "trigger_condition": null
+        },
+        "confidence_components": null,
+        "gas_used": null,
+        "attempt_index": 100,
+        "hypothesis_id": "hyp-410fa794"
+      },
+      {
+        "id": "finding-520da18b",
+        "title": "Exploit success for VaultProxy@0xE75D77B1865Ae93c7eaa3040B038D7aA7BC02F70",
+        "severity": "critical",
+        "status": "confirmed",
+        "vuln_type": "generic_contract",
+        "target": "VaultProxy@0xE75D77B1865Ae93c7eaa3040B038D7aA7BC02F70",
+        "description": "Generic on-chain testing hypothesis",
+        "verified": true,
+        "confidence_score": 0.3,
+        "evidence": [
+          "Error: Compiler run failed:",
+          "Error: Compiler error (C:\\Users\\circleci\\project\\libsolidity\\codegen\\LValue.cpp:51):Stack too deep. Try compiling with `--via-ir` (cli) or the equivalent `viaIR: true` (standard JSON) while enabling the optimizer. Otherwise, try removing local variables.",
+          "  --> test/secbrain/SecBrainExploit_hyp-dbf44ba9_100.t.sol:63:27:",
+          "   |",
+          "63 |     uint256 totalBefore = initialBalance;",
+          "   |                           ^^^^^^^^^^^^^^"
+        ],
+        "profit_logs": [
+          "63 |     uint256 totalBefore = initialBalance;"
+        ],
+        "token_transfers": [],
+        "profit_eth": null,
+        "profit_tokens": {},
+        "profit_eth_equiv": 0.0,
+        "profit_breakdown": {},
+        "profit_usd_estimate": null,
+        "execution_trace": "Error: Compiler run failed:\nError: Compiler error (C:\\Users\\circleci\\project\\libsolidity\\codegen\\LValue.cpp:51):Stack too deep. Try compiling with `--via-ir` (cli) or the equivalent `viaIR: true` (standard JSON) while enabling the optimizer. Otherwise, try removing local variables.\n  --> test/secbrain/SecBrainExploit_hyp-dbf44ba9_100.t.sol:63:27:\n   |\n63 |     uint256 totalBefore = initialBalance;\n   |                           ^^^^^^^^^^^^^^\n",
+        "state_changes": {},
+        "root_cause": {
+          "contract": "0xE75D77B1865Ae93c7eaa3040B038D7aA7BC02F70",
+          "function": "admin()",
+          "vulnerability_pattern": "generic_contract",
+          "trigger_condition": null
+        },
+        "confidence_components": null,
+        "gas_used": null,
+        "attempt_index": 100,
+        "hypothesis_id": "hyp-dbf44ba9"
+      },
+      {
+        "id": "finding-3dd4b562",
+        "title": "Exploit success for OETHCurveAMOProxy@0xaF04828Ed923216c77dC22a2fc8E077FDaDAA87d",
+        "severity": "critical",
+        "status": "confirmed",
+        "vuln_type": "generic_contract",
+        "target": "OETHCurveAMOProxy@0xaF04828Ed923216c77dC22a2fc8E077FDaDAA87d",
+        "description": "Generic on-chain testing hypothesis",
+        "verified": true,
+        "confidence_score": 0.3,
+        "evidence": [
+          "Error: Compiler run failed:",
+          "Error: Compiler error (C:\\Users\\circleci\\project\\libsolidity\\codegen\\LValue.cpp:50):Stack too deep. Try compiling with `--via-ir` (cli) or the equivalent `viaIR: true` (standard JSON) while enabling the optimizer. Otherwise, try removing local variables.",
+          "  --> test/secbrain/SecBrainExploit_hyp-b796f1f9_100.t.sol:63:27:",
+          "   |",
+          "63 |     uint256 totalBefore = initialBalance;",
+          "   |                           ^^^^^^^^^^^^^^"
+        ],
+        "profit_logs": [
+          "63 |     uint256 totalBefore = initialBalance;"
+        ],
+        "token_transfers": [],
+        "profit_eth": null,
+        "profit_tokens": {},
+        "profit_eth_equiv": 0.0,
+        "profit_breakdown": {},
+        "profit_usd_estimate": null,
+        "execution_trace": "Error: Compiler run failed:\nError: Compiler error (C:\\Users\\circleci\\project\\libsolidity\\codegen\\LValue.cpp:50):Stack too deep. Try compiling with `--via-ir` (cli) or the equivalent `viaIR: true` (standard JSON) while enabling the optimizer. Otherwise, try removing local variables.\n  --> test/secbrain/SecBrainExploit_hyp-b796f1f9_100.t.sol:63:27:\n   |\n63 |     uint256 totalBefore = initialBalance;\n   |                           ^^^^^^^^^^^^^^\n",
+        "state_changes": {},
+        "root_cause": {
+          "contract": "0xaF04828Ed923216c77dC22a2fc8E077FDaDAA87d",
+          "function": "admin()",
+          "vulnerability_pattern": "generic_contract",
+          "trigger_condition": null
+        },
+        "confidence_components": null,
+        "gas_used": null,
+        "attempt_index": 100,
+        "hypothesis_id": "hyp-b796f1f9"
+      },
+      {
+        "id": "finding-649d02a7",
+        "title": "Exploit success for FixedRateRewardsSourceProxy@0x7609c88E5880e934dd3A75bCFef44E31b1Badb8b",
+        "severity": "critical",
+        "status": "confirmed",
+        "vuln_type": "generic_contract",
+        "target": "FixedRateRewardsSourceProxy@0x7609c88E5880e934dd3A75bCFef44E31b1Badb8b",
+        "description": "Generic on-chain testing hypothesis",
+        "verified": true,
+        "confidence_score": 0.3,
+        "evidence": [
+          "Error: Compiler run failed:",
+          "Error: Compiler error (C:\\Users\\circleci\\project\\libsolidity\\codegen\\LValue.cpp:54):Stack too deep, try removing local variables.",
+          "  --> test/secbrain/SecBrainExploit_hyp-28e2093f_100.t.sol:63:27:",
+          "   |",
+          "63 |     uint256 totalBefore = initialBalance;",
+          "   |                           ^^^^^^^^^^^^^^"
+        ],
+        "profit_logs": [
+          "63 |     uint256 totalBefore = initialBalance;"
+        ],
+        "token_transfers": [],
+        "profit_eth": null,
+        "profit_tokens": {},
+        "profit_eth_equiv": 0.0,
+        "profit_breakdown": {},
+        "profit_usd_estimate": null,
+        "execution_trace": "Error: Compiler run failed:\nError: Compiler error (C:\\Users\\circleci\\project\\libsolidity\\codegen\\LValue.cpp:54):Stack too deep, try removing local variables.\n  --> test/secbrain/SecBrainExploit_hyp-28e2093f_100.t.sol:63:27:\n   |\n63 |     uint256 totalBefore = initialBalance;\n   |                           ^^^^^^^^^^^^^^\n",
+        "state_changes": {},
+        "root_cause": {
+          "contract": "0x7609c88E5880e934dd3A75bCFef44E31b1Badb8b",
+          "function": "admin()",
+          "vulnerability_pattern": "generic_contract",
+          "trigger_condition": null
+        },
+        "confidence_components": null,
+        "gas_used": null,
+        "attempt_index": 100,
+        "hypothesis_id": "hyp-28e2093f"
+      },
+      {
+        "id": "finding-eb0bb8ae",
+        "title": "Exploit success for ExponentialStakingProxy@0x63898b3b6Ef3d39332082178656E9862bee45C57",
+        "severity": "critical",
+        "status": "confirmed",
+        "vuln_type": "generic_contract",
+        "target": "ExponentialStakingProxy@0x63898b3b6Ef3d39332082178656E9862bee45C57",
+        "description": "Generic on-chain testing hypothesis",
+        "verified": true,
+        "confidence_score": 0.3,
+        "evidence": [
+          "Error: Compiler run failed:",
+          "Error: Compiler error (C:\\Users\\circleci\\project\\libsolidity\\codegen\\LValue.cpp:54):Stack too deep, try removing local variables.",
+          "  --> test/secbrain/SecBrainExploit_hyp-790afa08_100.t.sol:63:27:",
+          "   |",
+          "63 |     uint256 totalBefore = initialBalance;",
+          "   |                           ^^^^^^^^^^^^^^"
+        ],
+        "profit_logs": [
+          "63 |     uint256 totalBefore = initialBalance;"
+        ],
+        "token_transfers": [],
+        "profit_eth": null,
+        "profit_tokens": {},
+        "profit_eth_equiv": 0.0,
+        "profit_breakdown": {},
+        "profit_usd_estimate": null,
+        "execution_trace": "Error: Compiler run failed:\nError: Compiler error (C:\\Users\\circleci\\project\\libsolidity\\codegen\\LValue.cpp:54):Stack too deep, try removing local variables.\n  --> test/secbrain/SecBrainExploit_hyp-790afa08_100.t.sol:63:27:\n   |\n63 |     uint256 totalBefore = initialBalance;\n   |                           ^^^^^^^^^^^^^^\n",
+        "state_changes": {},
+        "root_cause": {
+          "contract": "0x63898b3b6Ef3d39332082178656E9862bee45C57",
+          "function": "admin()",
+          "vulnerability_pattern": "generic_contract",
+          "trigger_condition": null
+        },
+        "confidence_components": null,
+        "gas_used": null,
+        "attempt_index": 100,
+        "hypothesis_id": "hyp-790afa08"
+      }
+    ],
+    "clusters": {
+      "generic_contract": [
+        "finding-df1a9d9a",
+        "finding-520da18b",
+        "finding-3dd4b562",
+        "finding-649d02a7",
+        "finding-eb0bb8ae"
+      ]
+    },
+    "by_severity": {
+      "critical": 5
+    },
+    "ready_for_report": [],
     "economic": {
       "decision": "SKIP",
-      "reason": "no_attempts",
-      "max_profit_eth": 0.0
+      "reason": "Gas cost too high relative to profit",
+      "max_profit_eth": 0.0,
+      "max_profit_usd": 0.0,
+      "gas_used": null,
+      "gas_cost_usd_est": 0,
+      "net_usd_est": 0.0,
+      "threshold_eth": 0.1,
+      "threshold_usd": 300,
+      "gas_price_wei": 50000000000.0
     }
   },
-  "timestamp": "2025-12-20T05:43:33.363089"
+  "timestamp": "2025-12-21T01:28:13.665479"
 }

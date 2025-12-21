@@ -1,44 +1,33 @@
-# SecBrain Model Configuration
+# SecBrain Model Configuration - Groq primary / Perplexity research
+version: "1.0"
 
 worker:
-  provider: openai_compatible
-  model: deepseek-ai/DeepSeek-V3          # Hypothesis generation / complex reasoning
-  base_url: https://api.together.xyz/v1
-  max_tokens: 16384
+  provider: groq
+  model: llama-3.3-70b-versatile
+  base_url: https://api.groq.com/openai/v1
+  timeout: 30
   temperature: 0.3
+  max_tokens: 2000
+  top_p: 0.95
 
 advisor:
-  provider: openai_compatible
-  model: Qwen/Qwen2.5-Coder-32B-Instruct  # Severity / validation
-  base_url: https://api.together.xyz/v1
-  max_tokens: 4096
-  temperature: 0.2
+  provider: groq
+  model: llama-3.3-70b-versatile
+  base_url: https://api.groq.com/openai/v1
+  timeout: 30
+  temperature: 0.7
+  max_tokens: 1500
+  top_p: 0.95
 
 research:
   provider: perplexity
-  model: sonar-medium-online
+  model: sonar
   max_calls_per_run: 20
   max_calls_per_phase: 5
 
-# Alternative configurations for different environments
-
-local:
-  worker:
-    provider: ollama
-    model: llama3.1:70b
-    base_url: http://localhost:11434
-
-cheap:
-  worker:
-    provider: openai_compatible
-    model: meta-llama/Llama-3.1-8B-Instruct-Turbo
-    base_url: https://api.together.xyz/v1
-
-premium:
-  worker:
-    provider: openai_compatible
-    model: deepseek-ai/DeepSeek-V3
-    base_url: https://api.together.xyz/v1
-  advisor:
-    provider: gemini
-    model: gemini-1.5-pro
+rpc:
+  primary: alchemy
+  primary_url: "${RPC_URL}"
+  fallback_url: "https://eth.drpc.org"
+  timeout: 10
+  max_retries: 3

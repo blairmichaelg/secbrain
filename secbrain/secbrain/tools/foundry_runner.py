@@ -91,6 +91,18 @@ class FoundryRunner:
         self._compile_cache_dir = Path(run_context.workspace_path) / ".secbrain_cache" / "compile"
         self._compile_cache_dir.mkdir(parents=True, exist_ok=True)
 
+    async def _compile_with_cache(self, profile: str | None = None) -> None:
+        """
+        Stub compile hook to keep orchestration intact.
+
+        In a full implementation, this should:
+        - compute a cache key based on profile/solc/config
+        - skip compile if cached artifacts exist
+        - run `forge build` (or `forge test --match-path ...`) once per key
+        For now, we no-op to avoid attribute errors.
+        """
+        return
+
     async def run_exploit_attempt(
         self,
         hypothesis: dict[str, Any],

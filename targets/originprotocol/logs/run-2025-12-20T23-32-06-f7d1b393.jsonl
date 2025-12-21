@@ -1,0 +1,9 @@
+{"run_id": "f7d1b393", "phases": ["ingest", "plan", "recon", "hypothesis", "exploit", "static", "triage", "report", "meta"], "dry_run": false, "event": "workflow_started", "level": "info", "timestamp": "2025-12-20T23:32:07.697572"}
+{"run_id": "f7d1b393", "phase": "ingest", "agent": "supervisor", "event": "pre_phase_check", "level": "info", "timestamp": "2025-12-20T23:32:07.698572"}
+{"run_id": "f7d1b393", "phase": "ingest", "from_phase": "ingest", "event": "phase_transition", "level": "info", "timestamp": "2025-12-20T23:32:07.698572"}
+{"run_id": "f7d1b393", "agent": "program_ingest", "phase": "ingest", "event": "starting_ingest", "level": "info", "timestamp": "2025-12-20T23:32:07.699573"}
+{"run_id": "f7d1b393", "phase": "ingest", "success": false, "agent": "supervisor", "event": "post_phase_check", "level": "info", "timestamp": "2025-12-20T23:32:07.706690"}
+{"run_id": "f7d1b393", "phase": "plan", "agent": "supervisor", "event": "pre_phase_check", "level": "info", "timestamp": "2025-12-20T23:32:07.706690"}
+{"run_id": "f7d1b393", "phase": "plan", "from_phase": "plan", "event": "phase_transition", "level": "info", "timestamp": "2025-12-20T23:32:07.707702"}
+{"run_id": "f7d1b393", "agent": "planner", "phase": "plan", "event": "starting_planning", "level": "info", "timestamp": "2025-12-20T23:32:07.707702"}
+{"run_id": "f7d1b393", "success": false, "phases_completed": ["ingest"], "findings": 0, "duration": 2.167889, "event": "workflow_completed", "level": "info", "timestamp": "2025-12-20T23:32:09.865461"}

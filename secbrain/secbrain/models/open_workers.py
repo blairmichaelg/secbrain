@@ -33,14 +33,14 @@ class OpenWorkerClient(ModelClient):
 
         # Determine provider and set defaults
         self.base_url = base_url or os.environ.get(
-            "OPENAI_BASE_URL", "https://api.together.xyz/v1"
+            "OPENAI_BASE_URL", "https://api.groq.com/openai/v1"
         )
-        self.api_key = (
-            api_key
-            or os.environ.get("TOGETHER_API_KEY")
-            or os.environ.get("OPENROUTER_API_KEY")
-            or os.environ.get("OPENAI_API_KEY", "")
+        self.api_key = api_key or os.environ.get("GROQ_API_KEY") or os.environ.get(
+            "OPENAI_API_KEY", ""
         )
+
+        if not self.api_key:
+            raise ValueError("OpenWorkerClient missing API key. Set GROQ_API_KEY.")
 
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
@@ -74,7 +74,8 @@ class OpenWorkerClient(ModelClient):
         }
 
         try:
-            response = await self.client.post("/chat/completions", json=payload)
+            # Use relative path to preserve any base_url path (e.g., /v1)
+            response = await self.client.post("chat/completions", json=payload)
             response.raise_for_status()
             data = response.json()
 

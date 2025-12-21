@@ -8,11 +8,24 @@ import signal
 import sys
 from pathlib import Path
 import os
+import subprocess
+import tempfile
 
 import typer
 import yaml
 from rich.console import Console
 from rich.table import Table
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except Exception:
+    # Non-fatal if python-dotenv is not installed
+    pass
+
+from secbrain.core.model_manager import reset_model_manager, get_model_manager
+from eth_utils import is_address
 
 app = typer.Typer(
     name="secbrain",
@@ -215,6 +228,67 @@ async def _run_workflow(
 
     _validate_api_keys(dry_run=dry_run)
 
+    # Preflight checks
+    errors: list[str] = []
+    # 1) Foundry availability (when not dry-run)
+    if not dry_run:
+        try:
+            result = subprocess.run(
+                ["forge", "--version"],
+                capture_output=True,
+                timeout=5,
+                check=False,
+                text=True,
+            )
+            if result.returncode != 0:
+                errors.append(f"Foundry not working: {result.stderr.strip()}")
+        except FileNotFoundError:
+            errors.append("Foundry not installed or not in PATH")
+        except subprocess.TimeoutExpired:
+            errors.append("Foundry --version timed out")
+        except Exception as e:
+            errors.append(f"Foundry check unexpected error: {e}")
+
+    # 2) Workspace writable
+    try:
+        workspace_path.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(dir=workspace_path, delete=True) as tmp:
+            tmp.write(b"test")
+            tmp.flush()
+    except Exception as e:
+        errors.append(f"Workspace not writable: {e}")
+
+    # 3) foundry_root existence if provided
+    foundry_root = getattr(scope_config, "foundry_root", None)
+    if foundry_root:
+        fr = Path(foundry_root)
+        if not fr.exists():
+            errors.append(f"Foundry root does not exist: {foundry_root}")
+        elif not (fr / "foundry.toml").exists():
+            errors.append(f"Foundry root missing foundry.toml: {foundry_root}")
+
+    # 4) RPC URL presence when contracts exist
+    has_contracts = bool(getattr(scope_config, "contracts", None))
+    scope_rpc = getattr(scope_config, "rpc_url", None)
+    if has_contracts and not (rpc_url or scope_rpc):
+        errors.append("RPC URL required for contract exploitation but not configured")
+
+    # 5) Validate contract addresses
+    contracts = getattr(scope_config, "contracts", []) or []
+    for c in contracts:
+        try:
+            addr = c.get("address") if isinstance(c, dict) else getattr(c, "address", None)
+            if not addr or not is_address(addr):
+                errors.append(f"Invalid contract address: {addr}")
+        except Exception:
+            errors.append(f"Malformed contract address entry: {c}")
+
+    if errors:
+        console.print("[bold red]Preflight checks failed:[/]")
+        for e in errors:
+            console.print(f"  - {e}")
+        raise SystemExit(1)
+
     # Create run context
     run_context = RunContext(
         scope=scope_config,
@@ -228,6 +302,31 @@ async def _run_workflow(
         approval_mode=approval_mode,
         approval_audit_log=workspace_path / "audit.jsonl",
     )
+
+    # Initialize model clients from config/models.yaml defaults
+    try:
+        models_cfg_path = Path(__file__).parent.parent / "config" / "models.yaml"
+        if models_cfg_path.exists():
+            with open(models_cfg_path, "r", encoding="utf-8") as f:
+                models_cfg = yaml.safe_load(f) or {}
+        else:
+            models_cfg = {}
+
+        # Use centralized ModelManager for Groq/Perplexity
+        reset_model_manager()
+        model_manager = get_model_manager()
+        run_context.model_manager = model_manager  # for downstream access if needed
+
+        worker_cfg = models_cfg.get("worker", {})
+        advisor_cfg = models_cfg.get("advisor", {})
+
+        console.print(
+            "[green]Models initialized (ModelManager):[/]\n"
+            f"  worker={worker_cfg.get('model')} base_url={worker_cfg.get('base_url')} key_present={bool(os.environ.get('GROQ_API_KEY'))}\n"
+            f"  advisor={advisor_cfg.get('model')} base_url={advisor_cfg.get('base_url')} key_present={bool(os.environ.get('GROQ_API_KEY'))}"
+        )
+    except Exception as e:
+        console.print(f"[yellow]Model initialization warning:[/] {e}")
 
     # Set up logging
     logger = setup_logging(
@@ -265,16 +364,15 @@ def _validate_api_keys(*, dry_run: bool) -> None:
     Fail fast if required API keys are missing for non-dry runs.
 
     Defaults are sourced from config/models.yaml:
-    - Worker (OpenAI-compatible): TOGETHER_API_KEY | OPENROUTER_API_KEY | OPENAI_API_KEY
-    - Advisor (Gemini): GOOGLE_API_KEY
+    - Worker/Advisor (Groq): GROQ_API_KEY
     - Research (Perplexity): PERPLEXITY_API_KEY
     """
     if dry_run:
         return
 
     required = {
-        "worker": ["TOGETHER_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY"],
-        "advisor": ["GOOGLE_API_KEY"],
+        "worker": ["GROQ_API_KEY"],
+        "advisor": ["GROQ_API_KEY"],
         "research": ["PERPLEXITY_API_KEY"],
     }
 

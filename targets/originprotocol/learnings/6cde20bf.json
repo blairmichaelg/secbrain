@@ -1,0 +1,76 @@
+{
+  "run_id": "6cde20bf",
+  "program": "Origin Protocol",
+  "timestamp": "2025-12-21T01:28:13.566829",
+  "metrics": {
+    "recon": {
+      "assets_discovered": 25,
+      "live_hosts": 0
+    },
+    "hypotheses": {
+      "total_generated": 10,
+      "by_type": {
+        "generic_contract": 10
+      }
+    },
+    "exploitation": {
+      "tested": 15,
+      "confirmed": 15,
+      "confirmation_rate": 1.0
+    },
+    "findings": {
+      "total": 5,
+      "by_severity": {
+        "critical": 5
+      }
+    }
+  },
+  "analysis": {
+    "effective_types": {
+      "generic_contract": 5
+    },
+    "ineffective_types": {
+      "generic_contract": 5
+    },
+    "success_rates": {
+      "generic_contract": 0.5
+    },
+    "top_performing": [
+      [
+        "generic_contract",
+        0.5
+      ]
+    ],
+    "hypothesis_effectiveness": {
+      "generic_contract": {
+        "generated": 10,
+        "confirmed": 5,
+        "success_rate": 0.5,
+        "avg_confidence": 0.3,
+        "hypothesis_ids": [
+          "hyp-410fa794",
+          "hyp-dbf44ba9",
+          "hyp-b796f1f9",
+          "hyp-28e2093f",
+          "hyp-790afa08",
+          "hyp-a3bbcc20",
+          "hyp-d3186fa4",
+          "hyp-6e276547",
+          "hyp-e4a8fb2c",
+          "hyp-d9849890"
+        ],
+        "finding_ids": [
+          "finding-df1a9d9a",
+          "finding-520da18b",
+          "finding-3dd4b562",
+          "finding-649d02a7",
+          "finding-eb0bb8ae"
+        ]
+      }
+    }
+  },
+  "recommendations": [
+    "High confirmation rate - current approach is effective, consider expanding scope",
+    "Focus on generic_contract vulnerabilities - highest success rate"
+  ]
+}

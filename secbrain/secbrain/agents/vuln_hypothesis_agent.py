@@ -662,12 +662,14 @@ Additional note: The contract contains functions that may be vulnerable to preci
             return out
 
         parsed: list[dict[str, Any]] = []
+        last_error: Exception | None = None
 
         for attempt in range(max_retries):
             try:
                 raw = _extract_json_array(response)
                 validate(instance=raw, schema=self.HYPOTHESIS_SCHEMA)
                 parsed = raw
+                last_error = None
                 self._log(
                     "hypothesis_validation_success",
                     contract=contract_name,
@@ -676,6 +678,7 @@ Additional note: The contract contains functions that may be vulnerable to preci
                 )
                 break
             except json.JSONDecodeError as e:
+                last_error = e
                 self._log(
                     "hypothesis_json_parse_error",
                     contract=contract_name,
@@ -699,6 +702,7 @@ Return ONLY a JSON array with objects containing:
                     )
                 continue
             except ValidationError as e:
+                last_error = e
                 self._log(
                     "hypothesis_schema_validation_error",
                     contract=contract_name,
@@ -717,10 +721,19 @@ Fix and return ONLY a JSON array matching the schema and using function signatur
                     )
                 continue
             except Exception as e:
+                last_error = e
                 self._log("hypothesis_parse_error", contract=contract_name, error=str(e))
                 if attempt == max_retries - 1:
                     parsed = []
                 continue
+
+        if not parsed and last_error:
+            self._log_error(
+                "hypothesis_parse_failed_all_retries",
+                contract=contract_name,
+                error=str(last_error),
+                retries=max_retries,
+            )
 
         return parsed
 
