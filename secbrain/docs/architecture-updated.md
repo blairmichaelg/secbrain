@@ -7,13 +7,13 @@ SecBrain is a multi-agent security bounty system designed to automate vulnerabil
 - **Multi-agent orchestration** for specialized tasks (recon, hypothesis, exploit, triage, reporting)
 - **Verification-first evidence collection** via multi-method exploit verification
 - **Human-in-the-loop approvals** with explicit audit trails
-- **Advisor model** (Gemini) for critical decision checkpoints
+- **Advisor model** (Groq Llama 3.3 70B) for critical decision checkpoints
 - **Guarded tooling** with ACLs, rate limits, and kill-switch
 - **Research integration** (Perplexity) for context and learning
 
 ## High-Level Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                         CLI Layer                                │
 │                    (secbrain_cli.py)                            │
@@ -68,11 +68,11 @@ SecBrain is a multi-agent security bounty system designed to automate vulnerabil
 │              Models & Approval Layer                            │
 │  ┌────────────────────┐  ┌────────────────────┐                │
 │  │   Worker Models    │  │ ApprovalManager    │                │
-│  │  (Qwen/DeepSeek)   │  │  (ask/auto/deny)   │                │
+│  │  (Groq Llama 3.3)  │  │  (ask/auto/deny)   │                │
 │  └────────────────────┘  └────────────────────┘                │
 │  ┌────────────────────┐                                        │
-│  │   Advisor Model    │  (Gemini, critical checkpoints)        │
-│  │   (Gemini)         │                                        │
+│  │   Advisor Model    │  (Groq Llama 3.3,                       │
+│  │   (Groq Llama 3.3) │   critical checkpoints)                 │
 │  └────────────────────┘                                        │
 │  ┌────────────────────┐                                        │
 │  │ Research (Perplex) │                                        │

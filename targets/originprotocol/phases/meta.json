@@ -1,13 +1,13 @@
 {
-  "run_id": "6cde20bf",
+  "run_id": "3a144abe",
   "phase": "meta",
   "success": true,
-  "duration_seconds": 0.001994,
+  "duration_seconds": 0.004539,
   "errors": [],
   "data": {
-    "run_id": "6cde20bf",
+    "run_id": "3a144abe",
     "program": "Origin Protocol",
-    "timestamp": "2025-12-21T01:28:13.566829",
+    "timestamp": "2025-12-21T13:09:00.612114",
     "metrics": {
       "recon": {
         "assets_discovered": 25,
@@ -21,64 +21,60 @@
       },
       "exploitation": {
         "tested": 15,
-        "confirmed": 15,
-        "confirmation_rate": 1.0
+        "confirmed": 4,
+        "confirmation_rate": 0.267
       },
       "findings": {
-        "total": 5,
+        "total": 2,
         "by_severity": {
-          "critical": 5
+          "critical": 2
         }
       }
     },
     "analysis": {
       "effective_types": {
-        "generic_contract": 5
+        "generic_contract": 2
       },
       "ineffective_types": {
-        "generic_contract": 5
+        "generic_contract": 8
       },
       "success_rates": {
-        "generic_contract": 0.5
+        "generic_contract": 0.2
       },
       "top_performing": [
         [
           "generic_contract",
-          0.5
+          0.2
         ]
       ],
       "hypothesis_effectiveness": {
         "generic_contract": {
           "generated": 10,
-          "confirmed": 5,
-          "success_rate": 0.5,
+          "confirmed": 2,
+          "success_rate": 0.2,
           "avg_confidence": 0.3,
           "hypothesis_ids": [
-            "hyp-410fa794",
-            "hyp-dbf44ba9",
-            "hyp-b796f1f9",
-            "hyp-28e2093f",
-            "hyp-790afa08",
-            "hyp-a3bbcc20",
-            "hyp-d3186fa4",
-            "hyp-6e276547",
-            "hyp-e4a8fb2c",
-            "hyp-d9849890"
+            "hyp-9432df6c",
+            "hyp-1c464db8",
+            "hyp-ecc1b6aa",
+            "hyp-1e170adf",
+            "hyp-54994f65",
+            "hyp-5db488a0",
+            "hyp-f9bbb879",
+            "hyp-87a99450",
+            "hyp-d2c5d0c7",
+            "hyp-e6498fbe"
           ],
           "finding_ids": [
-            "finding-df1a9d9a",
-            "finding-520da18b",
-            "finding-3dd4b562",
-            "finding-649d02a7",
-            "finding-eb0bb8ae"
+            "finding-6c75a3d4",
+            "finding-a71ef7b7"
           ]
         }
       }
     },
     "recommendations": [
-      "High confirmation rate - current approach is effective, consider expanding scope",
       "Focus on generic_contract vulnerabilities - highest success rate"
     ]
   },
-  "timestamp": "2025-12-21T01:28:13.669479"
+  "timestamp": "2025-12-21T13:09:01.405262"
 }

@@ -1,78 +1,78 @@
 {
-  "generated_at": "2025-12-20T11:26:57.550496Z",
+  "generated_at": "2025-12-21T19:16:33.407068Z",
   "entries": [
     {
-      "hypothesis_id": "hyp-e40c2915",
+      "hypothesis_id": "hyp-f2fa0c61",
       "contract_address": "0x1827F9eA98E0bf96550b2FC20F7233277FcD7E63",
       "function_signature": "admin()",
       "categories": {
-        "unknown_failure": 3
+        "unknown_failure": 1
       },
       "targets": [
         "exploit"
       ],
       "recommendations": [
-        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x3)"
+        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x1)"
       ]
     },
     {
-      "hypothesis_id": "hyp-cbb54c4d",
+      "hypothesis_id": "hyp-31879a36",
       "contract_address": "0xE75D77B1865Ae93c7eaa3040B038D7aA7BC02F70",
       "function_signature": "admin()",
       "categories": {
-        "unknown_failure": 3
+        "unknown_failure": 1
       },
       "targets": [
         "exploit"
       ],
       "recommendations": [
-        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x3)"
+        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x1)"
       ]
     },
     {
-      "hypothesis_id": "hyp-039ab0c3",
+      "hypothesis_id": "hyp-10021c0b",
       "contract_address": "0xaF04828Ed923216c77dC22a2fc8E077FDaDAA87d",
       "function_signature": "admin()",
       "categories": {
-        "unknown_failure": 3
+        "unknown_failure": 1
       },
       "targets": [
         "exploit"
       ],
       "recommendations": [
-        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x3)"
+        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x1)"
       ]
     },
     {
-      "hypothesis_id": "hyp-0cc7a4ad",
+      "hypothesis_id": "hyp-2f398bc8",
       "contract_address": "0x7609c88E5880e934dd3A75bCFef44E31b1Badb8b",
       "function_signature": "admin()",
       "categories": {
-        "unknown_failure": 3
+        "unknown_failure": 1
       },
       "targets": [
         "exploit"
       ],
       "recommendations": [
-        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x3)"
+        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x1)"
       ]
     },
     {
-      "hypothesis_id": "hyp-6bf1de96",
+      "hypothesis_id": "hyp-23a93064",
       "contract_address": "0x63898b3b6Ef3d39332082178656E9862bee45C57",
       "function_signature": "admin()",
       "categories": {
-        "unknown_failure": 3
+        "unknown_failure": 1
       },
       "targets": [
         "exploit"
       ],
       "recommendations": [
-        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x3)"
+        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x1)"
       ]
     }
   ],
   "aggregate": {
-    "unknown_failure": 15
+    "unknown_failure": 5
   }
 }

@@ -211,15 +211,15 @@ class VulnHypothesisAgent(BaseAgent):
             for cs in contract_results:
                 all_hypotheses.extend(cs or [])
 
-        # Research: validate hypothesis viability
+        # Research: validate hypothesis viability (parallelized)
         if all_hypotheses and self.research_client:
             all_hypotheses = await self._research_validate_hypotheses(all_hypotheses)
 
-        # Sort by exploit focus and cut to top 5 with confidence threshold
+        # Sort by exploit focus and cut to top N with raised confidence threshold
         ranked = self._rank_hypotheses(all_hypotheses)
-        confidence_threshold = self.CONFIDENCE_THRESHOLD
+        confidence_threshold = max(self.CONFIDENCE_THRESHOLD, 0.5)
         filtered = [h for h in ranked if h.get("confidence", 0) >= confidence_threshold]
-        top_hypotheses = filtered[:5]
+        top_hypotheses = filtered[:10]
         self._log(
             "hypothesis_confidence_filter",
             total=len(ranked),

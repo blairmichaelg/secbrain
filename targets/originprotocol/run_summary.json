@@ -1,35 +1,18 @@
 {
-  "run_id": "6cde20bf",
+  "run_id": "8b88b924",
   "success": true,
   "phases_completed": [
-    "ingest",
-    "plan",
     "recon",
     "hypothesis",
-    "exploit",
-    "static",
-    "triage",
-    "report",
-    "meta"
+    "exploit"
   ],
   "phases_failed": [],
-  "findings_count": 5,
-  "reports_generated": 5,
-  "duration_seconds": 658.198672,
+  "findings_count": 0,
+  "reports_generated": 0,
+  "duration_seconds": 305.009135,
   "errors": [],
-  "economic": {
-    "decision": "SKIP",
-    "reason": "Gas cost too high relative to profit",
-    "max_profit_eth": 0.0,
-    "max_profit_usd": 0.0,
-    "gas_used": null,
-    "gas_cost_usd_est": 0,
-    "net_usd_est": 0.0,
-    "threshold_eth": 0.1,
-    "threshold_usd": 300,
-    "gas_price_wei": 50000000000.0
-  },
-  "attempts_count": 30,
+  "economic": {},
+  "attempts_count": 5,
   "meta_metrics": {
     "hypotheses_count": 10,
     "hypotheses_with_concrete_target": 9,
@@ -37,9 +20,9 @@
       "missing_contract_or_function": 1,
       "total_hypotheses": 10
     },
-    "attempts_count": 30,
+    "attempts_count": 5,
     "attempts_with_profit": 0,
-    "economic_decision": "SKIP",
-    "total_duration_seconds": 658.198672
+    "economic_decision": null,
+    "total_duration_seconds": 305.009135
   }
 }

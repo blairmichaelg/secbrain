@@ -33,14 +33,14 @@ pip install -e ".[dev]"
 Create a `.env` file or export these variables:
 
 ```bash
-# Required for research integration
-PERPLEXITY_API_KEY=pplx-xxxxxxxxxxxx
+# Required: worker/advisor (Groq)
+GROQ_API_KEY=gsk_xxxxxxxxxxxx
 
-# Required for advisor model
-GOOGLE_API_KEY=AIzaxxxxxxxxxxxxxxx
+# Required: research (Perplexity)
+PERPLEXITY_API_KEY=pplx_xxxxxxxxxxxx
 
-# Optional: Worker model (defaults to local/free tier)
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxx  # For OpenAI-compatible workers
+# Optional: OpenAI-compatible fallback workers
+OPENAI_API_KEY=sk-xxxxxxxxxxxxxxx
 ```
 
 ### Model Configuration
@@ -49,20 +49,26 @@ Edit `config/models.yaml`:
 
 ```yaml
 worker:
-  provider: openai_compatible
-  model: qwen/qwen-2.5-72b-instruct
-  base_url: https://api.together.xyz/v1
-  max_tokens: 4096
+  provider: groq
+  model: llama-3.3-70b-versatile
+  base_url: https://api.groq.com/openai/v1
+  max_tokens: 2000
+  temperature: 0.3
+  top_p: 0.95
 
 advisor:
-  provider: gemini
-  model: gemini-pro
-  max_tokens: 8192
+  provider: groq
+  model: llama-3.3-70b-versatile
+  base_url: https://api.groq.com/openai/v1
+  max_tokens: 1500
+  temperature: 0.7
+  top_p: 0.95
 
 research:
   provider: perplexity
-  model: sonar-medium-online
+  model: sonar
   max_calls_per_run: 20
+  max_calls_per_phase: 5
 ```
 
 ### Tool Configuration
@@ -382,7 +388,7 @@ Check tool paths in `config/tools.yaml` and ensure tools are installed.
 
 ### "API key not set"
 
-Set required environment variables for Perplexity/Gemini.
+Set required environment variables for Groq (worker/advisor) and Perplexity (research).
 
 ## Security Best Practices
 

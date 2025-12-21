@@ -1,8 +1,8 @@
 {
-  "run_id": "6cde20bf",
+  "run_id": "3a144abe",
   "phase": "ingest",
   "success": true,
-  "duration_seconds": 0.001053,
+  "duration_seconds": 0.007422,
   "errors": [],
   "data": {
     "program_name": "Origin Protocol",
@@ -34,5 +34,5 @@
       ]
     }
   },
-  "timestamp": "2025-12-21T01:28:13.569828"
+  "timestamp": "2025-12-21T13:09:00.616153"
 }

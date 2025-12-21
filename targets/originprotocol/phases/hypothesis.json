@@ -1,13 +1,13 @@
 {
-  "run_id": "6cde20bf",
+  "run_id": "8b88b924",
   "phase": "hypothesis",
   "success": true,
-  "duration_seconds": 31.227757,
+  "duration_seconds": 11.235729,
   "errors": [],
   "data": {
     "hypotheses": [
       {
-        "id": "hyp-410fa794",
+        "id": "hyp-f2fa0c61",
         "asset_id": null,
         "target": "ConvexEthMetaStrategyProxy@0x1827F9eA98E0bf96550b2FC20F7233277FcD7E63",
         "vuln_type": "generic_contract",
@@ -124,7 +124,7 @@
             "name": "upgradeTo",
             "inputs": [
               {
-                "name": "newImplementation",
+                "name": "_newImplementation",
                 "type": "address",
                 "internalType": "address"
               }
@@ -407,7 +407,7 @@
         "rank": 1
       },
       {
-        "id": "hyp-dbf44ba9",
+        "id": "hyp-31879a36",
         "asset_id": null,
         "target": "VaultProxy@0xE75D77B1865Ae93c7eaa3040B038D7aA7BC02F70",
         "vuln_type": "generic_contract",
@@ -807,7 +807,7 @@
         "rank": 2
       },
       {
-        "id": "hyp-b796f1f9",
+        "id": "hyp-10021c0b",
         "asset_id": null,
         "target": "OETHCurveAMOProxy@0xaF04828Ed923216c77dC22a2fc8E077FDaDAA87d",
         "vuln_type": "generic_contract",
@@ -1207,7 +1207,7 @@
         "rank": 3
       },
       {
-        "id": "hyp-28e2093f",
+        "id": "hyp-2f398bc8",
         "asset_id": null,
         "target": "FixedRateRewardsSourceProxy@0x7609c88E5880e934dd3A75bCFef44E31b1Badb8b",
         "vuln_type": "generic_contract",
@@ -1607,7 +1607,7 @@
         "rank": 4
       },
       {
-        "id": "hyp-790afa08",
+        "id": "hyp-23a93064",
         "asset_id": null,
         "target": "ExponentialStakingProxy@0x63898b3b6Ef3d39332082178656E9862bee45C57",
         "vuln_type": "generic_contract",
@@ -2007,7 +2007,7 @@
         "rank": 5
       },
       {
-        "id": "hyp-a3bbcc20",
+        "id": "hyp-8cf6af9a",
         "asset_id": null,
         "target": "InitializeGovernedUpgradeabilityProxy@0x501804B374EF06fa9C427476147ac09F1551B9A0",
         "vuln_type": "generic_contract",
@@ -2208,7 +2208,7 @@
         "rank": 6
       },
       {
-        "id": "hyp-d3186fa4",
+        "id": "hyp-f7921c30",
         "asset_id": null,
         "target": "WOETHProxy@0xDcEe70654261AF21C44c093C300eD3Bb97b78192",
         "vuln_type": "generic_contract",
@@ -2409,7 +2409,7 @@
         "rank": 7
       },
       {
-        "id": "hyp-6e276547",
+        "id": "hyp-626ee061",
         "asset_id": null,
         "target": "Governance@0x1D3Fbd4d129Ddd2372EA85c5Fa00b2682081c9EC",
         "vuln_type": "generic_contract",
@@ -3775,7 +3775,7 @@
         "rank": 8
       },
       {
-        "id": "hyp-e4a8fb2c",
+        "id": "hyp-0a31a3c1",
         "asset_id": null,
         "target": "CompoundingStakingStrategyView@0xEDf495F92c2eBdEE8B797E9C503aA7A3302A9c88",
         "vuln_type": "generic_contract",
@@ -3884,7 +3884,7 @@
         "rank": 9
       },
       {
-        "id": "hyp-d9849890",
+        "id": "hyp-e18efd65",
         "asset_id": null,
         "target": "Proxy@0x85B78AcA6Deae198fBF201c82DAF6Ca21942acc6",
         "vuln_type": "generic_contract",
@@ -3920,5 +3920,5 @@
       "total_hypotheses": 10
     }
   },
-  "timestamp": "2025-12-21T01:28:13.620878"
+  "timestamp": "2025-12-21T13:16:33.542859"
 }

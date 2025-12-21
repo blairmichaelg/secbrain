@@ -8,7 +8,7 @@ SecBrain is a CLI-first Python project that automates bug bounty workflows using
 
 - **Multi-agent architecture**: Specialized agents for each phase (recon, hypothesis, exploit, triage, reporting)
 - **Research-first approach**: Perplexity integration for external knowledge and learning
-- **Advisor oversight**: Gemini model reviews critical decisions
+- **Advisor oversight**: Groq Llama 3.3 model reviews critical decisions
 - **Guarded execution**: ACLs, rate limits, kill-switch, and human approval checkpoints
 
 ## Key Features
@@ -23,7 +23,7 @@ SecBrain is a CLI-first Python project that automates bug bounty workflows using
 
 ## Architecture
 
-```
+```text
 CLI → Orchestrator → Agents → Models/Tools → Core Context
          ↓             ↓           ↓
     Supervisor    [Ingest,      [Worker,
@@ -52,12 +52,16 @@ pip install -e ".[dev]"
 ## Quick Start
 
 1. **Set up API keys**:
+
 ```bash
-export PERPLEXITY_API_KEY=pplx-xxxx
-export GOOGLE_API_KEY=AIza-xxxx
+export GROQ_API_KEY=gsk-xxxx          # worker/advisor
+export PERPLEXITY_API_KEY=pplx-xxxx   # research
+# Optional: OpenAI-compatible fallback
+export OPENAI_API_KEY=sk-xxxx
 ```
 
-2. **Run a dry-run test**:
+1. **Run a dry-run test**:
+
 ```bash
 secbrain run \
   --scope examples/dummy_target/scope.yaml \
@@ -66,7 +70,8 @@ secbrain run \
   --dry-run
 ```
 
-3. **Run a real bounty workflow**:
+1. **Run a real bounty workflow**:
+
 ```bash
 secbrain run \
   --scope path/to/scope.yaml \
@@ -105,14 +110,14 @@ secbrain run \
 
 ## Documentation
 
-- [Architecture](docs/architecture.md) - System design and components
+- [Architecture](docs/architecture-updated.md) - System design and components
 - [Workflows](docs/workflows.md) - Run modes and phases
 - [Threat Model](docs/threat_model.md) - Security considerations
 - [Operations](docs/ops.md) - Setup and usage guide
 
 ## Project Structure
 
-```
+```text
 secbrain/
 ├── secbrain/
 │   ├── agents/        # Agent implementations
@@ -218,6 +223,7 @@ forge test --match-contract Invariant -vvv
 ```
 
 For advanced testing strategies including mutation testing and Echidna fuzzing, see:
+
 - 📚 [Complete Testing Guide](docs/TESTING-STRATEGIES.md)
 - ⚡ [Quick Reference](docs/TESTING-QUICK-REF.md)
 
@@ -277,6 +283,7 @@ git push -u origin feature/my-improvement
 ### Current CI Status
 
 Our GitHub Actions CI automatically runs:
+
 - ✅ **Linting** (ruff) - Code style checks
 - ⚠️ **Type checking** (mypy) - Currently non-blocking while we fix legacy type errors
 - ✅ **Unit tests** - pytest with coverage requirements

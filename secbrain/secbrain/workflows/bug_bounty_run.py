@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -25,6 +26,7 @@ from secbrain.agents.supervisor import SupervisorAgent
 from secbrain.agents.triage_agent import TriageAgent
 from secbrain.agents.vuln_hypothesis_agent import VulnHypothesisAgent
 from secbrain.core.logging import log_event, log_phase_transition
+from secbrain.tools.perplexity_research import PerplexityResearch
 
 
 class Phase(str, Enum):
@@ -106,9 +108,15 @@ class BugBountyWorkflow:
 
     def _init_agents(self) -> None:
         """Initialize all agents."""
+        research_client = PerplexityResearch(
+            api_key=os.environ.get("PERPLEXITY_API_KEY"),
+            model="sonar",
+            max_calls_per_run=20,
+        )
         common_kwargs = {
             "run_context": self.run_context,
             "logger": self.logger,
+            "research_client": research_client,
         }
 
         self.supervisor = SupervisorAgent(**common_kwargs)
