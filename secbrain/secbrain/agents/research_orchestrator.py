@@ -78,6 +78,7 @@ class ResearchOrchestrator:
         self._rate_limiter = asyncio.Semaphore(10)  # Additional concurrency limit
         self._last_query_time = 0.0
         self._min_query_interval = 6.0  # 6 seconds between queries
+        self._time_lock = asyncio.Lock()  # Lock for thread-safe timestamp updates
 
         # Statistics
         self._stats = {
@@ -164,16 +165,21 @@ class ResearchOrchestrator:
     async def _execute_query(self, query: ResearchQuery) -> ResearchResult:
         """Execute a single research query with rate limiting."""
         async with self._semaphore, self._rate_limiter:
-            # Rate limiting - update timestamp before sleeping to avoid race condition
-            current_time = asyncio.get_event_loop().time()
-            time_since_last = current_time - self._last_query_time
+            # Rate limiting with lock to prevent race conditions
+            async with self._time_lock:
+                current_time = asyncio.get_event_loop().time()
+                time_since_last = current_time - self._last_query_time
+                
+                if time_since_last < self._min_query_interval:
+                    sleep_time = self._min_query_interval - time_since_last
+                    # Update timestamp before releasing the lock
+                    self._last_query_time = current_time + sleep_time
+                else:
+                    self._last_query_time = current_time
             
-            # Update the timestamp before sleeping to prevent concurrent queries
-            # from all getting the same time_since_last value
-            self._last_query_time = current_time
-            
+            # Sleep outside the lock to allow other queries to check timing
             if time_since_last < self._min_query_interval:
-                await asyncio.sleep(self._min_query_interval - time_since_last)
+                await asyncio.sleep(sleep_time)
 
             try:
                 if not self.research_client:
@@ -190,8 +196,6 @@ class ResearchOrchestrator:
                     context=query.context,
                 )
 
-                # Update timestamp after successful execution
-                self._last_query_time = asyncio.get_event_loop().time()
                 self._stats["executed_queries"] += 1
 
                 return ResearchResult(

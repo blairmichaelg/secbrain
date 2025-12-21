@@ -18,6 +18,12 @@ from secbrain.agents.oracle_manipulation_detector import OracleManipulationDetec
 
 logger = logging.getLogger(__name__)
 
+# ABI preview limits for prompt generation
+ABI_PREVIEW_MAX_ENTRIES = 30  # Maximum number of ABI entries to include
+ABI_PREVIEW_REDUCED_ENTRIES = 15  # Reduced number if JSON is too large
+ABI_JSON_SIZE_LIMIT = 1500  # Maximum JSON string length for ABI preview
+FUNCTIONS_PREVIEW_LIMIT = 15  # Maximum number of function signatures to preview
+
 
 @dataclass(slots=True)
 class ProtocolProfile:
@@ -323,16 +329,16 @@ class VulnHypothesisAgent(BaseAgent):
             return static_hypotheses
 
         # Keep prompts bounded
-        functions_preview = functions[:15]  # Reduced from 50
-        abi_preview = abi[:30]  # Limit ABI entries
+        functions_preview = functions[:FUNCTIONS_PREVIEW_LIMIT]
+        abi_preview = abi[:ABI_PREVIEW_MAX_ENTRIES]
         try:
             # Limit ABI entries before serialization to avoid invalid JSON
-            if len(json.dumps(abi_preview)) > 1500:
+            if len(json.dumps(abi_preview)) > ABI_JSON_SIZE_LIMIT:
                 # If still too long, reduce ABI entries further
-                abi_preview = abi[:15]
+                abi_preview = abi[:ABI_PREVIEW_REDUCED_ENTRIES]
         except Exception:
             # On serialization failure, fall back to a smaller preview slice
-            abi_preview = abi[:15]
+            abi_preview = abi[:ABI_PREVIEW_REDUCED_ENTRIES]
 
         classification = (asset.get("metadata", {}) or {}).get("classification", {})
         protocol_type = classification.get("protocol_type", "generic")
