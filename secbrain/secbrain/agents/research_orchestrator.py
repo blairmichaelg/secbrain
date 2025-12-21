@@ -72,7 +72,7 @@ class ResearchOrchestrator:
 
         # Rate limiting
         self._semaphore = asyncio.Semaphore(max_concurrent)
-        self._rate_limiter = asyncio.Semaphore(10)  # Max 10 per minute
+        self._rate_limiter = asyncio.Semaphore(10)  # Additional concurrency limit
         self._last_query_time = 0.0
         self._min_query_interval = 6.0  # 6 seconds between queries
 
@@ -281,6 +281,10 @@ class ResearchOrchestrator:
                     cached=True,
                 )
                 self._cache[query_hash] = result
-        except Exception:
-            # Silently fail if cache cannot be loaded
+        except (FileNotFoundError, json.JSONDecodeError, KeyError):
+            # Expected errors when cache doesn't exist or is corrupted - silently continue
+            pass
+        except Exception as e:
+            # Unexpected errors - log but don't fail
+            # Note: Would use logger here if available in __init__
             pass

@@ -323,7 +323,12 @@ class VulnHypothesisAgent(BaseAgent):
         functions_preview = functions[:15]  # Reduced from 50
         abi_preview = abi[:30]  # Limit ABI entries
         try:
-            abi_preview_str = json.dumps(abi_preview)[:1500]  # Reduced from 2000
+            # Limit ABI entries before serialization to avoid invalid JSON
+            abi_preview_str = json.dumps(abi_preview)
+            if len(abi_preview_str) > 1500:
+                # If still too long, reduce ABI entries further
+                abi_preview = abi[:15]
+                abi_preview_str = json.dumps(abi_preview)
         except Exception:
             abi_preview_str = "[]"
 
