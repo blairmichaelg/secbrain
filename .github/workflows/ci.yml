@@ -1,0 +1,153 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [main, master, dev, develop]
+  push:
+    branches: [main, master, dev, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+  statuses: write
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          pytest tests/ \
+            --cov=secbrain \
+            --cov-report=xml \
+            --junit-xml=test-results.xml \
+            -v
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install ruff black isort
+
+      - name: Run ruff
+        run: ruff check . --output-format=github
+
+      - name: Run black
+        run: black --check .
+
+      - name: Run isort
+        run: isort --check-only .
+
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -e ".[dev]"
+          pip install mypy
+
+      - name: Run mypy
+        run: mypy secbrain/ --ignore-missing-imports
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install safety bandit pip-audit
+
+      - name: Run security checks
+        run: |
+          safety check --json || true
+          bandit -r secbrain/ -f json || true
+          pip-audit --format json || true
+
+  auto-approve:
+    name: Auto-approve PR
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      (github.actor == 'dependabot[bot]' ||
+       startsWith(github.head_ref, 'copilot/') ||
+       startsWith(github.head_ref, 'auto/'))
+    needs: [tests, lint, type-check, security]
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Approve PR
+        run: gh pr review ${{ github.event.pull_request.number }} --approve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  auto-merge:
+    name: Auto-merge PR
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      (github.actor == 'dependabot[bot]' ||
+       startsWith(github.head_ref, 'copilot/') ||
+       startsWith(github.head_ref, 'auto/'))
+    needs: [auto-approve]
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Enable auto-merge
+        run: gh pr merge ${{ github.event.pull_request.number }} --auto --squash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

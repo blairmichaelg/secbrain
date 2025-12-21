@@ -1,66 +1,39 @@
 version: 2
 updates:
-  # Python dependencies - daily security updates
-  # Note: Daily updates are aggressive but necessary for security research/bug bounty work
-  # where staying current with CVE fixes is critical. For production use, consider weekly.
   - package-ecosystem: "pip"
-    directory: "/secbrain"
-    schedule:
-      interval: "daily"
-    allow:
-      - dependency-type: "all"
-    open-pull-requests-limit: 10
-    labels:
-      - "dependencies"
-      - "python"
-    reviewers:
-      - "blairmichaelg"
-    commit-message:
-      prefix: "chore(deps)"
-      include: "scope"
-    # Auto-merge security updates
-    ignore:
-      # Add packages to ignore updates here if needed
-    groups:
-      security-updates:
-        patterns:
-          - "*"
-        update-types:
-          - "patch"
-          - "minor"
-
-  # GitHub Actions - weekly updates
-  - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "github-actions"
+      time: "09:00"
+    open-pull-requests-limit: 10
     reviewers:
       - "blairmichaelg"
+    labels:
+      - "dependencies"
+      - "auto-merge"
     commit-message:
-      prefix: "chore(ci)"
-      include: "scope"
+      prefix: "chore(deps)"
+    groups:
+      development-dependencies:
+        patterns:
+          - "pytest*"
+          - "black"
+          - "ruff"
+          - "mypy"
+      production-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "pytest*"
+          - "black"
+          - "ruff"
+          - "mypy"
 
-  # npm for Solidity tooling (if package.json exists)
-  # Uncomment when package.json is added
-  # - package-ecosystem: "npm"
-  #   directory: "/"
-  #   schedule:
-  #     interval: "daily"
-  #   allow:
-  #     - dependency-type: "all"
-  #   open-pull-requests-limit: 10
-  #   labels:
-  #     - "dependencies"
-  #     - "npm"
-  #     - "solidity-tooling"
-  #   reviewers:
-  #     - "blairmichaelg"
-  #   commit-message:
-  #     prefix: "chore(deps)"
-  #     include: "scope"
-
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "auto-merge"
