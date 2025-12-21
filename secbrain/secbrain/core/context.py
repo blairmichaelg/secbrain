@@ -87,6 +87,19 @@ class ScopeConfig(BaseModel):
         default=2,
         description="Maximum concurrent Foundry exploit attempts to run",
     )
+    research_config: dict[str, Any] = Field(
+        default_factory=lambda: {
+            "max_concurrent": 3,
+            "cache_results": True,
+            "priority_threshold": 5,
+            "max_queries_per_phase": {
+                "hypothesis": 10,
+                "exploit": 5,
+                "triage": 3,
+            },
+        },
+        description="Research orchestrator configuration",
+    )
 
 
 class ProgramConfig(BaseModel):

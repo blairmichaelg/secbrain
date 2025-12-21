@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     import structlog
 
+    from secbrain.agents.research_orchestrator import ResearchOrchestrator
     from secbrain.core.context import RunContext
     from secbrain.models.base import ModelClient
     from secbrain.tools.perplexity_research import PerplexityResearch
@@ -62,6 +63,16 @@ class BaseAgent(ABC):
         self.storage = storage
         self.logger = logger
         self._reasoning_chain: list[dict[str, Any]] = []
+
+        # Initialize research orchestrator
+        self.research_orch: ResearchOrchestrator | None = None
+        if self.research_client:
+            from secbrain.agents.research_orchestrator import ResearchOrchestrator
+
+            self.research_orch = ResearchOrchestrator(
+                run_context=self.run_context,
+                research_client=self.research_client,
+            )
 
     def _check_kill_switch(self) -> bool:
         """Check if kill-switch is activated."""
