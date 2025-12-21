@@ -47,6 +47,7 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.7.0",
     "hypothesis>=6.0.0",
+    "sortedcontainers>=2.4.0",  # hypothesis dependency for property-based tests
     "mutmut>=2.4.0",
 ]
 
