@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Any
 
 from secbrain.core.context import RunContext
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -21,7 +25,16 @@ class ResearchQuery:
     tags: list[str] = field(default_factory=list)
     cache_key: str = field(init=False)
 
+    # Priority validation constants
+    MIN_PRIORITY = 1
+    MAX_PRIORITY = 10
+
     def __post_init__(self) -> None:
+        # Validate priority range
+        if not self.MIN_PRIORITY <= self.priority <= self.MAX_PRIORITY:
+            raise ValueError(
+                f"priority must be between {self.MIN_PRIORITY} and {self.MAX_PRIORITY}, got {self.priority}"
+            )
         raw = f"{self.question}|||{self.context}"
         self.cache_key = hashlib.sha256(raw.encode()).hexdigest()
 
@@ -35,6 +48,13 @@ class ResearchResult:
     sources: list[str]
     confidence: float = 0.5
     cached: bool = False
+
+    def __post_init__(self) -> None:
+        # Validate confidence range
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError(
+                f"confidence must be between 0.0 and 1.0, got {self.confidence}"
+            )
 
 
 class ResearchOrchestrator:
@@ -52,6 +72,7 @@ class ResearchOrchestrator:
         self._cache: dict[str, ResearchResult] = {}
         self._pending_queries: list[ResearchQuery] = []
         self._semaphore = asyncio.Semaphore(3)  # Max concurrent research
+        self._queue_lock = asyncio.Lock()  # Protect pending_queries list
 
     async def queue_research(self, query: ResearchQuery) -> None:
         """Queue a research query for later execution."""
@@ -59,38 +80,53 @@ class ResearchOrchestrator:
         if query.cache_key in self._cache:
             return
 
-        # Check if already queued
-        if any(q.cache_key == query.cache_key for q in self._pending_queries):
-            return
+        async with self._queue_lock:
+            # Check if already queued
+            if any(q.cache_key == query.cache_key for q in self._pending_queries):
+                return
 
-        self._pending_queries.append(query)
+            self._pending_queries.append(query)
 
     async def execute_batch(self, max_queries: int = 5) -> list[ResearchResult]:
         """Execute top priority queries in batch."""
-        if not self._pending_queries:
-            return []
+        async with self._queue_lock:
+            if not self._pending_queries:
+                return []
 
-        # Sort by priority
-        self._pending_queries.sort(key=lambda q: q.priority, reverse=True)
+            # Sort by priority
+            self._pending_queries.sort(key=lambda q: q.priority, reverse=True)
 
-        # Take top N
-        batch = self._pending_queries[:max_queries]
-        self._pending_queries = self._pending_queries[max_queries:]
+            # Take top N
+            batch = self._pending_queries[:max_queries]
+            self._pending_queries = self._pending_queries[max_queries:]
 
         # Execute in parallel
         tasks = [self._execute_single(q) for q in batch]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        # Filter out exceptions
-        return [r for r in results if isinstance(r, ResearchResult)]
+        # Filter out exceptions and log them
+        valid_results = []
+        for i, result in enumerate(results):
+            if isinstance(result, ResearchResult):
+                valid_results.append(result)
+            elif isinstance(result, Exception):
+                logger.error(
+                    f"Research query failed: {batch[i].question[:100]}",
+                    exc_info=result,
+                )
+
+        return valid_results
 
     async def _execute_single(self, query: ResearchQuery) -> ResearchResult:
         """Execute a single research query."""
-        # Check cache again (race condition)
-        if query.cache_key in self._cache:
-            return self._cache[query.cache_key]
-
         async with self._semaphore:
+            # Check cache inside semaphore to prevent race conditions
+            cached_result = self._cache.get(query.cache_key)
+            if cached_result is not None:
+                # Mark as cached and return
+                cached_result.cached = True
+                return cached_result
+
             result = await self.research_client.ask_research(
                 question=query.question,
                 context=query.context,
@@ -115,9 +151,17 @@ class ResearchOrchestrator:
         contract_context: str = "",
         priority: int = 7,
     ) -> ResearchResult | None:
-        """Research a specific vulnerability pattern."""
+        """Research a specific vulnerability pattern.
+
+        Note: This method executes immediately, bypassing the normal priority queue.
+        If you need priority-based scheduling, use queue_research() and execute_batch().
+        """
+        # Calculate recent years dynamically
+        current_year = datetime.now(UTC).year
+        recent_years = f"{current_year - 1}-{current_year}"
+
         query = ResearchQuery(
-            question=f"What are the key indicators and exploitation techniques for {vuln_type} vulnerabilities in smart contracts? Include recent (2023-2024) attack patterns.",
+            question=f"What are the key indicators and exploitation techniques for {vuln_type} vulnerabilities in smart contracts? Include recent ({recent_years}) attack patterns.",
             context=f"Analyzing potential {vuln_type} vulnerability. {contract_context}",
             priority=priority,
             phase="hypothesis",
@@ -135,7 +179,11 @@ class ResearchOrchestrator:
         functions: list[str],
         priority: int = 8,
     ) -> ResearchResult | None:
-        """Research common vulnerabilities for a protocol type."""
+        """Research common vulnerabilities for a protocol type.
+
+        Note: This method executes immediately, bypassing the normal priority queue.
+        If you need priority-based scheduling, use queue_research() and execute_batch().
+        """
         query = ResearchQuery(
             question=f"What are the top 5 vulnerability classes in {protocol_type} protocols? Focus on high-severity issues from recent audits.",
             context=f"Contract has functions: {', '.join(functions[:10])}",
@@ -155,7 +203,11 @@ class ResearchOrchestrator:
         revert_reason: str,
         priority: int = 6,
     ) -> ResearchResult | None:
-        """Research whether a revert indicates a near-miss exploit."""
+        """Research whether a revert indicates a near-miss exploit.
+
+        Note: This method executes immediately, bypassing the normal priority queue.
+        If you need priority-based scheduling, use queue_research() and execute_batch().
+        """
         query = ResearchQuery(
             question=f"For {vuln_type} exploits, what do reverts like '{revert_reason[:100]}' typically indicate? Is this a near-miss that could succeed with parameter adjustment?",
             context=f"Exploit attempt reverted with: {revert_reason}",
@@ -175,7 +227,11 @@ class ResearchOrchestrator:
         target_protocol: str,
         priority: int = 8,
     ) -> ResearchResult | None:
-        """Research historical exploits of similar type."""
+        """Research historical exploits of similar type.
+
+        Note: This method executes immediately, bypassing the normal priority queue.
+        If you need priority-based scheduling, use queue_research() and execute_batch().
+        """
         query = ResearchQuery(
             question=f"What are documented {vuln_type} exploits in {target_protocol} or similar protocols? Include root causes and profit mechanisms.",
             context="Looking for exploit patterns to validate hypothesis",
