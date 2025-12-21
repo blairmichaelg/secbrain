@@ -136,6 +136,7 @@ class Session(BaseModel):
     current_phase: str = "init"
     phases_completed: list[str] = Field(default_factory=list)
     tool_call_counts: dict[str, int] = Field(default_factory=dict)
+    tool_call_counts_by_phase: dict[str, dict[str, int]] = Field(default_factory=dict)
     research_cache: dict[str, Any] = Field(default_factory=dict)
     llm_cache: dict[str, Any] = Field(default_factory=dict)
     findings: list[dict[str, Any]] = Field(default_factory=list)
@@ -354,9 +355,14 @@ class RunContext:
         if acl.allowed_phases and phase not in acl.allowed_phases:
             return False
 
-        # Check call counts
+        # Check per-run call counts
         current_calls = self.session.tool_call_counts.get(tool_name, 0)
         if current_calls >= acl.max_calls_per_run:
+            return False
+
+        # Check per-phase call counts
+        phase_counts = self.session.tool_call_counts_by_phase.get(phase, {})
+        if phase_counts.get(tool_name, 0) >= acl.max_calls_per_phase:
             return False
 
         return True
@@ -384,6 +390,11 @@ class RunContext:
         self.session.tool_call_counts[tool_name] = (
             self.session.tool_call_counts.get(tool_name, 0) + 1
         )
+        phase = self.session.current_phase
+        if phase not in self.session.tool_call_counts_by_phase:
+            self.session.tool_call_counts_by_phase[phase] = {}
+        phase_counts = self.session.tool_call_counts_by_phase[phase]
+        phase_counts[tool_name] = phase_counts.get(tool_name, 0) + 1
 
     def check_rate_limit(self, tool_name: str) -> bool:
         """Check whether a tool is still within its per-run call budget."""
