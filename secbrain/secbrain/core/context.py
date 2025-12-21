@@ -405,6 +405,11 @@ class RunContext:
     def cache_research(self, key: str, value: Any) -> None:
         """Cache a research result."""
         self.session.research_cache[key] = value
+        # Keep cache bounded to avoid unbounded growth on long runs
+        max_items = 256
+        if len(self.session.research_cache) > max_items:
+            first_key = next(iter(self.session.research_cache.keys()))
+            self.session.research_cache.pop(first_key, None)
 
     def get_cached_research(self, key: str) -> Any | None:
         """Get a cached research result."""

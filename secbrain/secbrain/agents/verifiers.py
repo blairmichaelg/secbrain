@@ -127,6 +127,8 @@ class SQLiErrorVerifier(ExploitVerifier):
     ERROR_PATTERNS = [
         "sql syntax error",
         "mysql_error",
+        "mysql server version",
+        "unclosed quotation mark",
         "ora-",
         "postgresql",
         "you have an error in your sql",
@@ -238,9 +240,14 @@ class TimingVerifier(ExploitVerifier):
         test_ms = float(getattr(test_response, "duration_ms", 0) or 0)
         delta = test_ms - baseline_ms
 
-        test_passed = delta >= 1000  # simple heuristic for blind/timing checks
+        # Require both an absolute delay and a relative increase to reduce noise
+        test_passed = delta >= 1000 and (baseline_ms == 0 or test_ms >= baseline_ms * 2)
         confidence_score = 0.6 if test_passed else 0.0
-        notes = f"Timing delta {delta:.0f}ms (baseline {baseline_ms:.0f}ms)"
+        notes = (
+            f"Timing delta {delta:.0f}ms (baseline {baseline_ms:.0f}ms)"
+            if baseline_ms and test_ms
+            else "Timing signal inconclusive (missing durations)"
+        )
 
         evidence = self._build_evidence_bundle(
             target_url=target_url,

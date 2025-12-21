@@ -7,6 +7,7 @@ import json
 import signal
 import sys
 from pathlib import Path
+import os
 
 import typer
 import yaml
@@ -212,6 +213,8 @@ async def _run_workflow(
         rewards=program_data.get("rewards", {}),
     )
 
+    _validate_api_keys(dry_run=dry_run)
+
     # Create run context
     run_context = RunContext(
         scope=scope_config,
@@ -255,6 +258,36 @@ async def _run_workflow(
         "duration": result.total_duration_seconds,
         "errors": result.errors,
     }
+
+
+def _validate_api_keys(*, dry_run: bool) -> None:
+    """
+    Fail fast if required API keys are missing for non-dry runs.
+
+    Defaults are sourced from config/models.yaml:
+    - Worker (OpenAI-compatible): TOGETHER_API_KEY | OPENROUTER_API_KEY | OPENAI_API_KEY
+    - Advisor (Gemini): GOOGLE_API_KEY
+    - Research (Perplexity): PERPLEXITY_API_KEY
+    """
+    if dry_run:
+        return
+
+    required = {
+        "worker": ["TOGETHER_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY"],
+        "advisor": ["GOOGLE_API_KEY"],
+        "research": ["PERPLEXITY_API_KEY"],
+    }
+
+    missing: list[str] = []
+    for group in required.values():
+        if not any(os.environ.get(key) for key in group):
+            missing.extend(group)
+
+    if missing:
+        raise RuntimeError(
+            "Missing required API keys for non-dry run: "
+            + ", ".join(sorted(set(missing)))
+        )
 
 
 def _display_results(result: dict) -> None:

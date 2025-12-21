@@ -13,6 +13,7 @@ References:
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -107,8 +108,8 @@ contract Secure is ReentrancyGuard {
                 "view function",
                 "external call in modifier",
                 "getters during state change",
-                "balanceOf",
-                "totalSupply",
+                "balanceof",
+                "totalsupply",
             ],
             mitigation_code='''
 // Protect view functions from read-only reentrancy
@@ -119,7 +120,7 @@ contract Secure is ReentrancyGuard {
     function getBalance(address user) external view nonReentrant returns (uint256) {
         return balances[user];
     }
-    
+
     // Or use a reentrancy lock for all state-reading functions
     modifier nonReentrantView() {
         require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
@@ -147,11 +148,11 @@ function withdraw(uint256 amount) external {
     // 1. Checks
     require(balances[msg.sender] >= amount, "Insufficient balance");
     require(amount > 0, "Amount must be positive");
-    
+
     // 2. Effects (update state BEFORE external calls)
     balances[msg.sender] -= amount;
     emit Withdrawal(msg.sender, amount);
-    
+
     // 3. Interactions (external calls LAST)
     (bool success, ) = msg.sender.call{value: amount}("");
     require(success, "Transfer failed");
@@ -183,7 +184,7 @@ contract Secure {
     AggregatorV3Interface internal priceFeed;
     uint256 constant MAX_PRICE_DEVIATION = 5; // 5% max deviation
     uint256 constant TWAP_PERIOD = 1800; // 30 minutes
-    
+
     function getSecurePrice() public view returns (uint256) {
         // Use Chainlink oracle with staleness check
         (
@@ -193,19 +194,19 @@ contract Secure {
             uint256 updatedAt,
             uint80 answeredInRound
         ) = priceFeed.latestRoundData();
-        
+
         require(price > 0, "Invalid price");
         require(answeredInRound >= roundId, "Stale price");
         require(block.timestamp - updatedAt < 3600, "Price too old");
-        
+
         // Additional: Check price deviation
         uint256 twapPrice = getTWAP(TWAP_PERIOD);
         uint256 deviation = abs(uint256(price), twapPrice) * 100 / twapPrice;
         require(deviation <= MAX_PRICE_DEVIATION, "Price deviation too high");
-        
+
         return uint256(price);
     }
-    
+
     function getTWAP(uint256 period) internal view returns (uint256) {
         // Implement TWAP calculation
         // This prevents flash loan manipulation
@@ -224,33 +225,33 @@ contract Secure {
                 "borrow",
                 "repay",
                 "block.number",
-                "flashLoan",
-                "onFlashLoan",
+                "flashloan",
+                "onflashloan",
             ],
             mitigation_code='''
 // Detect and prevent same-block borrow/repay attacks
 contract Secure {
     mapping(address => uint256) public lastBorrowBlock;
     mapping(address => uint256) public lastActionBlock;
-    
+
     function borrow(uint256 amount) external {
         require(
             block.number > lastActionBlock[msg.sender],
             "Same block action prevented"
         );
-        
+
         lastBorrowBlock[msg.sender] = block.number;
         lastActionBlock[msg.sender] = block.number;
-        
+
         // Borrow logic...
     }
-    
+
     function sensitiveAction() external {
         require(
             block.number > lastBorrowBlock[msg.sender],
             "Cannot act in same block as borrow"
         );
-        
+
         lastActionBlock[msg.sender] = block.number;
         // Sensitive action logic...
     }
@@ -268,7 +269,7 @@ contract Secure {
             severity="high",
             description="Multi-level role-based access control needed instead of simple Ownable",
             detection_heuristics=[
-                "onlyOwner",
+                "onlyowner",
                 "owner",
                 "admin",
                 "restricted function",
@@ -281,20 +282,20 @@ contract Secure is AccessControl {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    
+
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(ADMIN_ROLE, msg.sender);
     }
-    
+
     function criticalOperation() external onlyRole(ADMIN_ROLE) {
         // Only admins can execute
     }
-    
+
     function operatorAction() external onlyRole(OPERATOR_ROLE) {
         // Only operators can execute
     }
-    
+
     function pause() external onlyRole(PAUSER_ROLE) {
         // Only pausers can execute
     }
@@ -312,6 +313,7 @@ contract Secure is AccessControl {
             severity="medium",
             description="Commit-reveal scheme needed to prevent front-running",
             detection_heuristics=[
+                "commit",
                 "bid",
                 "auction",
                 "vote",
@@ -323,20 +325,20 @@ contract Secure is AccessControl {
 contract Secure {
     mapping(address => bytes32) public commitments;
     mapping(address => uint256) public revealDeadline;
-    
+
     function commit(bytes32 commitment) external {
         require(commitments[msg.sender] == 0, "Already committed");
         commitments[msg.sender] = commitment;
         revealDeadline[msg.sender] = block.timestamp + 1 hours;
     }
-    
+
     function reveal(uint256 value, bytes32 salt) external {
         require(commitments[msg.sender] != 0, "No commitment");
         require(block.timestamp <= revealDeadline[msg.sender], "Reveal deadline passed");
-        
+
         bytes32 hash = keccak256(abi.encodePacked(msg.sender, value, salt));
         require(hash == commitments[msg.sender], "Invalid reveal");
-        
+
         delete commitments[msg.sender];
         // Process revealed value...
     }
@@ -361,13 +363,13 @@ contract Secure {
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 
 contract Secure is EIP712 {
-    bytes32 public constant PERMIT_TYPEHASH = 
+    bytes32 public constant PERMIT_TYPEHASH =
         keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
-    
+
     mapping(address => uint256) public nonces;
-    
+
     constructor() EIP712("SecureToken", "1") {}
-    
+
     function permit(
         address owner,
         address spender,
@@ -378,15 +380,15 @@ contract Secure is EIP712 {
         bytes32 s
     ) external {
         require(block.timestamp <= deadline, "Signature expired");
-        
+
         bytes32 structHash = keccak256(
             abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++, deadline)
         );
-        
+
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, v, r, s);
         require(signer == owner, "Invalid signature");
-        
+
         // Process permit...
     }
 }
@@ -415,7 +417,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 contract Secure {
     AggregatorV3Interface internal priceFeed;
     uint256 public constant STALENESS_THRESHOLD = 3600; // 1 hour
-    
+
     function getLatestPrice() public view returns (uint256) {
         (
             uint80 roundId,
@@ -424,12 +426,12 @@ contract Secure {
             uint256 updatedAt,
             uint80 answeredInRound
         ) = priceFeed.latestRoundData();
-        
+
         // Check for stale data
         require(answeredInRound >= roundId, "Stale price: round not complete");
         require(block.timestamp - updatedAt <= STALENESS_THRESHOLD, "Stale price: too old");
         require(price > 0, "Invalid price: must be positive");
-        
+
         return uint256(price);
     }
 }
@@ -452,12 +454,12 @@ contract Secure {
 contract Secure {
     AggregatorV3Interface[] public priceFeeds;
     uint256 public constant MAX_PRICE_DEVIATION = 3; // 3%
-    
+
     function getConsensusPrice() public view returns (uint256) {
         require(priceFeeds.length >= 3, "Need at least 3 oracles");
-        
+
         uint256[] memory prices = new uint256[](priceFeeds.length);
-        
+
         // Collect prices from all oracles
         for (uint256 i = 0; i < priceFeeds.length; i++) {
             (, int256 price, , uint256 updatedAt, ) = priceFeeds[i].latestRoundData();
@@ -465,19 +467,19 @@ contract Secure {
             require(block.timestamp - updatedAt < 3600, "Stale price");
             prices[i] = uint256(price);
         }
-        
+
         // Calculate median price
         uint256 medianPrice = _median(prices);
-        
+
         // Verify all prices are within acceptable deviation
         for (uint256 i = 0; i < prices.length; i++) {
             uint256 deviation = abs(prices[i], medianPrice) * 100 / medianPrice;
             require(deviation <= MAX_PRICE_DEVIATION, "Price deviation too high");
         }
-        
+
         return medianPrice;
     }
-    
+
     function _median(uint256[] memory values) internal pure returns (uint256) {
         // Sort and return median
         _quickSort(values, 0, int256(values.length - 1));
@@ -506,24 +508,24 @@ import "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 contract Secure {
     IUniswapV3Pool public pool;
     uint32 public constant TWAP_PERIOD = 1800; // 30 minutes
-    
+
     function getTWAP() public view returns (uint256) {
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = TWAP_PERIOD;
         secondsAgos[1] = 0;
-        
+
         (int56[] memory tickCumulatives, ) = pool.observe(secondsAgos);
-        
+
         int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
         int24 arithmeticMeanTick = int24(tickCumulativesDelta / int56(uint56(TWAP_PERIOD)));
-        
+
         uint256 quoteAmount = OracleLibrary.getQuoteAtTick(
             arithmeticMeanTick,
             uint128(1e18),
             address(token0),
             address(token1)
         );
-        
+
         return quoteAmount;
     }
 }
@@ -536,41 +538,49 @@ contract Secure {
 
     @classmethod
     def get_all_patterns(cls) -> dict[str, SecurityPattern]:
-        """Get all security patterns."""
-        all_patterns = {}
-        all_patterns.update(cls.REENTRANCY_PATTERNS)
-        all_patterns.update(cls.FLASH_LOAN_PATTERNS)
-        all_patterns.update(cls.ACCESS_CONTROL_PATTERNS)
-        all_patterns.update(cls.FRONT_RUNNING_PATTERNS)
-        all_patterns.update(cls.ORACLE_SECURITY_PATTERNS)
-        return all_patterns
+        """Get all patterns across categories."""
+        base_patterns: dict[str, SecurityPattern] = {}
+        base_patterns.update(cls.REENTRANCY_PATTERNS)
+        base_patterns.update(cls.FLASH_LOAN_PATTERNS)
+        base_patterns.update(cls.ACCESS_CONTROL_PATTERNS)
+        base_patterns.update(cls.FRONT_RUNNING_PATTERNS)
+        base_patterns.update(cls.ORACLE_SECURITY_PATTERNS)
+
+        # Work on copies so the class-level definitions (used in existence tests) remain untouched.
+        normalized_patterns: dict[str, SecurityPattern] = {}
+        for key, pattern in base_patterns.items():
+            clone = copy.deepcopy(pattern)
+            clone.detection_heuristics = [h.lower() for h in clone.detection_heuristics]
+            normalized_patterns[key] = clone
+
+        return normalized_patterns
 
     @classmethod
     def detect_patterns(cls, contract_code: str, abi: list[Any]) -> list[SecurityPattern]:
         """Detect security patterns in contract code."""
         detected = []
         all_patterns = cls.get_all_patterns()
-        
+
         code_lower = contract_code.lower()
-        
+
         for pattern_key, pattern in all_patterns.items():
             # Check if any detection heuristics match
             for heuristic in pattern.detection_heuristics:
                 if heuristic.lower() in code_lower:
                     detected.append(pattern)
                     break
-        
+
         return detected
 
     @classmethod
     def get_mitigation_for_pattern(cls, pattern_type: VulnerabilityPattern) -> str:
         """Get mitigation code for a specific pattern."""
         all_patterns = cls.get_all_patterns()
-        
+
         for pattern in all_patterns.values():
             if pattern.pattern_type == pattern_type:
                 return pattern.mitigation_code
-        
+
         return ""
 
 
@@ -581,7 +591,7 @@ class FormalVerificationPatterns:
     def generate_natspec_invariants(function_name: str, invariants: list[str]) -> str:
         """Generate NatSpec annotations for invariants."""
         invariant_docs = "\n".join([f"    /// @invariant {inv}" for inv in invariants])
-        
+
         return f'''
     /// @notice {function_name}
 {invariant_docs}
@@ -595,7 +605,7 @@ class FormalVerificationPatterns:
             f"assertTrue({inv}, \"Invariant failed: {inv}\");"
             for inv in invariants
         ])
-        
+
         return f'''
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
@@ -605,11 +615,11 @@ import "../src/{contract_name}.sol";
 
 contract {contract_name}InvariantTest is Test {{
     {contract_name} public target;
-    
+
     function setUp() public {{
         target = new {contract_name}();
     }}
-    
+
     /// @dev Foundry will call this after every function call
     function invariant_criticalInvariants() public {{
         {invariant_checks}

@@ -1,0 +1,20 @@
+{
+  "run_id": "69361bf5",
+  "phase": "hypothesis",
+  "success": true,
+  "duration_seconds": 0.003412,
+  "errors": [],
+  "data": {
+    "hypotheses": [],
+    "top_hypotheses": [],
+    "review": {
+      "reviewed": false
+    },
+    "by_vuln_type": {},
+    "missing_targets": {
+      "missing_contract_or_function": 0,
+      "total_hypotheses": 0
+    }
+  },
+  "timestamp": "2025-12-20T21:01:34.687378"
+}

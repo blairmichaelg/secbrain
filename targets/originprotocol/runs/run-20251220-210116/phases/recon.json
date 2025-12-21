@@ -1,0 +1,107 @@
+{
+  "run_id": "69361bf5",
+  "phase": "recon",
+  "success": true,
+  "duration_seconds": 14.619104,
+  "errors": [],
+  "data": {
+    "assets": [
+      {
+        "id": "error-aaaf9f15",
+        "type": "compilation_error",
+        "value": "0x85b78aCa6DeaE198fBf201c82dAf6cA21942ACc6",
+        "name": "Proxy",
+        "chain_id": 1,
+        "status": "compilation_error",
+        "metadata": {
+          "error": "[WinError 267] The directory name is invalid",
+          "error_type": "NotADirectoryError",
+          "timestamp": "2025-12-20T21:01:28.617310"
+        }
+      },
+      {
+        "id": "error-6c6bcfc4",
+        "type": "compilation_error",
+        "value": "0x1827F9eA98E0bf96550b2FC20F7233277FcD7E63",
+        "name": "ConvexEthMetaStrategyProxy",
+        "chain_id": 1,
+        "status": "compilation_error",
+        "metadata": {
+          "error": "[WinError 267] The directory name is invalid",
+          "error_type": "NotADirectoryError",
+          "timestamp": "2025-12-20T21:01:28.620459"
+        }
+      },
+      {
+        "id": "error-ddc44667",
+        "type": "compilation_error",
+        "value": "0xe75D77b1865Ae93c7eAa3040b038D7aA7BC02F70",
+        "name": "VaultProxy",
+        "chain_id": 1,
+        "status": "compilation_error",
+        "metadata": {
+          "error": "[WinError 267] The directory name is invalid",
+          "error_type": "NotADirectoryError",
+          "timestamp": "2025-12-20T21:01:28.618888"
+        }
+      },
+      {
+        "id": "error-9d6adccd",
+        "type": "compilation_error",
+        "value": "0xaF04828Ed923216c77dC22a2fc8E077FDaDAA87d",
+        "name": "OETHCurveAMOProxy",
+        "chain_id": 1,
+        "status": "compilation_error",
+        "metadata": {
+          "error": "[WinError 267] The directory name is invalid",
+          "error_type": "NotADirectoryError",
+          "timestamp": "2025-12-20T21:01:28.622127"
+        }
+      },
+      {
+        "id": "error-98d5af32",
+        "type": "compilation_error",
+        "value": "0x7609C88e5880E934DD3a75BCfeF44E31B1BAdb8b",
+        "name": "FixedRateRewardsSourceProxy",
+        "chain_id": 1,
+        "status": "compilation_error",
+        "metadata": {
+          "error": "[WinError 267] The directory name is invalid",
+          "error_type": "NotADirectoryError",
+          "timestamp": "2025-12-20T21:01:28.625171"
+        }
+      },
+      {
+        "id": "error-d8aadfc1",
+        "type": "compilation_error",
+        "value": "0x63898B3B6EF3D39332082178656E9862BEE45c57",
+        "name": "ExponentialStakingProxy",
+        "chain_id": 1,
+        "status": "compilation_error",
+        "metadata": {
+          "error": "[WinError 267] The directory name is invalid",
+          "error_type": "NotADirectoryError",
+          "timestamp": "2025-12-20T21:01:34.647537"
+        }
+      },
+      {
+        "id": "error-ee5f4f28",
+        "type": "compilation_error",
+        "value": "0x501804B374EF06fa9C427476147ac09F1551B9A0",
+        "name": "InitializeGovernedUpgradeabilityProxy",
+        "chain_id": 1,
+        "status": "compilation_error",
+        "metadata": {
+          "error": "[WinError 267] The directory name is invalid",
+          "error_type": "NotADirectoryError",
+          "timestamp": "2025-12-20T21:01:34.655782"
+        }
+      }
+    ],
+    "contracts_count": 7,
+    "compiled_count": 0,
+    "failed_count": 7,
+    "foundry_root": "C:\\Users\\Michael\\CascadeProjects\\windsurf-project-2\\originprotocol"
+  },
+  "timestamp": "2025-12-20T21:01:34.685867"
+}

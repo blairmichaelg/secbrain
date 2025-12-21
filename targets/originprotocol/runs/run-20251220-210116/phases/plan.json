@@ -1,0 +1,112 @@
+{
+  "run_id": "69361bf5",
+  "phase": "plan",
+  "success": true,
+  "duration_seconds": 0.000867,
+  "errors": [],
+  "data": {
+    "plan": {
+      "phases": [
+        {
+          "phase": "recon",
+          "objectives": [
+            "Subdomain enumeration",
+            "Port scanning",
+            "Technology detection"
+          ],
+          "tools": [
+            "subfinder",
+            "httpx",
+            "nmap"
+          ],
+          "time_estimate": "30 minutes",
+          "success_criteria": [
+            "Complete asset inventory",
+            "Technology stack identified"
+          ]
+        },
+        {
+          "phase": "hypothesis",
+          "objectives": [
+            "Identify vulnerability classes",
+            "Map attack surface"
+          ],
+          "tools": [
+            "worker_model",
+            "research"
+          ],
+          "time_estimate": "20 minutes",
+          "success_criteria": [
+            "Hypothesis list generated",
+            "Priorities assigned"
+          ]
+        },
+        {
+          "phase": "exploit",
+          "objectives": [
+            "Test hypotheses",
+            "Validate vulnerabilities"
+          ],
+          "tools": [
+            "http_client",
+            "nuclei"
+          ],
+          "time_estimate": "60 minutes",
+          "success_criteria": [
+            "Hypotheses tested",
+            "Findings documented"
+          ]
+        },
+        {
+          "phase": "triage",
+          "objectives": [
+            "Validate findings",
+            "Assess severity"
+          ],
+          "tools": [
+            "advisor_model"
+          ],
+          "time_estimate": "15 minutes",
+          "success_criteria": [
+            "Findings validated",
+            "Severity assigned"
+          ]
+        },
+        {
+          "phase": "report",
+          "objectives": [
+            "Create PoCs",
+            "Write reports"
+          ],
+          "tools": [
+            "worker_model",
+            "research"
+          ],
+          "time_estimate": "30 minutes",
+          "success_criteria": [
+            "Reports ready for submission"
+          ]
+        }
+      ],
+      "priority_targets": [],
+      "risk_considerations": [
+        "Stay within scope boundaries",
+        "Respect rate limits",
+        "Avoid destructive testing"
+      ]
+    },
+    "review": {
+      "approved": true,
+      "concerns": [],
+      "suggestions": []
+    },
+    "phases": [
+      "recon",
+      "hypothesis",
+      "exploit",
+      "triage",
+      "report"
+    ]
+  },
+  "timestamp": "2025-12-20T21:01:34.680866"
+}

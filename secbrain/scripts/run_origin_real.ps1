@@ -11,7 +11,7 @@ if (-not $RpcUrl) {
     exit 1
 }
 
-$repoRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+$repoRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path))
 $scope = Join-Path $repoRoot "secbrain/examples/originprotocol/scope.yaml"
 $program = Join-Path $repoRoot "secbrain/examples/originprotocol/program.json"
 $workspace = Join-Path $repoRoot "targets/originprotocol/runs/$WorkspaceName"
