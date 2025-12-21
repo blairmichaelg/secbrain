@@ -21,6 +21,9 @@ MAX_RAW_AMOUNT = 10**80
 # Default ETH price when no dynamic pricing is available
 ETH_PRICE_DEFAULT = 3000.0
 
+# Maximum gas cost as fraction of profit before warning (50%)
+MAX_GAS_COST_RATIO = 0.5
+
 
 @dataclass(frozen=True)
 class TokenSpec:
@@ -322,7 +325,7 @@ class ProfitCalculator:
             ETH equivalent value
         """
         # Check for eth_equiv_multiplier in spec (backward compatibility)
-        if hasattr(token_spec, 'eth_equiv_multiplier'):
+        if token_spec.eth_equiv_multiplier is not None:
             multiplier = token_spec.eth_equiv_multiplier
             if isinstance(multiplier, dict):
                 numerator = multiplier.get('numerator', 1)
@@ -494,8 +497,8 @@ class ProfitCalculator:
         """
         net_usd = max_profit_usd - gas_cost_usd
 
-        # Check if gas cost is too high (>50% of profit)
-        if max_profit_usd > 0 and gas_cost_usd / max_profit_usd > 0.5:
+        # Check if gas cost is too high (>MAX_GAS_COST_RATIO of profit)
+        if max_profit_usd > 0 and gas_cost_usd / max_profit_usd > MAX_GAS_COST_RATIO:
             return {
                 'decision': 'SKIP',
                 'reason': 'Gas cost too high relative to profit',
