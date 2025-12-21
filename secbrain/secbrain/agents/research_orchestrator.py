@@ -5,12 +5,15 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from secbrain.core.context import RunContext
     from secbrain.tools.perplexity_research import PerplexityResearch
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -26,7 +29,7 @@ class ResearchQuery:
     def hash_key(self) -> str:
         """Generate a unique hash for deduplication."""
         content = f"{self.question.lower().strip()}||{self.context[:200]}"
-        return hashlib.sha256(content.encode()).hexdigest()[:16]
+        return hashlib.sha256(content.encode()).hexdigest()
 
 
 @dataclass
@@ -132,8 +135,16 @@ class ResearchOrchestrator:
             # Check cache first
             if query_hash in self._cache:
                 cached_result = self._cache[query_hash]
-                cached_result.cached = True
-                results.append(cached_result)
+                # Create a copy to avoid mutating the cached object
+                result_copy = ResearchResult(
+                    query=cached_result.query,
+                    answer=cached_result.answer,
+                    confidence=cached_result.confidence,
+                    sources=cached_result.sources,
+                    cached=True,
+                    error=cached_result.error,
+                )
+                results.append(result_copy)
                 self._pending_queries.pop(query_hash, None)
                 continue
 
@@ -153,9 +164,14 @@ class ResearchOrchestrator:
     async def _execute_query(self, query: ResearchQuery) -> ResearchResult:
         """Execute a single research query with rate limiting."""
         async with self._semaphore, self._rate_limiter:
-            # Rate limiting
+            # Rate limiting - update timestamp before sleeping to avoid race condition
             current_time = asyncio.get_event_loop().time()
             time_since_last = current_time - self._last_query_time
+            
+            # Update the timestamp before sleeping to prevent concurrent queries
+            # from all getting the same time_since_last value
+            self._last_query_time = current_time
+            
             if time_since_last < self._min_query_interval:
                 await asyncio.sleep(self._min_query_interval - time_since_last)
 
@@ -174,6 +190,7 @@ class ResearchOrchestrator:
                     context=query.context,
                 )
 
+                # Update timestamp after successful execution
                 self._last_query_time = asyncio.get_event_loop().time()
                 self._stats["executed_queries"] += 1
 
@@ -228,7 +245,20 @@ class ResearchOrchestrator:
         if query_hash in self._cache:
             return self._cache[query_hash]
 
-        return None
+        # If we reach here, the query was queued but no result was produced or cached.
+        # This can happen if the query was filtered out by a priority threshold.
+        return ResearchResult(
+            query=query,
+            answer="",
+            confidence=0.0,
+            sources=[],
+            cached=False,
+            error=(
+                "No research result was produced for this protocol type query. "
+                "The query may have been filtered out by a priority threshold or "
+                "failed to execute."
+            ),
+        )
 
     def get_research_summary(self) -> dict[str, Any]:
         """Get summary of research activity."""
@@ -286,5 +316,4 @@ class ResearchOrchestrator:
             pass
         except Exception as e:
             # Unexpected errors - log but don't fail
-            # Note: Would use logger here if available in __init__
-            pass
+            logger.warning("Unexpected error loading research cache: %s", str(e), exc_info=True)

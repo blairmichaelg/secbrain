@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     import structlog
 
-    from secbrain.agents.research_orchestrator import ResearchOrchestrator
     from secbrain.core.context import RunContext
     from secbrain.models.base import ModelClient
     from secbrain.tools.perplexity_research import PerplexityResearch

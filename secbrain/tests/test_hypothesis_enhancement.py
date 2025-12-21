@@ -5,11 +5,7 @@ from __future__ import annotations
 import pytest
 
 from secbrain.agents.hypothesis_enhancement import HypothesisEnhancer
-from secbrain.agents.research_orchestrator import (
-    ResearchOrchestrator,
-    ResearchResult,
-    ResearchQuery,
-)
+from secbrain.agents.research_orchestrator import ResearchOrchestrator
 
 
 class MockRunContext:

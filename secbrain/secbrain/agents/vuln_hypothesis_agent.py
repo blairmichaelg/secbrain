@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import math
 import uuid
 from dataclasses import dataclass, field
@@ -14,6 +15,8 @@ from jsonschema import ValidationError, validate
 
 from secbrain.agents.base import AgentResult, BaseAgent
 from secbrain.agents.oracle_manipulation_detector import OracleManipulationDetector
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -324,13 +327,12 @@ class VulnHypothesisAgent(BaseAgent):
         abi_preview = abi[:30]  # Limit ABI entries
         try:
             # Limit ABI entries before serialization to avoid invalid JSON
-            abi_preview_str = json.dumps(abi_preview)
-            if len(abi_preview_str) > 1500:
+            if len(json.dumps(abi_preview)) > 1500:
                 # If still too long, reduce ABI entries further
                 abi_preview = abi[:15]
-                abi_preview_str = json.dumps(abi_preview)
         except Exception:
-            abi_preview_str = "[]"
+            # On serialization failure, fall back to a smaller preview slice
+            abi_preview = abi[:15]
 
         classification = (asset.get("metadata", {}) or {}).get("classification", {})
         protocol_type = classification.get("protocol_type", "generic")
@@ -371,10 +373,23 @@ Functions (sample): {', '.join(functions_preview[:8])}
 
 {research_context}
 
-Generate 3-5 exploit hypotheses as JSON array. Format:
-{{"vuln_type":"","confidence":0.8,"rationale":"","function_signature":"","exploit_notes":[]}}
+Generate 3-5 exploit hypotheses as a JSON array.
 
-Focus on {protocol_type}-specific high-severity issues."""
+Each hypothesis MUST be a JSON object with at least these required fields:
+- "vuln_type": short name of the vulnerability class
+- "confidence": numeric confidence score in [0,1]
+
+Optional fields you MAY include:
+- "contract_address": the checksum address of the target contract (use "{address}")
+- "chain_id": the numeric chain id (use {chain_id})
+- "function_signature": primary function or entrypoint involved, if any
+- "rationale": explanation of why this hypothesis is plausible
+- "exploit_notes": array of short notes or assumptions
+
+Example JSON object:
+{{"vuln_type":"share_inflation","confidence":0.8,"rationale":"short explanation","function_signature":"deposit(uint256)","exploit_notes":["note 1","note 2"]}}
+
+Always return a pure JSON array of such objects. Focus on {protocol_type}-specific high-severity issues."""
 
         async with self._contract_llm_sem:
             # Define precision-related keywords and checks for use in multiple blocks
@@ -728,6 +743,7 @@ Fix and return ONLY a JSON array matching the schema and using function signatur
         """Validate and return checksum address with better error handling."""
         if not address or not isinstance(address, str):
             # Return a placeholder instead of raising
+            logger.warning("Invalid or missing address (None or non-string), returning placeholder: %s", address)
             return "0x0000000000000000000000000000000000000000"
         
         addr = address.strip()
@@ -739,17 +755,21 @@ Fix and return ONLY a JSON array matching the schema and using function signatur
         # Pad if too short
         if len(addr) < 42:
             addr = addr + "0" * (42 - len(addr))
+            logger.debug("Padded short address: original=%s, padded=%s", address, addr)
         
         # Truncate if too long
         if len(addr) > 42:
             addr = addr[:42]
+            logger.debug("Truncated long address: original=%s, truncated=%s", address, addr)
         
         try:
             if is_address(addr):
                 return to_checksum_address(addr)
             else:
+                logger.warning("Invalid address format, returning placeholder: %s", address)
                 return "0x0000000000000000000000000000000000000000"
-        except Exception:
+        except Exception as e:
+            logger.warning("Exception validating address, returning placeholder: %s (error: %s)", address, str(e))
             return "0x0000000000000000000000000000000000000000"
 
     def _static_vulnerability_patterns(

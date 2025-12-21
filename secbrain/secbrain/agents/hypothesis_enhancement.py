@@ -5,7 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from secbrain.agents.research_orchestrator import ResearchOrchestrator, ResearchQuery
+    from secbrain.agents.research_orchestrator import ResearchOrchestrator
+
+# Confidence adjustment constants
+RESEARCH_VALIDATION_BOOST = 0.15  # Boost by 15% when research validates vulnerability
+REFINEMENT_REVERT_MULTIPLIER = 0.8  # 80% of original confidence for revert failures
+REFINEMENT_BALANCE_MULTIPLIER = 0.9  # 90% of original confidence for balance failures
+REFINEMENT_ACCESS_MULTIPLIER = 0.5  # 50% of original confidence for access control failures
 
 
 class HypothesisEnhancer:
@@ -53,17 +59,29 @@ class HypothesisEnhancer:
         research_answer_lower = research_result.answer.lower()
         research_vuln_types = set()
 
-        # Common vulnerability keywords to look for
+        # Map research keywords to actual vuln_type values used in the schema
+        # This mapping aligns with the VulnHypothesisAgent.HYPOTHESIS_SCHEMA enum values
         vuln_keywords = {
             "reentrancy": ["reentrancy", "re-entrancy", "reentrant"],
-            "oracle_manipulation": ["oracle", "price manipulation", "oracle attack"],
+            "read_only_reentrancy": ["read-only reentrancy", "view reentrancy"],
+            "cross_function_reentrancy": ["cross-function reentrancy", "cross contract"],
+            "oracle_manipulation": ["oracle manipulation", "oracle attack"],
+            "oracle_manipulation_flash": ["oracle flash", "flash loan oracle"],
             "flash_loan": ["flash loan", "flash-loan", "flashloan"],
-            "access_control": ["access control", "unauthorized", "permission"],
-            "integer_overflow": ["overflow", "underflow", "arithmetic"],
-            "mev_sandwich": ["mev", "sandwich", "frontrun", "front-run"],
+            "flash_loan_price_manipulation": ["flash loan price"],
+            "flash_loan_governance_attack": ["flash loan governance"],
+            "access_control": ["access control"],
+            "missing_access_control": ["missing access", "no access control"],
+            "weak_access_control": ["weak access"],
+            "integer_overflow": ["integer overflow", "overflow"],
+            "unchecked_arithmetic": ["underflow", "arithmetic"],
+            "mev_sandwich": ["mev", "sandwich attack", "frontrun", "front-run"],
+            "front_running_vulnerable": ["front running"],
         }
 
+        # Match keywords in order of specificity (more specific first)
         for vuln_type, keywords in vuln_keywords.items():
+            # Use word boundary matching to reduce false positives
             if any(keyword in research_answer_lower for keyword in keywords):
                 research_vuln_types.add(vuln_type)
 
@@ -76,8 +94,7 @@ class HypothesisEnhancer:
             # Boost confidence if vulnerability type is validated by research
             if vuln_type in research_vuln_types:
                 current_confidence = hyp.get("confidence", 0.5)
-                boost_amount = 0.15  # Boost by 15%
-                enhanced_hyp["confidence"] = min(1.0, current_confidence + boost_amount)
+                enhanced_hyp["confidence"] = min(1.0, current_confidence + RESEARCH_VALIDATION_BOOST)
                 enhanced_hyp["research_validated"] = True
                 enhanced_hyp["research_source"] = "protocol_research"
             else:
@@ -167,7 +184,7 @@ Focus on {protocol_type}-specific high-severity issues."""
             refined_hypotheses.append({
                 **original_hypothesis,
                 "id": f"{original_hypothesis.get('id', 'hyp')}-refined-revert",
-                "confidence": original_hypothesis.get("confidence", 0.5) * 0.8,  # Lower confidence
+                "confidence": original_hypothesis.get("confidence", 0.5) * REFINEMENT_REVERT_MULTIPLIER,
                 "rationale": f"Original hypothesis refined: {original_hypothesis.get('rationale', '')} - Failed due to revert, may need different preconditions",
                 "refinement": "check_preconditions",
             })
@@ -177,7 +194,7 @@ Focus on {protocol_type}-specific high-severity issues."""
             refined_hypotheses.append({
                 **original_hypothesis,
                 "id": f"{original_hypothesis.get('id', 'hyp')}-refined-balance",
-                "confidence": original_hypothesis.get("confidence", 0.5) * 0.9,
+                "confidence": original_hypothesis.get("confidence", 0.5) * REFINEMENT_BALANCE_MULTIPLIER,
                 "rationale": f"Original hypothesis refined: {original_hypothesis.get('rationale', '')} - May require initial balance or tokens",
                 "refinement": "balance_requirements",
             })
@@ -187,7 +204,7 @@ Focus on {protocol_type}-specific high-severity issues."""
             refined_hypotheses.append({
                 **original_hypothesis,
                 "id": f"{original_hypothesis.get('id', 'hyp')}-refined-access",
-                "confidence": original_hypothesis.get("confidence", 0.5) * 0.5,  # Significantly lower
+                "confidence": original_hypothesis.get("confidence", 0.5) * REFINEMENT_ACCESS_MULTIPLIER,
                 "rationale": f"Original hypothesis refined: {original_hypothesis.get('rationale', '')} - Access control restrictions detected",
                 "refinement": "access_control_blocked",
             })
