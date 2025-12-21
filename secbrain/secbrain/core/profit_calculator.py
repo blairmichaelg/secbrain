@@ -46,11 +46,11 @@ class TokenSpec:
         if not self.address or not self.address.strip():
             raise ValueError("address cannot be empty")
         if self.decimals < 0:
-            raise ValueError(f"decimals must be non-negative, got {self.decimals}")
-        if not 0 <= self.decimals <= MAX_TOKEN_DECIMALS:
-            raise ValueError(f"Invalid decimals: {self.decimals}")
+            raise ValueError(f"Invalid decimals: decimals must be non-negative, got {self.decimals}")
+        if self.decimals > MAX_TOKEN_DECIMALS:
+            raise ValueError(f"Invalid decimals: must be <= {MAX_TOKEN_DECIMALS}, got {self.decimals}")
         if self.price_usd < 0:
-            raise ValueError(f"price_usd must be non-negative, got {self.price_usd}")
+            raise ValueError(f"Negative price: price_usd must be non-negative, got {self.price_usd}")
     
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "TokenSpec":
