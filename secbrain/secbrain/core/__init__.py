@@ -8,6 +8,11 @@ from secbrain.core.profit_calculator import (
     TokenSpec,
     create_profit_calculator_from_chain,
 )
+from secbrain.core.research_orchestrator import (
+    ResearchOrchestrator,
+    ResearchQuery,
+    ResearchResult,
+)
 from secbrain.core.types import (
     # Constants
     ALLOWED_HTTP_METHODS,
@@ -65,6 +70,10 @@ __all__ = [
     "ProfitBreakdown",
     "ProfitCalculator",
     "ProfitTokenDict",
+    # Research Orchestrator
+    "ResearchOrchestrator",
+    "ResearchQuery",
+    "ResearchResult",
     # Context and Logging
     "RunContext",
     "SHA256Hash",
