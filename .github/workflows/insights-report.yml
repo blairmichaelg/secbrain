@@ -59,7 +59,7 @@ jobs:
       
       - name: Upload insights reports
         if: steps.workspaces.outputs.workspaces != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: insights-reports
           path: insights-reports/**/*.html
