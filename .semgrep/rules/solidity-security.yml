@@ -1,0 +1,229 @@
+rules:
+  - id: solidity-reentrancy-external-call
+    patterns:
+      - pattern-either:
+          - pattern: "$ADDR.call{value: $AMOUNT}(...)"
+          - pattern: $ADDR.delegatecall(...)
+    message: |
+      Potential reentrancy vulnerability with external call detected.
+      State changes should be made before external calls (Checks-Effects-Interactions pattern).
+    severity: WARNING
+    languages: [solidity]
+    metadata:
+      category: security
+      cwe: "CWE-841: Improper Enforcement of Behavioral Workflow"
+      owasp: "A04:2021 - Insecure Design"
+      confidence: MEDIUM
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+    fix: |
+      Follow the Checks-Effects-Interactions pattern:
+      1. Perform checks (require statements)
+      2. Update state variables
+      3. Make external calls
+
+  - id: solidity-unchecked-low-level-call
+    patterns:
+      - pattern-either:
+          - pattern: "$ADDR.call{...}(...)"
+          - pattern: $ADDR.delegatecall(...)
+          - pattern: $ADDR.staticcall(...)
+      - pattern-not-inside: |
+          ($SUCCESS, ...) = $ADDR.call{...}(...);
+          require($SUCCESS, ...);
+      - pattern-not-inside: |
+          ($SUCCESS, ...) = $ADDR.call{...}(...);
+          if (!$SUCCESS) { ... }
+    message: |
+      Low-level call return value not checked.
+      Always check the return value of low-level calls.
+    severity: ERROR
+    languages: [solidity]
+    metadata:
+      category: security
+      cwe: "CWE-252: Unchecked Return Value"
+      owasp: "A04:2021 - Insecure Design"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+      subcategory:
+        - vuln
+    fix: |
+      Check the return value:
+      (bool success, bytes memory data) = addr.call{value: amount}("");
+      require(success, "Call failed");
+
+  - id: solidity-tx-origin-auth
+    pattern: require(tx.origin == $ADDR, ...)
+    message: |
+      Using tx.origin for authorization is dangerous and can lead to phishing attacks.
+      Use msg.sender instead for authorization checks.
+    severity: ERROR
+    languages: [solidity]
+    metadata:
+      category: security
+      cwe: "CWE-346: Origin Validation Error"
+      owasp: "A04:2021 - Insecure Design"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+      subcategory:
+        - vuln
+    fix: |
+      Use msg.sender for authorization:
+      require(msg.sender == owner, "Not authorized");
+
+  - id: solidity-deprecated-suicide
+    pattern-either:
+      - pattern: suicide(...)
+      - pattern: selfdestruct(...)
+    message: |
+      selfdestruct is deprecated and dangerous. 
+      Consider alternative patterns for contract upgrades.
+    severity: WARNING
+    languages: [solidity]
+    metadata:
+      category: security
+      cwe: "CWE-477: Use of Obsolete Function"
+      confidence: HIGH
+      likelihood: LOW
+      impact: MEDIUM
+      subcategory:
+        - vuln
+
+  - id: solidity-unprotected-selfdestruct
+    patterns:
+      - pattern: selfdestruct(...)
+      - pattern-not-inside: |
+          function $FUNC(...) ... $MODIFIER ... {
+            ...
+            selfdestruct(...);
+          }
+      - pattern-not-inside: |
+          require(msg.sender == ..., ...);
+          ...
+          selfdestruct(...);
+    message: |
+      selfdestruct without access control detected.
+      Ensure only authorized addresses can destroy the contract.
+    severity: ERROR
+    languages: [solidity]
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      owasp: "A01:2021 - Broken Access Control"
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: CRITICAL
+      subcategory:
+        - vuln
+
+  - id: solidity-weak-randomness
+    patterns:
+      - pattern-either:
+          - pattern: block.timestamp
+          - pattern: block.number
+          - pattern: blockhash(...)
+          - pattern: block.difficulty
+      - pattern-inside: |
+          ... % ...
+    message: |
+      Using block properties for randomness is predictable and can be manipulated.
+      Use a secure randomness source like Chainlink VRF.
+    severity: WARNING
+    languages: [solidity]
+    metadata:
+      category: security
+      cwe: "CWE-330: Use of Insufficiently Random Values"
+      owasp: "A02:2021 - Cryptographic Failures"
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: HIGH
+      subcategory:
+        - vuln
+    fix: |
+      Use Chainlink VRF or similar oracle-based randomness:
+      import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+
+  - id: solidity-integer-overflow
+    patterns:
+      - pattern-either:
+          - pattern: $X + $Y
+          - pattern: $X - $Y
+          - pattern: $X * $Y
+      - pattern-inside: |
+          pragma solidity ^0.$VERSION.$PATCH;
+          ...
+      - metavariable-comparison:
+          metavariable: $VERSION
+          comparison: $VERSION < 8
+    message: |
+      Integer overflow/underflow possible in Solidity < 0.8.0.
+      Use SafeMath library or upgrade to Solidity 0.8.0+.
+    severity: WARNING
+    languages: [solidity]
+    metadata:
+      category: security
+      cwe: "CWE-190: Integer Overflow"
+      owasp: "A04:2021 - Insecure Design"
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+      subcategory:
+        - vuln
+
+  - id: solidity-delegatecall-to-untrusted
+    patterns:
+      - pattern: $ADDR.delegatecall(...)
+      - pattern-not-inside: |
+          address constant $TRUSTED = ...;
+          ...
+          $TRUSTED.delegatecall(...);
+    message: |
+      delegatecall to untrusted contract can lead to complete contract takeover.
+      Ensure the target address is trusted and cannot be modified.
+    severity: ERROR
+    languages: [solidity]
+    metadata:
+      category: security
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+      owasp: "A08:2021 - Software and Data Integrity Failures"
+      confidence: MEDIUM
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+    fix: |
+      Only delegatecall to trusted, immutable addresses:
+      address public immutable implementation;
+      implementation.delegatecall(data);
+
+  - id: solidity-unprotected-ether-withdrawal
+    patterns:
+      - pattern-either:
+          - pattern: payable($ADDR).transfer(...)
+          - pattern: payable($ADDR).send(...)
+          - pattern: "$ADDR.call{value: $AMOUNT}(...)"
+      - pattern-not-inside: |
+          modifier $MODIFIER() {
+            ...
+          }
+      - pattern-not-inside: |
+          require(msg.sender == $OWNER);
+          ...
+    message: |
+      Ether withdrawal without proper access control.
+      Add access control modifiers or require statements.
+    severity: ERROR
+    languages: [solidity]
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      owasp: "A01:2021 - Broken Access Control"
+      confidence: MEDIUM
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln

@@ -65,8 +65,14 @@ jobs:
         continue-on-error: true
         run: |
           cd secbrain
-          semgrep --config=auto --json --output semgrep-results.json secbrain/ || true
+          # Run custom rules
+          semgrep --config=../.semgrep/rules/ --json --output semgrep-custom-results.json secbrain/ || true
+          semgrep --config=../.semgrep/rules/ secbrain/ || true
+          # Run auto rules
+          semgrep --config=auto --json --output semgrep-auto-results.json secbrain/ || true
           semgrep --config=auto secbrain/ || true
+          # Merge results
+          jq -s '.[0].results + .[1].results | {results: .}' semgrep-custom-results.json semgrep-auto-results.json > semgrep-results.json 2>/dev/null || cp semgrep-custom-results.json semgrep-results.json
 
       - name: Upload security scan results
         if: always()

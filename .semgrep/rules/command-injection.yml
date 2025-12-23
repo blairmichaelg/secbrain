@@ -1,0 +1,147 @@
+rules:
+  - id: os-system-with-user-input
+    patterns:
+      - pattern: os.system($CMD)
+      - metavariable-pattern:
+          metavariable: $CMD
+          patterns:
+            - pattern-either:
+                - pattern: f"..."
+                - pattern: '"..." + $VAR'
+                - pattern: $STR % $VAR
+                - pattern: $STR.format(...)
+    message: |
+      os.system() with dynamic command can lead to command injection.
+      Use subprocess with list arguments instead.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+    fix: |
+      Use subprocess with list arguments:
+      import subprocess
+      subprocess.run(["command", arg1, arg2])
+
+  - id: os-popen-injection
+    patterns:
+      - pattern-either:
+          - pattern: os.popen(f"... {$VAR} ...")
+          - pattern: 'os.popen("..." + $VAR + "...")'
+    message: |
+      os.popen() with dynamic command can lead to command injection.
+      Use subprocess.Popen with list arguments instead.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+
+  - id: eval-with-user-input
+    patterns:
+      - pattern: eval($ARG)
+      - metavariable-pattern:
+          metavariable: $ARG
+          patterns:
+            - pattern-not: "..."
+    message: |
+      eval() with dynamic input can lead to arbitrary code execution.
+      Avoid using eval() with user-controlled input.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+    fix: |
+      Avoid eval() entirely. If you need to evaluate expressions safely:
+      - Use ast.literal_eval() for literals only
+      - Use a safe expression parser
+      - Validate and sanitize input thoroughly
+
+  - id: exec-with-user-input
+    patterns:
+      - pattern: exec($ARG)
+      - metavariable-pattern:
+          metavariable: $ARG
+          patterns:
+            - pattern-not: "..."
+    message: |
+      exec() with dynamic input can lead to arbitrary code execution.
+      Avoid using exec() with user-controlled input.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+
+  - id: compile-with-user-input
+    patterns:
+      - pattern: compile($CODE, ...)
+      - metavariable-pattern:
+          metavariable: $CODE
+          patterns:
+            - pattern-not: "..."
+    message: |
+      compile() with dynamic input can lead to code injection.
+      Ensure the input is properly validated and sanitized.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code"
+      owasp: "A03:2021 - Injection"
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: HIGH
+      subcategory:
+        - vuln
+
+  - id: pickle-load-untrusted
+    patterns:
+      - pattern-either:
+          - pattern: pickle.load($FILE)
+          - pattern: pickle.loads($DATA)
+          - pattern: cPickle.load($FILE)
+          - pattern: cPickle.loads($DATA)
+    message: |
+      Loading pickle data from untrusted sources can lead to arbitrary code execution.
+      Use safer serialization formats like JSON for untrusted data.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      owasp: "A08:2021 - Software and Data Integrity Failures"
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: CRITICAL
+      subcategory:
+        - vuln
+    fix: |
+      Use JSON or other safe serialization formats:
+      import json
+      data = json.loads(json_string)

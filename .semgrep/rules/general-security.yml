@@ -1,0 +1,243 @@
+rules:
+  - id: hardcoded-password
+    patterns:
+      - pattern-either:
+          - pattern: $VAR = "..."
+          - pattern: "$DICT = {..., $KEY: '...', ...}"
+      - metavariable-regex:
+          metavariable: $VAR
+          regex: .*(password|passwd|pwd|secret|api_key|apikey|token|auth).*
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: .*(password|passwd|pwd|secret|api_key|apikey|token|auth).*
+    message: |
+      Potential hardcoded password or secret detected.
+      Use environment variables or secure configuration management.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      owasp: "A07:2021 - Identification and Authentication Failures"
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: HIGH
+      subcategory:
+        - vuln
+    fix: |
+      Use environment variables:
+      import os
+      password = os.environ.get("DB_PASSWORD")
+
+  - id: insecure-hash-function
+    patterns:
+      - pattern-either:
+          - pattern: hashlib.md5(...)
+          - pattern: hashlib.sha1(...)
+    message: |
+      MD5 and SHA1 are cryptographically broken.
+      Use SHA256, SHA384, SHA512, or SHA3 family instead.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of a Broken or Risky Cryptographic Algorithm"
+      owasp: "A02:2021 - Cryptographic Failures"
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: MEDIUM
+      subcategory:
+        - vuln
+    fix: |
+      Use SHA256 or stronger:
+      import hashlib
+      hash_obj = hashlib.sha256(data.encode())
+
+  - id: insecure-random
+    patterns:
+      - pattern: random.$FUNC(...)
+      - pattern-not: random.SystemRandom().$FUNC(...)
+    message: |
+      random module is not cryptographically secure.
+      Use secrets module for security-sensitive randomness.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-330: Use of Insufficiently Random Values"
+      owasp: "A02:2021 - Cryptographic Failures"
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: MEDIUM
+      subcategory:
+        - vuln
+    fix: |
+      Use secrets module:
+      import secrets
+      token = secrets.token_hex(16)
+      random_int = secrets.randbelow(100)
+
+  - id: yaml-unsafe-load
+    pattern: yaml.load($DATA, ...)
+    message: |
+      yaml.load() can execute arbitrary Python code.
+      Use yaml.safe_load() instead.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      owasp: "A08:2021 - Software and Data Integrity Failures"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+    fix: |
+      Use safe_load:
+      import yaml
+      data = yaml.safe_load(yaml_string)
+
+  - id: path-traversal-open
+    patterns:
+      - pattern: open($PATH, ...)
+      - metavariable-pattern:
+          metavariable: $PATH
+          patterns:
+            - pattern-either:
+                - pattern: f"... {$VAR} ..."
+                - pattern: '"..." + $VAR + "..."'
+                - pattern: os.path.join(..., $VAR, ...)
+    message: |
+      File path constructed from user input may allow path traversal.
+      Validate and sanitize file paths to prevent directory traversal attacks.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-22: Path Traversal"
+      owasp: "A01:2021 - Broken Access Control"
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: HIGH
+      subcategory:
+        - vuln
+    fix: |
+      Validate file paths:
+      import os
+      safe_path = os.path.normpath(os.path.join(BASE_DIR, user_input))
+      if not safe_path.startswith(BASE_DIR):
+          raise ValueError("Invalid path")
+
+  - id: request-without-timeout
+    patterns:
+      - pattern-either:
+          - pattern: requests.$METHOD(...)
+          - pattern: requests.request(...)
+      - pattern-not: requests.$METHOD(..., timeout=$TIMEOUT, ...)
+    message: |
+      HTTP request without timeout can hang indefinitely.
+      Always specify a timeout for network requests.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-400: Uncontrolled Resource Consumption"
+      confidence: HIGH
+      likelihood: LOW
+      impact: MEDIUM
+      subcategory:
+        - vuln
+    fix: |
+      Add timeout parameter:
+      response = requests.get(url, timeout=30)
+
+  - id: assert-used-for-validation
+    patterns:
+      - pattern: assert $COND, ...
+      - pattern-inside: |
+          def $FUNC(...):
+            ...
+    message: |
+      assert statements are removed in optimized code (-O flag).
+      Use explicit if/raise for validation in production code.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-703: Improper Check or Handling of Exceptional Conditions"
+      confidence: MEDIUM
+      likelihood: LOW
+      impact: MEDIUM
+      subcategory:
+        - vuln
+    fix: |
+      Use explicit checks:
+      if not condition:
+          raise ValueError("Validation failed")
+
+  - id: flask-debug-enabled
+    patterns:
+      - pattern-either:
+          - pattern: app.run(..., debug=True, ...)
+          - pattern: app.debug = True
+    message: |
+      Flask debug mode should never be enabled in production.
+      Debug mode can expose sensitive information and allow code execution.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-489: Active Debug Code"
+      owasp: "A05:2021 - Security Misconfiguration"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+      subcategory:
+        - vuln
+
+  - id: jwt-none-algorithm
+    patterns:
+      - pattern-either:
+          - pattern: jwt.decode(..., algorithms=["none"], ...)
+          - pattern: jwt.decode(..., verify=False, ...)
+    message: |
+      JWT with 'none' algorithm or disabled verification is insecure.
+      Always verify JWT signatures with a proper algorithm.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-347: Improper Verification of Cryptographic Signature"
+      owasp: "A02:2021 - Cryptographic Failures"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+
+  - id: xml-external-entity
+    patterns:
+      - pattern-either:
+          - pattern: xml.etree.ElementTree.parse(...)
+          - pattern: xml.etree.ElementTree.fromstring(...)
+          - pattern: xml.dom.minidom.parse(...)
+          - pattern: xml.dom.minidom.parseString(...)
+    message: |
+      XML parser vulnerable to XXE (XML External Entity) attacks.
+      Use defusedxml library or disable external entity processing.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-611: Improper Restriction of XML External Entity Reference"
+      owasp: "A05:2021 - Security Misconfiguration"
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+      subcategory:
+        - vuln
+    fix: |
+      Use defusedxml:
+      from defusedxml import ElementTree
+      tree = ElementTree.parse(xml_file)

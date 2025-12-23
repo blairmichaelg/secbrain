@@ -1,0 +1,120 @@
+rules:
+  - id: sql-injection-format-string
+    patterns:
+      - pattern-either:
+          - pattern: $CURSOR.execute(f"... {$VAR} ...")
+          - pattern: '$CURSOR.execute("..." + $VAR + "...")'
+          - pattern: $CURSOR.execute($SQL % $VAR)
+          - pattern: $CURSOR.execute($SQL.format(...))
+    message: |
+      SQL query uses string formatting which can lead to SQL injection.
+      Use parameterized queries instead with placeholders.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+    fix: |
+      Use parameterized queries:
+      cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+      # or for named parameters:
+      cursor.execute("SELECT * FROM users WHERE id = :id", {"id": user_id})
+
+  - id: sql-injection-executemany
+    patterns:
+      - pattern-either:
+          - pattern: $CURSOR.executemany(f"... {$VAR} ...")
+          - pattern: '$CURSOR.executemany("..." + $VAR + "...")'
+    message: |
+      SQL executemany uses string formatting which can lead to SQL injection.
+      Use parameterized queries instead.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+
+  - id: sql-injection-executescript
+    patterns:
+      - pattern: $CURSOR.executescript($SCRIPT)
+      - metavariable-pattern:
+          metavariable: $SCRIPT
+          patterns:
+            - pattern-either:
+                - pattern: f"..."
+                - pattern: '"..." + $VAR'
+                - pattern: $STR % $VAR
+                - pattern: $STR.format(...)
+    message: |
+      SQL executescript with dynamic content detected.
+      This can lead to SQL injection vulnerabilities.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+
+  - id: sqlalchemy-text-with-format
+    patterns:
+      - pattern-either:
+          - pattern: text(f"... {$VAR} ...")
+          - pattern: 'text("..." + $VAR + "...")'
+          - pattern: text($SQL % $VAR)
+          - pattern: text($SQL.format(...))
+    message: |
+      SQLAlchemy text() with string formatting can lead to SQL injection.
+      Use bound parameters instead.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
+    fix: |
+      Use bound parameters:
+      from sqlalchemy import text
+      query = text("SELECT * FROM users WHERE id = :id")
+      result = connection.execute(query, {"id": user_id})
+
+  - id: raw-sql-query-with-format
+    patterns:
+      - pattern-either:
+          - pattern: $DB.raw(f"... {$VAR} ...")
+          - pattern: '$DB.raw("..." + $VAR + "...")'
+    message: |
+      Raw SQL query with string formatting detected.
+      Use parameterized queries to prevent SQL injection.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln

@@ -67,7 +67,9 @@ jobs:
           safety check | tee -a ../audit-log.txt || true
           echo -e "\n=== pip-audit ===" | tee -a ../audit-log.txt
           pip-audit | tee -a ../audit-log.txt || true
-          echo -e "\n=== Semgrep ===" | tee -a ../audit-log.txt
+          echo -e "\n=== Semgrep Custom Rules ===" | tee -a ../audit-log.txt
+          semgrep --config=../.semgrep/rules/ secbrain/ | tee -a ../audit-log.txt || true
+          echo -e "\n=== Semgrep Auto Rules ===" | tee -a ../audit-log.txt
           semgrep --config=auto secbrain/ | tee -a ../audit-log.txt || true
 
       - name: Run Python quality audit

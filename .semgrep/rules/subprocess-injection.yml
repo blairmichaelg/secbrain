@@ -1,0 +1,75 @@
+rules:
+  - id: subprocess-shell-injection
+    pattern: subprocess.$FUNC(..., shell=True, ...)
+    message: |
+      Avoid shell=True in subprocess calls - it can lead to command injection vulnerabilities.
+      Use shell=False and pass arguments as a list instead.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+      subcategory:
+        - vuln
+    fix: |
+      Use subprocess with shell=False and pass arguments as a list:
+      subprocess.run(["command", "arg1", "arg2"])
+
+  - id: unquoted-subprocess-args
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.$FUNC(f"... {$VAR} ...")
+          - pattern: 'subprocess.$FUNC("..." + $VAR + "...")'
+          - pattern: subprocess.$FUNC($STR % $VAR)
+          - pattern: subprocess.$FUNC($STR.format(...))
+    message: |
+      Dynamic subprocess arguments should be properly quoted to prevent injection.
+      Use shlex.quote() for dynamic subprocess arguments or pass as a list.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+      owasp: "A03:2021 - Injection"
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: HIGH
+      subcategory:
+        - vuln
+    fix: |
+      Use shlex.quote() for dynamic arguments:
+      import shlex
+      subprocess.run(f"command {shlex.quote(user_input)}", shell=True)
+      
+      Or better, use list arguments:
+      subprocess.run(["command", user_input])
+
+  - id: subprocess-with-user-input
+    patterns:
+      - pattern: subprocess.$FUNC($CMD, ...)
+      - metavariable-pattern:
+          metavariable: $CMD
+          patterns:
+            - pattern-either:
+                - pattern: request.$METHOD(...)
+                - pattern: input(...)
+                - pattern: sys.argv[...]
+                - pattern: os.environ.get(...)
+    message: |
+      Subprocess call with user-controlled input detected.
+      Ensure proper input validation and sanitization to prevent command injection.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+      subcategory:
+        - vuln
