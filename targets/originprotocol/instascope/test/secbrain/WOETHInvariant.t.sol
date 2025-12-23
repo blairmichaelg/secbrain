@@ -11,6 +11,9 @@ contract WOETHHandler is Test {
     MockWOETH public woeth;
     MockOETH public oeth;
     
+    // Constants
+    uint256 constant MAX_ACTORS = 10;
+    
     // Ghost variables to track expected state
     uint256 public ghost_totalDeposited;
     uint256 public ghost_totalWithdrawn;
@@ -88,7 +91,7 @@ contract WOETHHandler is Test {
     }
     
     function _getRandomActor(uint256 seed) internal returns (address) {
-        address actor = address(uint160(bound(seed, 1, 10)));
+        address actor = address(uint160(bound(seed, 1, MAX_ACTORS)));
         
         if (!isActor[actor]) {
             actors.push(actor);
@@ -270,6 +273,10 @@ contract WOETHInvariantTest is Test {
     MockOETH public oeth;
     WOETHHandler public handler;
     
+    // Test constants
+    uint256 constant ROUNDING_TOLERANCE = 1e18;
+    uint256 constant CONVERSION_TOLERANCE = 1e15;
+    
     function setUp() public {
         // Deploy mock OETH
         oeth = new MockOETH();
@@ -307,7 +314,7 @@ contract WOETHInvariantTest is Test {
         uint256 supplyInAssets = woeth.convertToAssets(supply);
         
         // They should be equal (within rounding)
-        assertApproxEqAbs(supplyInAssets, assets, 1e18, "Supply != Assets");
+        assertApproxEqAbs(supplyInAssets, assets, ROUNDING_TOLERANCE, "Supply != Assets");
     }
     
     /**
@@ -346,7 +353,7 @@ contract WOETHInvariantTest is Test {
             uint256 backToAssets = woeth.convertToAssets(shares);
             
             // Should round-trip correctly (within small rounding error)
-            assertApproxEqAbs(testAmount, backToAssets, 1e15, "Conversion not consistent");
+            assertApproxEqAbs(testAmount, backToAssets, CONVERSION_TOLERANCE, "Conversion not consistent");
         }
     }
     

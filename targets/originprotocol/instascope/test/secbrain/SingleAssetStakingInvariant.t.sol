@@ -13,6 +13,9 @@ contract SingleAssetStakingHandler is Test {
     SingleAssetStaking public staking;
     MockERC20 public stakingToken;
     
+    // Constants
+    uint256 constant MAX_ACTORS = 10;
+    
     // Ghost variables to track expected state
     uint256 public ghost_totalStaked;
     uint256 public ghost_totalRewards;
@@ -62,11 +65,11 @@ contract SingleAssetStakingHandler is Test {
         }
     }
     
-    function exit() external {
+    function exit(uint256 actorSeed) external {
         // Try to exit stakes for random actor
         if (actors.length == 0) return;
         
-        uint256 actorIndex = bound(block.timestamp, 0, actors.length - 1);
+        uint256 actorIndex = bound(actorSeed, 0, actors.length - 1);
         address actor = actors[actorIndex];
         
         // Warp time forward to allow exits
@@ -83,7 +86,7 @@ contract SingleAssetStakingHandler is Test {
     
     function _getRandomActor(uint256 seed) internal returns (address) {
         // Use a limited set of actors for better collision testing
-        address actor = address(uint160(bound(seed, 1, 10)));
+        address actor = address(uint160(bound(seed, 1, MAX_ACTORS)));
         
         if (!isActor[actor]) {
             actors.push(actor);

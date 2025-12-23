@@ -13,6 +13,9 @@ contract LidoARMHandler is Test {
     MockERC20 public weth;
     MockERC20 public steth;
     
+    // Constants
+    uint256 constant MAX_ACTORS = 10;
+    
     // Ghost variables
     uint256 public ghost_totalDeposits;
     uint256 public ghost_totalWithdrawals;
@@ -86,7 +89,7 @@ contract LidoARMHandler is Test {
     }
     
     function _getRandomActor(uint256 seed) internal returns (address) {
-        address actor = address(uint160(bound(seed, 1, 10)));
+        address actor = address(uint160(bound(seed, 1, MAX_ACTORS)));
         
         if (!isActor[actor]) {
             actors.push(actor);
