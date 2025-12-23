@@ -111,7 +111,8 @@ dictionary_weight = 80  # Higher weight for dictionary in invariant tests
 shrink_run_limit = 5000 # Limit for shrinking failing tests
 
 [profile.ci]
-invariant_runs = 1000   # Increased runs for CI
+fuzz_runs = 10000       # High fuzz runs for standard property tests
+invariant_runs = 1000   # Increased invariant runs for CI
 invariant_depth = 20    # Deeper call sequences for CI
 ```
 
@@ -242,7 +243,7 @@ Ghost variables are used to track expected state independently of the contract:
 ### Performance Issues
 - Start with `quick` profile (32 runs) for development
 - Use `default` (256 runs) for regular testing
-- Reserve `ci` (10,000 runs) and `intense` (50,000 runs) for CI/CD
+- Reserve `ci` (1,000 invariant runs) and `intense` (5,000 runs) for CI/CD and audits
 
 ## Integration with CI/CD
 
@@ -259,7 +260,7 @@ Invariant tests run automatically in CI via `.github/workflows/foundry-fuzzing.y
 The workflow runs multiple fuzzing profiles:
 1. **Quick** (32 runs): Fast feedback
 2. **Standard** (256 runs): Default testing
-3. **CI** (10,000 runs): Comprehensive pre-merge testing
+3. **CI** (1,000 invariant runs, 10,000 fuzz runs): Comprehensive pre-merge testing
 
 ## Expected Impact
 

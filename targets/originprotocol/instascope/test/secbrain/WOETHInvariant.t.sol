@@ -84,6 +84,7 @@ contract WOETHHandler is Test {
         
         vm.prank(actor);
         try woeth.redeem(shares, actor, actor) returns (uint256 assets) {
+            ghost_totalWithdrawn += assets;
             callCount++;
         } catch {
             // Redeem failed
@@ -274,8 +275,8 @@ contract WOETHInvariantTest is Test {
     WOETHHandler public handler;
     
     // Test constants
-    uint256 constant ROUNDING_TOLERANCE = 1e18;
-    uint256 constant CONVERSION_TOLERANCE = 1e15;
+    uint256 constant ROUNDING_TOLERANCE = 1e9;  // 1 gwei - tight enough to catch bugs
+    uint256 constant CONVERSION_TOLERANCE = 1e12;  // 0.000001 tokens - catches precision issues
     
     function setUp() public {
         // Deploy mock OETH
@@ -355,6 +356,15 @@ contract WOETHInvariantTest is Test {
             // Should round-trip correctly (within small rounding error)
             assertApproxEqAbs(testAmount, backToAssets, CONVERSION_TOLERANCE, "Conversion not consistent");
         }
+    }
+    
+    /**
+     * @notice Deposits should always be greater than or equal to withdrawals
+     * @dev This ensures no more assets leave than entered
+     */
+    function invariant_depositWithdrawalBalance() public view {
+        assertGe(handler.ghost_totalDeposited(), handler.ghost_totalWithdrawn(), 
+                 "Withdrawals exceed deposits");
     }
     
     /**

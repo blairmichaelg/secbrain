@@ -216,12 +216,13 @@ contract SingleAssetStakingInvariantTest is Test {
     }
     
     /**
-     * @notice totalOutstanding should never decrease without a payout
-     * @dev This is a basic accounting check
+     * @notice totalOutstanding should match expected accounting
+     * @dev Verifies contract accounting is consistent with ghost state tracking
      */
-    function invariant_totalOutstandingNonNegative() public view {
+    function invariant_totalOutstandingAccounting() public view {
         uint256 totalOut = staking.totalOutstanding();
-        assertTrue(totalOut >= 0, "totalOutstanding is negative");
+        uint256 expectedTotalOut = handler.ghost_totalStaked() + handler.ghost_totalRewards();
+        assertEq(totalOut, expectedTotalOut, "totalOutstanding accounting mismatch");
     }
     
     /**

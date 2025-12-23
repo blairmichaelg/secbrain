@@ -18,7 +18,6 @@ contract LidoARMHandler is Test {
     
     // Ghost variables
     uint256 public ghost_totalDeposits;
-    uint256 public ghost_totalWithdrawals;
     uint256 public ghost_totalSwaps;
     
     // Track actors
@@ -274,28 +273,34 @@ contract LidoARMInvariantTest is Test {
     
     /**
      * @notice ARM should maintain sufficient liquidity
-     * @dev Combined WETH + stETH balance should be reasonable
+     * @dev Combined WETH + stETH balance should be above minimum threshold
      */
     function invariant_sufficientLiquidity() public view {
         uint256 wethBalance = weth.balanceOf(address(arm));
         uint256 stethBalance = steth.balanceOf(address(arm));
         
-        // Should have some liquidity in at least one token
-        assertTrue(wethBalance > 0 || stethBalance > 0, "No liquidity");
+        // Should have meaningful liquidity (at least 1 token) in at least one asset
+        uint256 minLiquidity = 1e18;
+        assertTrue(wethBalance >= minLiquidity || stethBalance >= minLiquidity, 
+                   "Insufficient liquidity for swaps");
     }
     
     /**
      * @notice Total supply should track total assets deposited
-     * @dev For simplified 1:1 share ratio
+     * @dev For simplified 1:1 share ratio, verify bidirectional relationship
      */
     function invariant_sharesToAssetsConsistency() public view {
         uint256 supply = arm.totalSupply();
         uint256 assets = arm.totalAssets();
         
-        // In our simplified model with 1:1 ratio, these should be close
-        // Allow for some variance due to swaps
+        // Bidirectional relationship: if shares exist, assets must exist, and vice versa
         if (supply > 0) {
             assertTrue(assets > 0, "Assets should exist if shares exist");
+        }
+        
+        // Additionally, assets should not exist without corresponding shares
+        if (assets > 0) {
+            assertTrue(supply > 0, "Shares should exist if assets exist");
         }
     }
     

@@ -29,7 +29,7 @@ This document summarizes the security benefits of implementing invariant testing
 - Integer overflow/underflow scenarios
 - Rounding errors in financial calculations
 
-**Coverage**: 10,000+ test scenarios per contract with CI profile
+**Coverage**: Up to 1,000 invariant runs per contract with CI profile (20,000 total call sequences at depth 20)
 
 ### 2. State Consistency Verification
 **Benefit**: Ensures critical properties hold under ALL conditions, not just known scenarios.
@@ -48,7 +48,7 @@ This document summarizes the security benefits of implementing invariant testing
 **CI Configuration**:
 - Quick (32 runs): Fast feedback in < 1 minute
 - Standard (256 runs): Default testing in < 5 minutes
-- CI (1,000 runs): Comprehensive testing in < 15 minutes
+- CI (1,000 invariant runs): Comprehensive testing in < 15 minutes
 - Intense (5,000 runs): Available for security audits
 
 **Impact**: Security issues caught before merge, not in production
@@ -121,7 +121,7 @@ invariant_sufficientLiquidity()
 |--------|-----------|-----------------|
 | Coverage | Specific scenarios | Entire state space |
 | Edge Cases | Manual discovery | Automated discovery |
-| Scenarios | 10s-100s | 1,000s-10,000s |
+| Scenarios | 10s-100s | 1,000s-20,000s |
 | Regression | Manual updates | Automatic |
 | Security Properties | Implicit | Explicit |
 
@@ -167,7 +167,7 @@ invariant_sufficientLiquidity()
 ### Short Term (1-2 weeks)
 1. Add invariant tests for VaultCore contract
 2. Add invariant tests for Governance contract
-3. Increase CI profile to 10,000 runs
+3. Consider increasing CI profile invariant runs for even deeper testing
 4. Add Echidna integration for comparison
 
 ### Medium Term (1-2 months)
