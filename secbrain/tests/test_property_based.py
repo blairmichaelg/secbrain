@@ -9,7 +9,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from secbrain.utils.response_diff import (
     diff_body_size_entropy,
@@ -18,7 +19,6 @@ from secbrain.utils.response_diff import (
     diff_keywords,
     diff_status,
 )
-
 
 # ============================================================================
 # Property-based tests for response_diff module
@@ -30,7 +30,7 @@ def test_diff_status_symmetry(status1: int, status2: int) -> None:
     """Diff should detect change regardless of order when statuses differ."""
     result1 = diff_status(status1, status2)
     result2 = diff_status(status2, status1)
-    
+
     # Both should agree on whether there's a change
     assert result1["changed"] == result2["changed"]
     # If statuses are different, both should report a change
@@ -84,7 +84,7 @@ def test_diff_headers_case_insensitive(headers1: dict[str, str], headers2: dict[
     # Create case-variant versions
     headers1_lower = {k.lower(): v for k, v in headers1.items()}
     headers2_lower = {k.lower(): v for k, v in headers2.items()}
-    
+
     result = diff_headers(headers1_lower, headers2_lower)
     # The result should be consistent regardless of original case
     assert isinstance(result["has_diff"], bool)
@@ -126,7 +126,7 @@ def test_diff_keywords_symmetric_detection(body1: str, body2: str, keywords: lis
     """Keyword diff should detect changes regardless of which is baseline."""
     result1 = diff_keywords(body1, body2, keywords)
     result2 = diff_keywords(body2, body1, keywords)
-    
+
     # Both should agree on whether there's a change
     assert result1["changed"] == result2["changed"]
 
@@ -186,7 +186,7 @@ def _is_valid_json(text: str) -> bool:
 def test_entropy_bounded(text: str) -> None:
     """Entropy should be bounded by log2 of alphabet size."""
     from secbrain.utils.response_diff import _entropy
-    
+
     entropy = _entropy(text)
     # Entropy should be non-negative
     assert entropy >= 0

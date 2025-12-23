@@ -366,9 +366,9 @@ class TestLiteralStringSafety:
         # _executescript methods accept LiteralString parameters.
         # The actual type checking happens at mypy time - this just
         # confirms the methods exist and are callable.
-        from secbrain.tools.storage import WorkspaceStorage
-        from pathlib import Path
         import inspect
+
+        from secbrain.tools.storage import WorkspaceStorage
 
         # Check that _execute has LiteralString in its signature
         sig = inspect.signature(WorkspaceStorage._execute)

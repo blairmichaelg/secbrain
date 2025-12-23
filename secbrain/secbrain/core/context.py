@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -428,13 +428,13 @@ class RunContext:
 
     def add_finding(self, finding: dict[str, Any]) -> None:
         """Add a finding to the session."""
-        finding["timestamp"] = datetime.now().isoformat()
+        finding["timestamp"] = datetime.now(timezone.utc).isoformat()
         finding["run_id"] = self.run_id
         self.session.findings.append(finding)
 
     def add_error(self, error: dict[str, Any]) -> None:
         """Record an error."""
-        error["timestamp"] = datetime.now().isoformat()
+        error["timestamp"] = datetime.now(timezone.utc).isoformat()
         error["run_id"] = self.run_id
         self.session.errors.append(error)
 

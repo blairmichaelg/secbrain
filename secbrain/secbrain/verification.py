@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime
+from datetime import timezone
 from typing import Any, Protocol
 
 
@@ -35,7 +36,7 @@ class EvidenceBundle:
             "observations": self.observations,
         }
 
-
+2
 @dataclass(frozen=True)
 class VerificationResult:
     """Result of verifying a vulnerability signal."""
@@ -103,7 +104,7 @@ class ReflectedXSSVerifier:
             verifier=self.name,
             target=target,
             vuln_type=vuln_type,
-            created_at=datetime.now().isoformat(),
+            created_at=datetime.now(timezone.utc).isoformat(),
             observations=observations,
         )
 
@@ -179,7 +180,7 @@ class BasicSQLiVerifier:
             verifier=self.name,
             target=target,
             vuln_type=vuln_type,
-            created_at=datetime.now().isoformat(),
+            created_at=datetime.now(timezone.utc).isoformat(),
             observations=observations[:5],
         )
 

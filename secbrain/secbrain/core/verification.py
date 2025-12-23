@@ -63,7 +63,7 @@ class ResponseFingerprint:
             body_bytes = body
 
         try:
-            text = getattr(response, "text")
+            text = response.text
         except Exception:
             try:
                 text = body_bytes.decode("utf-8", errors="replace")

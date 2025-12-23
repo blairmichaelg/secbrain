@@ -4,6 +4,7 @@ globs:
 ignores:
   - "**/node_modules/**"
   - ".windsurf/rules/system-prompt.md"
+  - "targets/**"
 
 config:
   MD013: false

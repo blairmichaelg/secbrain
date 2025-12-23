@@ -54,7 +54,6 @@ class ModelClient(ABC):
         Returns:
             ModelResponse with generated content
         """
-        pass
 
     @abstractmethod
     async def generate_structured(
@@ -76,7 +75,6 @@ class ModelClient(ABC):
         Returns:
             Parsed structured response
         """
-        pass
 
     def get_model_name(self) -> str:
         """Get the model name."""

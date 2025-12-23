@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -164,7 +164,7 @@ class BugBountyWorkflow:
         Returns:
             WorkflowResult with all phase outcomes
         """
-        start_time = datetime.now()
+        start_time = datetime.now(timezone.utc)
         result = WorkflowResult(run_id=self.run_context.run_id, success=True)
 
         # Determine phases to run
@@ -241,7 +241,7 @@ class BugBountyWorkflow:
             result.success = False
 
         # Calculate totals
-        end_time = datetime.now()
+        end_time = datetime.now(timezone.utc)
         result.total_duration_seconds = (end_time - start_time).total_seconds()
 
         # Extract summary metrics
@@ -315,7 +315,7 @@ class BugBountyWorkflow:
                         "duration_seconds": pr.duration_seconds,
                         "errors": pr.errors,
                         "data": pr.data,
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                     },
                     indent=2,
                 )
@@ -367,7 +367,7 @@ class BugBountyWorkflow:
         profit_threshold: float | None = None,
     ) -> PhaseResult:
         """Execute a single phase."""
-        start_time = datetime.now()
+        start_time = datetime.now(timezone.utc)
 
         log_phase_transition(
             self.logger,
@@ -398,7 +398,7 @@ class BugBountyWorkflow:
             # Execute agent
             agent_result = await agent.run(**kwargs)
 
-            duration = (datetime.now() - start_time).total_seconds()
+            duration = (datetime.now(timezone.utc) - start_time).total_seconds()
 
             return PhaseResult(
                 phase=phase,
@@ -409,7 +409,7 @@ class BugBountyWorkflow:
             )
 
         except Exception as e:
-            duration = (datetime.now() - start_time).total_seconds()
+            duration = (datetime.now(timezone.utc) - start_time).total_seconds()
             return PhaseResult(
                 phase=phase,
                 success=False,

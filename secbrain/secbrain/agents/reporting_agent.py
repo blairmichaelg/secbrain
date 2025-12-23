@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from secbrain.agents.base import AgentResult, BaseAgent
 
@@ -96,7 +96,7 @@ class ReportingAgent(BaseAgent):
             "cvss": cwe_info.get("cvss", ""),
             "content": content,
             "poc": poc,
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
         }
 
     def _format_title(self, finding: dict[str, Any]) -> str:

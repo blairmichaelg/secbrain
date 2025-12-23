@@ -1,7 +1,15 @@
 import asyncio
+import json
+import os
+from datetime import datetime, timezone
 from pathlib import Path
 
-from secbrain.core.context import ProgramConfig, RunContext, ScopeConfig
+import pytest
+from pydantic import ValidationError
+
+from secbrain.config.models import ProgramConfig, ScopeConfig
+from secbrain.core.context import RunContext
+from secbrain.core.approval import ApprovalRequest, new_request_id
 
 
 def test_per_phase_acl_limits_block_when_exceeded(tmp_path: Path) -> None:
@@ -50,17 +58,12 @@ def test_approval_mode_auto_allows_without_prompt(tmp_path: Path) -> None:
         raise AssertionError("tools.yaml missing http_client acl")
     acl.require_approval = True
 
-    # Simulate an approval request
-    from datetime import datetime
-
-    from secbrain.core.approval import ApprovalRequest, new_request_id
-
     req = ApprovalRequest(
         request_id=new_request_id(),
         tool_name="http_client",
         operation="GET https://example.com",
         risk_level="high",
-        timestamp=datetime.now(),
+        timestamp=datetime.now(timezone.utc),
     )
 
     resp = asyncio.run(run_context.approval_manager.request_approval(req))

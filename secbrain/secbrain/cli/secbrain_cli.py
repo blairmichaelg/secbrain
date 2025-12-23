@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import json
-import signal
-import sys
-from pathlib import Path
 import os
+import signal
 import subprocess
+import sys
 import tempfile
+from pathlib import Path
 
 import typer
 import yaml
@@ -24,8 +24,9 @@ except Exception:
     # Non-fatal if python-dotenv is not installed
     pass
 
-from secbrain.core.model_manager import reset_model_manager, get_model_manager
 from eth_utils import is_address
+
+from secbrain.core.model_manager import get_model_manager, reset_model_manager
 
 app = typer.Typer(
     name="secbrain",
@@ -307,7 +308,7 @@ async def _run_workflow(
     try:
         models_cfg_path = Path(__file__).parent.parent / "config" / "models.yaml"
         if models_cfg_path.exists():
-            with open(models_cfg_path, "r", encoding="utf-8") as f:
+            with open(models_cfg_path, encoding="utf-8") as f:
                 models_cfg = yaml.safe_load(f) or {}
         else:
             models_cfg = {}

@@ -238,7 +238,6 @@ class BaseAgent(ABC):
         Returns:
             AgentResult with success status and data
         """
-        pass
 
     def _success(
         self,

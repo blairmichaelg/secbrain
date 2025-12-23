@@ -6,7 +6,7 @@ import hashlib
 import uuid
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
-from typing import Any, Protocol
+from typing import Protocol
 
 from secbrain.core.verification import (
     EvidenceBundle,

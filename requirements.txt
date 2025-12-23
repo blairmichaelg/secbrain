@@ -4,6 +4,9 @@
 #
 #    pip-compile --extra=dev --output-file=requirements.txt secbrain/pyproject.toml
 #
+## Root-level pointer so CI can detect the Python project.
+## Actual project is under ./secbrain with pyproject.toml and lock files.
+-e ./secbrain
 aiosqlite==0.22.0
     # via secbrain (secbrain/pyproject.toml)
 annotated-types==0.7.0

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -64,10 +64,12 @@ class ApprovalManager:
 
         resp = ApprovalResponse(
             request_id=req.request_id,
-            approved=approved,
-            approver=self.approver,
-            reason=reason,
-            timestamp=datetime.now(),
+            approval_event=ApprovalEvent(
+                approved=approved,
+                approver=self.approver,
+                reason=reason,
+                timestamp=datetime.now(timezone.utc),
+            ),
         )
 
         self._append_audit(

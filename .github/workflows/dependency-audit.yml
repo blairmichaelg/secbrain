@@ -15,7 +15,7 @@ on:
       - 'package-lock.json'
 
 permissions:
-  contents: read
+  contents: write
   issues: write
   security-events: write
 
@@ -87,17 +87,17 @@ jobs:
               # Get outdated packages
               with open("outdated-packages.json") as f:
                   outdated = json.load(f)
-              
+
               # Simple risk assessment
               risk_data = {
                   "timestamp": datetime.now(timezone.utc).isoformat(),
                   "outdated_count": len(outdated),
                   "risk_level": "HIGH" if len(outdated) > 20 else "MEDIUM" if len(outdated) > 10 else "LOW"
               }
-              
+
               with open("vendor-risk-assessment.json", "w") as f:
                   json.dump(risk_data, f, indent=2)
-              
+
               print(f"Risk Level: {risk_data['risk_level']}")
           except Exception as e:
               print(f"Error: {e}")
@@ -312,3 +312,16 @@ jobs:
           name: npm-audit-results
           path: npm-audit-results.json
           retention-days: 90
+
+  component-detection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Component Detection
+        uses: actions/component-detection-dependency-submission-action@v0.8.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          detectors: |
+            pip
+            npm

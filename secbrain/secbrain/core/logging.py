@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -41,7 +41,7 @@ def add_timestamp(
     logger: WrappedLogger, method_name: str, event_dict: EventDict
 ) -> EventDict:
     """Add ISO timestamp to log events."""
-    event_dict["timestamp"] = datetime.now().isoformat()
+    event_dict["timestamp"] = datetime.now(timezone.utc).isoformat()
     return event_dict
 
 
@@ -78,7 +78,7 @@ def setup_logging(
     if run_id is None:
         raise ValueError("setup_logging requires run_id")
 
-    timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S")
     log_file = logs_path / f"run-{timestamp}-{run_id}.jsonl"
 
     # Create file handler

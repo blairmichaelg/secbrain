@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import logging
 import os
-from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import yaml
 from openai import AsyncOpenAI
@@ -37,12 +36,12 @@ class ModelManager:
         # Prefer repo config/models.yaml relative to this file
         return Path(__file__).parent.parent / "config" / "models.yaml"
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load models.yaml with env var interpolation."""
         cfg_path = self._config_path()
         if not cfg_path.exists():
             return {}
-        with open(cfg_path, "r", encoding="utf-8") as f:
+        with open(cfg_path, encoding="utf-8") as f:
             config = yaml.safe_load(f) or {}
 
         # Normalize deprecated models to current supported defaults
@@ -124,17 +123,17 @@ class ModelManager:
             raise
 
     @property
-    def primary_rpc(self) -> Optional[str]:
+    def primary_rpc(self) -> str | None:
         """Get primary RPC URL."""
         return self.rpc_url
 
     @property
-    def fallback_rpc(self) -> Optional[str]:
+    def fallback_rpc(self) -> str | None:
         """Get fallback RPC URL."""
         return self.rpc_fallback
 
 
-_model_manager: Optional[ModelManager] = None
+_model_manager: ModelManager | None = None
 
 
 def get_model_manager() -> ModelManager:

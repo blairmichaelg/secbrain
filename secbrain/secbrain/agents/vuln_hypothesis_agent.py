@@ -1166,13 +1166,11 @@ Hypotheses:
 Evaluate:
 1. Which hypotheses are most likely to yield real vulnerabilities?
 2. Which should be deprioritized or skipped?
-3. Are there any safety concerns with testing these?
 
 Respond with JSON:
 {{
   "priority_hypotheses": ["hyp-id-1", "hyp-id-2"],
   "skip_hypotheses": ["hyp-id-3"],
-  "safety_concerns": ["..."],
   "recommendations": ["..."]
 }}"""
 

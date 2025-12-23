@@ -258,8 +258,7 @@ Respond with JSON:
                 max_profit_eth = p_eth
                 gas_used = att.get("gas_used")
                 gas_price_wei = att.get("gas_price_wei") or att.get("gas_price")
-            if p_usd > max_profit_usd:
-                max_profit_usd = p_usd
+            max_profit_usd = max(max_profit_usd, p_usd)
 
         # Estimate gas cost with EIP-1559-style baseline + priority fee if available
         base_gas_price_wei = 50e9  # 50 gwei fallback

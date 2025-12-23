@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, LiteralString
 
@@ -14,7 +14,6 @@ except ModuleNotFoundError:  # pragma: no cover
     aiosqlite = None  # type: ignore[assignment]
 
 if TYPE_CHECKING:
-    import sqlite3
 
     from secbrain.core.context import RunContext
 
@@ -170,7 +169,7 @@ class WorkspaceStorage:
             """,
             (
                 self.run_id,
-                datetime.now().isoformat(),
+                datetime.now(timezone.utc).isoformat(),
                 "running",
                 scope_hash,
                 json.dumps(metadata or {}),
@@ -184,7 +183,7 @@ class WorkspaceStorage:
             """
             UPDATE runs SET end_time = ?, status = ? WHERE run_id = ?
             """,
-            (datetime.now().isoformat(), status, self.run_id),
+            (datetime.now(timezone.utc).isoformat(), status, self.run_id),
         )
         await self._commit()
 
@@ -202,7 +201,7 @@ class WorkspaceStorage:
                 asset.get("value"),
                 json.dumps(asset.get("technologies", [])),
                 json.dumps(asset.get("metadata", {})),
-                datetime.now().isoformat(),
+                datetime.now(timezone.utc).isoformat(),
             ),
         )
         await self._commit()
@@ -258,7 +257,7 @@ class WorkspaceStorage:
                 hypothesis.get("rationale", ""),
                 hypothesis.get("status", "pending"),
                 json.dumps(hypothesis.get("result", {})),
-                datetime.now().isoformat(),
+                datetime.now(timezone.utc).isoformat(),
             ),
         )
         await self._commit()
@@ -309,7 +308,7 @@ class WorkspaceStorage:
                 finding.get("target"),
                 finding.get("description"),
                 json.dumps(finding.get("evidence", [])),
-                datetime.now().isoformat(),
+                datetime.now(timezone.utc).isoformat(),
             ),
         )
         await self._commit()
@@ -363,7 +362,7 @@ class WorkspaceStorage:
                 target,
                 1 if success else 0,
                 duration_ms,
-                datetime.now().isoformat(),
+                datetime.now(timezone.utc).isoformat(),
             ),
         )
         await self._commit()

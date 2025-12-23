@@ -133,7 +133,7 @@ Provide a focused, technical answer relevant to security research and bug bounty
 
         except httpx.HTTPError as e:
             return {
-                "answer": f"[ERROR] Research failed: {str(e)}",
+                "answer": f"[ERROR] Research failed: {e!s}",
                 "sources": [],
                 "cached": False,
                 "error": True,
