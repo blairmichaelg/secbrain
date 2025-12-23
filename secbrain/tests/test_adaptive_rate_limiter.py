@@ -249,7 +249,8 @@ async def test_adaptive_rate_limiter_resize_during_acquire():
     limiter = ExploitAgent.AdaptiveRateLimiter(initial_limit=1, max_limit=5)
     
     # First, build up success count to be near resize threshold
-    # This needs to happen before tasks A and B start
+    # Run 7 operations so that task A's operation will be the 8th, triggering resize
+    # This needs to happen before tasks A and B start to avoid deadlock
     for _ in range(7):
         async with limiter:
             pass
@@ -293,7 +294,7 @@ async def test_adaptive_rate_limiter_resize_during_acquire():
     # Wait a bit for setup
     await asyncio.sleep(0.01)
     
-    # Now let task A exit (which will trigger resize since it's the 8th success)
+    # Now let task A exit (which will trigger resize in __aexit__ since it's the 8th success)
     task_a_can_exit.set()
     
     # Wait for both to complete
@@ -331,7 +332,7 @@ async def test_adaptive_rate_limiter_concurrent_resizes():
     # to try to trigger concurrent resizes
     await asyncio.gather(*[task() for _ in range(10)])
     
-    # At least one resize should have happened (8th success triggers resize)
+    # Multiple resizes should have happened (8th and 16th operations trigger resizes)
     assert limiter.current_limit > initial_limit
     
     # The limiter should still be in a valid state
