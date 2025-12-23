@@ -98,6 +98,7 @@ secbrain insights --workspace ./targets/protocol1 --format html --open
 - 🛠️ [Operations Guide](secbrain/docs/ops.md) - Setup and usage
 - 🔒 [Threat Model](secbrain/docs/threat_model.md) - Security considerations
 - 📊 [Insights Guide](secbrain/docs/INSIGHTS-GUIDE.md) - Turn data into actionable insights
+- 🧪 [Invariant Testing Guide](docs/INVARIANT-TESTING-GUIDE.md) - Property-based testing for smart contracts
 
 ### Contributing & Quality
 - 🤝 [Contributing Guide](CONTRIBUTING.md) - How to contribute
@@ -191,9 +192,19 @@ FOUNDRY_PROFILE=ci forge test
 # Invariant tests only
 forge test --match-contract Invariant -vvv
 
+# Invariant tests with CI profile (comprehensive)
+FOUNDRY_PROFILE=ci forge test --match-contract Invariant -vvv
+
 # Echidna fuzzing (if installed)
 echidna . --contract EchidnaTestExample --config echidna.yaml
 ```
+
+**Invariant Test Coverage:**
+- SingleAssetStaking: Balance consistency, accounting, pause state
+- WOETH: ERC4626 properties, conversion consistency, backing assets
+- LidoARM: Liquidity management, share accounting
+
+See [Invariant Testing Guide](docs/INVARIANT-TESTING-GUIDE.md) for details.
 
 **Advanced Testing Features:**
 - 🧪 **Property-Based Testing**: Hypothesis generates thousands of random inputs
