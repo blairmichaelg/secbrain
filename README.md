@@ -53,8 +53,18 @@ pip install -e ".[dev]"
 ### Set up API keys
 
 ```bash
+# Required for research integration
 export PERPLEXITY_API_KEY=pplx-xxxx
+
+# Required for advisor model
 export GOOGLE_API_KEY=AIza-xxxx
+
+# Required for worker model (choose one)
+export TOGETHER_API_KEY=your-together-key      # Recommended: Together AI
+# OR
+export OPENROUTER_API_KEY=your-openrouter-key  # Alternative: OpenRouter
+# OR
+export OPENAI_API_KEY=your-openai-key          # Alternative: OpenAI
 ```
 
 ### Run a dry-run test
