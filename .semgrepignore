@@ -31,7 +31,6 @@ vendor/
 *.json.gz
 
 # Third-party code
-.venv/
 lib/
 libs/
 

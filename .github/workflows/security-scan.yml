@@ -66,13 +66,19 @@ jobs:
         run: |
           cd secbrain
           # Run custom rules
-          semgrep --config=../.semgrep/rules/ --json --output semgrep-custom-results.json secbrain/ || true
+          semgrep --config=../.semgrep/rules/ --json --output semgrep-custom-results.json secbrain/ || echo '{"results":[]}' > semgrep-custom-results.json
           semgrep --config=../.semgrep/rules/ secbrain/ || true
           # Run auto rules
-          semgrep --config=auto --json --output semgrep-auto-results.json secbrain/ || true
+          semgrep --config=auto --json --output semgrep-auto-results.json secbrain/ || echo '{"results":[]}' > semgrep-auto-results.json
           semgrep --config=auto secbrain/ || true
-          # Merge results
-          jq -s '.[0].results + .[1].results | {results: .}' semgrep-custom-results.json semgrep-auto-results.json > semgrep-results.json 2>/dev/null || cp semgrep-custom-results.json semgrep-results.json
+          # Merge results if both files exist and are valid
+          if [ -f semgrep-custom-results.json ] && [ -f semgrep-auto-results.json ]; then
+            jq -s 'if (.[0].results and .[1].results) then {results: (.[0].results + .[1].results)} else .[0] end' \
+              semgrep-custom-results.json semgrep-auto-results.json > semgrep-results.json 2>/dev/null || \
+              cp semgrep-custom-results.json semgrep-results.json
+          else
+            cp semgrep-custom-results.json semgrep-results.json 2>/dev/null || echo '{"results":[]}' > semgrep-results.json
+          fi
 
       - name: Upload security scan results
         if: always()
