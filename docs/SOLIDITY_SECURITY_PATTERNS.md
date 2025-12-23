@@ -4,6 +4,15 @@
 
 This document describes the advanced Solidity security patterns implemented in SecBrain for detecting and preventing state-of-the-art smart contract vulnerabilities.
 
+## 📚 Reference Implementation Templates
+
+SecBrain provides production-ready security pattern templates in `docs/testing-examples/`:
+
+- **[SecureVaultTemplate.sol](../docs/testing-examples/SecureVaultTemplate.sol)** - Comprehensive reentrancy protection (classic + read-only), access control, and flash loan detection
+- **[OracleSecurityTemplate.sol](../docs/testing-examples/OracleSecurityTemplate.sol)** - Chainlink integration, TWAP oracles, multi-oracle consensus, and price manipulation resistance
+- **[MEVProtectionTemplate.sol](../docs/testing-examples/MEVProtectionTemplate.sol)** - Slippage protection, deadline enforcement, commit-reveal scheme, and sandwich attack prevention
+- **[DeFiSecurityTests.t.sol](../docs/testing-examples/DeFiSecurityTests.t.sol)** - Comprehensive test suite for all security patterns
+
 ## Table of Contents
 
 1. [Reentrancy Patterns](#reentrancy-patterns)
@@ -12,6 +21,7 @@ This document describes the advanced Solidity security patterns implemented in S
 4. [Front-Running Protection](#front-running-protection)
 5. [Oracle Security](#oracle-security)
 6. [Formal Verification Hints](#formal-verification-hints)
+7. [Implementation Templates](#implementation-templates)
 
 ## Reentrancy Patterns
 
@@ -510,6 +520,144 @@ contract MyTokenInvariantTest is Test {
 - Formal verification hints
 - NatSpec annotations for invariants
 - Foundry invariant testing templates
+
+## Implementation Templates
+
+### SecureVaultTemplate.sol
+
+**Location:** `docs/testing-examples/SecureVaultTemplate.sol`
+
+**Features:**
+- ✅ Reentrancy guards for state-changing functions
+- ✅ Read-only reentrancy protection for view functions
+- ✅ Checks-Effects-Interactions (CEI) pattern enforcement
+- ✅ Role-based access control (ADMIN, OPERATOR, PAUSER)
+- ✅ Flash loan detection (same-block action prevention)
+- ✅ Slippage protection on withdrawals
+- ✅ Emergency pause functionality
+- ✅ TWAP oracle integration points
+
+**Usage Example:**
+```solidity
+import "./SecureVaultTemplate.sol";
+
+// Your contract inherits all security protections
+contract MyVault is SecureVault {
+    // Add your custom logic here
+    // All security patterns are already implemented
+}
+```
+
+**Key Patterns:**
+- **Reentrancy Protection**: Both `nonReentrant` and `nonReentrantView` modifiers
+- **Access Control**: Three-tier role system (ADMIN_ROLE, OPERATOR_ROLE, PAUSER_ROLE)
+- **Flash Loan Detection**: `noFlashLoan` modifier prevents same-block actions
+- **CEI Pattern**: All functions follow Checks → Effects → Interactions
+
+### OracleSecurityTemplate.sol
+
+**Location:** `docs/testing-examples/OracleSecurityTemplate.sol`
+
+**Features:**
+- ✅ Chainlink price feed integration with staleness checks
+- ✅ TWAP (Time-Weighted Average Price) using Uniswap V3
+- ✅ Multi-oracle consensus mechanism
+- ✅ Price deviation detection and rejection
+- ✅ Circuit breakers for extreme price movements
+- ✅ Flash loan price manipulation resistance
+
+**Usage Example:**
+```solidity
+import "./OracleSecurityTemplate.sol";
+
+// Deploy oracle system
+ChainlinkOracle chainlink = new ChainlinkOracle(CHAINLINK_FEED_ADDRESS);
+TWAPOracle twap = new TWAPOracle(UNISWAP_V3_POOL);
+MultiOracleConsensus consensus = new MultiOracleConsensus(
+    address(chainlink),
+    address(twap)
+);
+
+// Get secure price
+uint256 price = consensus.getConsensusPrice();
+```
+
+**Key Patterns:**
+- **Staleness Checks**: Validates Chainlink data is recent (< 1 hour)
+- **TWAP Protection**: 30-minute time-weighted average prevents flash loan manipulation
+- **Multi-Oracle Consensus**: Cross-validates Chainlink and TWAP (max 3% deviation)
+- **Circuit Breakers**: Automatic shutdown on extreme price movements
+
+### MEVProtectionTemplate.sol
+
+**Location:** `docs/testing-examples/MEVProtectionTemplate.sol`
+
+**Features:**
+- ✅ Comprehensive slippage protection
+- ✅ Transaction deadline enforcement
+- ✅ Commit-reveal scheme for front-running resistance
+- ✅ Sandwich attack detection and prevention
+- ✅ Price impact validation
+- ✅ MEV-aware transaction ordering
+
+**Usage Example:**
+```solidity
+import "./MEVProtectionTemplate.sol";
+
+// Deploy MEV-protected DEX
+MEVProtectedDEX dex = new MEVProtectedDEX();
+
+// Swap with full MEV protection
+uint256 amountOut = dex.swapWithProtection(
+    amountIn,
+    minAmountOut,  // Slippage protection
+    deadline       // Deadline protection
+);
+
+// Or use commit-reveal for sensitive trades
+bytes32 commitHash = keccak256(abi.encodePacked(
+    address(this),
+    abi.encode(amountIn, minOut, deadline),
+    salt
+));
+dex.commitSwap(commitHash);
+// Wait minimum blocks...
+dex.revealSwap(amountIn, minOut, deadline, salt);
+```
+
+**Key Patterns:**
+- **Slippage Protection**: User-defined minimum output amounts (max 5%)
+- **Deadline Enforcement**: Prevents stale transaction execution
+- **Commit-Reveal**: Two-phase execution prevents front-running
+- **Sandwich Detection**: Monitors per-block price impact (max 3%)
+
+### DeFiSecurityTests.t.sol
+
+**Location:** `docs/testing-examples/DeFiSecurityTests.t.sol`
+
+**Test Coverage:**
+- ✅ Reentrancy attack attempts (should fail)
+- ✅ Read-only reentrancy protection
+- ✅ CEI pattern validation
+- ✅ Role-based access control enforcement
+- ✅ Flash loan detection
+- ✅ Slippage protection validation
+- ✅ Deadline enforcement
+- ✅ Commit-reveal workflow
+- ✅ Sandwich attack detection
+- ✅ Invariant testing with handlers
+
+**Running Tests:**
+```bash
+# Quick test (32 runs)
+FOUNDRY_PROFILE=quick forge test --match-path docs/testing-examples/DeFiSecurityTests.t.sol
+
+# Standard test (256 runs)
+forge test --match-path docs/testing-examples/DeFiSecurityTests.t.sol
+
+# CI test (10,000 runs)
+FOUNDRY_PROFILE=ci forge test --match-path docs/testing-examples/DeFiSecurityTests.t.sol
+```
 
 ## Bug Bounty Impact
 
