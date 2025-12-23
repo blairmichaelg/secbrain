@@ -24,7 +24,7 @@ class OpenWorkerClient(ModelClient):
 
     def __init__(
         self,
-        model: str = "qwen/qwen-2.5-72b-instruct",
+        model: str = "deepseek/deepseek-chat",  # Changed to DeepSeek - faster and cheaper
         base_url: str | None = None,
         api_key: str | None = None,
         **kwargs: Any,
@@ -42,6 +42,7 @@ class OpenWorkerClient(ModelClient):
             or os.environ.get("OPENAI_API_KEY", "")
         )
 
+        # Optimized HTTP client with connection pooling and keep-alive
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             headers={
@@ -49,6 +50,7 @@ class OpenWorkerClient(ModelClient):
                 "Content-Type": "application/json",
             },
             timeout=120.0,
+            limits=httpx.Limits(max_keepalive_connections=10, max_connections=20),
         )
 
     async def generate(

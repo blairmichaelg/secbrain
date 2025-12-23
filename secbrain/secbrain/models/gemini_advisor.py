@@ -22,7 +22,7 @@ class GeminiAdvisorClient(ModelClient):
 
     def __init__(
         self,
-        model: str = "gemini-pro",
+        model: str = "gemini-2.0-flash-exp",  # Changed to Flash for faster responses
         api_key: str | None = None,
         **kwargs: Any,
     ):

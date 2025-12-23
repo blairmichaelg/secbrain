@@ -18,26 +18,20 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ResearchQuery:
-    """Represents a research query."""
+    """A research query with priority and context."""
 
     question: str
     context: str = ""
-    priority: int = 5
-    phase: str = "unknown"
+    priority: int = 5  # 1-10, higher is more important
+    phase: str = ""
+    tags: list[str] = field(default_factory=list)
+    ttl_hours: int = 24
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def hash_key(self) -> str:
         """Generate a unique hash for deduplication."""
         content = f"{self.question.lower().strip()}||{self.context[:200]}"
         return hashlib.sha256(content.encode()).hexdigest()
-    """A research query with priority and context."""
-
-    question: str
-    context: str
-    priority: int = 5  # 1-10, higher is more important
-    phase: str = ""
-    tags: list[str] = field(default_factory=list)
-    ttl_hours: int = 24
 
 
 @dataclass
@@ -50,9 +44,6 @@ class ResearchResult:
     sources: list[str] = field(default_factory=list)
     cached: bool = False
     error: str | None = None
-    sources: list[str]
-    cached: bool = False
-    error: bool = False
 
 
 class ResearchOrchestrator:
@@ -202,9 +193,10 @@ class ResearchOrchestrator:
                     )
 
                 # Execute research query
-                response = await self.research_client.research(
+                response = await self.research_client.ask_research(
                     question=query.question,
                     context=query.context,
+                    run_context=self.run_context,
                 )
 
                 self._stats["executed_queries"] += 1
@@ -359,7 +351,7 @@ class ResearchOrchestrator:
 
     def clear_queue(self) -> None:
         """Clear the research queue."""
-        self._query_queue.clear()
+        self._pending_queries.clear()
 
     def clear_results(self) -> None:
         """Clear stored results."""

@@ -44,7 +44,7 @@ class PerplexityResearch:
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = "sonar-medium-online",
+        model: str = "sonar",  # Changed to sonar (faster, cheaper) from sonar-medium-online
         max_calls_per_run: int = 50,  # Increased from 20 for intensive research
     ):
         self.api_key = api_key or os.environ.get("PERPLEXITY_API_KEY", "")
@@ -61,7 +61,7 @@ class PerplexityResearch:
         self._cache_ttl: dict[str, datetime] = {}
         self._default_ttl = timedelta(hours=24)
 
-        # HTTP client
+        # HTTP client with optimized connection pooling
         self.client = httpx.AsyncClient(
             base_url="https://api.perplexity.ai",
             headers={
@@ -69,6 +69,7 @@ class PerplexityResearch:
                 "Content-Type": "application/json",
             },
             timeout=60.0,
+            limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
         )
 
     def _cache_key(self, question: str, context: str = "") -> str:
@@ -246,7 +247,7 @@ Prioritize data from within the last 6 months (from {datetime.now().strftime('%B
                 "cached": bool
             }
 
-        Cache: 72 hours (severity standards change slowly)
+        Cache: 168 hours (7 days - severity standards change very slowly)
         """
         from datetime import datetime, timedelta
         
@@ -276,7 +277,7 @@ Provide concrete, data-driven assessment with specific examples and amounts.
             question=question,
             context=f"Severity research for {vuln_type}",
             run_context=run_context,
-            ttl_hours=72,  # 3 day cache
+            ttl_hours=168,  # 7 day cache (severity standards change slowly)
         )
 
     async def research_attack_vectors(
