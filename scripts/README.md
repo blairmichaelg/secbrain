@@ -1,12 +1,54 @@
 # AI Engineer Analysis Scripts
 
-This directory contains scripts that power the dynamic AI-Powered Engineering Agent workflow.
+This directory contains scripts that power the dynamic AI-Powered Engineering Agent workflow, as well as example scripts for running SecBrain.
 
 ## Overview
 
 The AI engineer workflow has been transformed from static, cookie-cutter suggestions to dynamic, context-aware recommendations based on actual codebase analysis and cutting-edge security intelligence.
 
-## Scripts
+## Example Scripts
+
+### `run_example.sh` (Bash)
+
+**Purpose:** Example bash script demonstrating proper RPC URL configuration and SecBrain execution.
+
+**Features:**
+- Proper environment variable quoting
+- Configuration validation
+- Clear error messages
+- Best practices for array expansion
+
+**Usage:**
+```bash
+chmod +x scripts/run_example.sh
+./scripts/run_example.sh
+```
+
+### `run_example.ps1` (PowerShell)
+
+**Purpose:** Example PowerShell script demonstrating proper RPC URL configuration to avoid concatenation issues.
+
+**Features:**
+- Parameter-based configuration
+- Proper quoting to prevent PowerShell misinterpretation
+- Array splatting for correct argument passing
+- Inline tips for common PowerShell pitfalls
+
+**Usage:**
+```powershell
+.\scripts\run_example.ps1
+.\scripts\run_example.ps1 -RpcUrl "https://ethereum.publicnode.com"
+.\scripts\run_example.ps1 -BlockNumber 18500000
+```
+
+**Important PowerShell Notes:**
+- Always quote RPC URLs: `$env:RPC_URL = "https://..."`
+- Use arrays for command arguments to ensure proper quoting
+- Prefer `scope.yaml` for multiple RPC URLs instead of environment variables
+
+See [docs/TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md) for more details on RPC configuration.
+
+## AI Engineering Scripts
 
 ### 1. `ai_engineer_analysis.py`
 
