@@ -13,6 +13,13 @@ targets/**/instascope/lib/
 pwsh.profile.ps1
 claude-review.*
 
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+.Python
+
 # Test and validation workspaces (generated during test runs)
 secbrain/test_workspace/
 secbrain/validation_workspace/
@@ -72,11 +79,13 @@ build/
 *.whl
 
 # IDE
-.vscode/settings.json
+.vscode/*
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
 *~
+.DS_Store
 
 # Insights reports generated in workspaces
 targets/**/insights/
