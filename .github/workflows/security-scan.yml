@@ -33,7 +33,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           cd secbrain
-          pip install -r requirements.lock
+          pip install --require-hashes -r requirements.lock
           pip install bandit[toml] safety pip-audit semgrep
 
       - name: Run Bandit security scan

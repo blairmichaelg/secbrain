@@ -9,8 +9,8 @@ This project uses **hash-verified dependencies** for supply chain security. All 
 ### Files
 
 - **`secbrain/requirements.in`**: Human-readable list of direct dependencies
-- **`secbrain/requirements-hashed.txt`**: Auto-generated file with all dependencies and their SHA256 hashes
-- **`secbrain/requirements.lock`**: Simple version-only lock file (kept for compatibility)
+- **`secbrain/requirements.lock`**: Auto-generated file with all dependencies and their SHA256 hashes (hash-pinned)
+- **`secbrain/requirements-hashed.txt`**: Alternative name for hash-verified requirements (kept for compatibility)
 - **`requirements.txt`**: Root requirements file (generated from pyproject.toml for CI)
 - **`secbrain/pyproject.toml`**: Project metadata and dependency specifications
 
@@ -19,8 +19,8 @@ This project uses **hash-verified dependencies** for supply chain security. All 
 ```
 requirements.in (manual)
     ↓ [pip-compile --generate-hashes]
-requirements-hashed.txt (auto-generated)
-    ↓ [pip install]
+requirements.lock (auto-generated with hashes)
+    ↓ [pip install --require-hashes]
 Production environment
 ```
 
@@ -36,12 +36,12 @@ Production environment
 2. Run pip-compile to update the hashed requirements:
    ```bash
    cd secbrain
-   pip-compile --generate-hashes --output-file=requirements-hashed.txt requirements.in
+   pip-compile --generate-hashes --output-file=requirements.lock requirements.in
    ```
 
 3. Commit both files:
    ```bash
-   git add requirements.in requirements-hashed.txt
+   git add requirements.in requirements.lock
    git commit -m "Add new-package dependency"
    ```
 
@@ -51,14 +51,14 @@ To update all dependencies to their latest compatible versions:
 
 ```bash
 cd secbrain
-pip-compile --generate-hashes --upgrade --output-file=requirements-hashed.txt requirements.in
+pip-compile --generate-hashes --upgrade --output-file=requirements.lock requirements.in
 ```
 
 To update a specific package:
 
 ```bash
 cd secbrain
-pip-compile --generate-hashes --upgrade-package package-name --output-file=requirements-hashed.txt requirements.in
+pip-compile --generate-hashes --upgrade-package package-name --output-file=requirements.lock requirements.in
 ```
 
 ### Installing Dependencies
@@ -66,11 +66,11 @@ pip-compile --generate-hashes --upgrade-package package-name --output-file=requi
 **Development (with hash verification):**
 ```bash
 cd secbrain
-pip install -r requirements-hashed.txt
+pip install --require-hashes -r requirements.lock
 ```
 
-**CI/CD (automated):**
-The workflows automatically use hash-verified requirements.
+**CI/CD (automated with hash verification):**
+The workflows automatically use hash-verified requirements with `--require-hashes` flag.
 
 ## Security Benefits
 
@@ -94,6 +94,14 @@ requests==2.32.5 \
     # via -r requirements.in
 ```
 
+### Installation with Hash Verification
+
+When installing with `--require-hashes`, pip will:
+1. Verify each package's hash against the hashes in requirements.lock
+2. Reject installation if ANY package hash doesn't match
+3. Prevent installation of packages without hashes
+4. Ensure all dependencies (including transitive ones) are verified
+
 ## Integration with CI/CD
 
 All CI workflows use hash-verified requirements:
@@ -106,7 +114,7 @@ All CI workflows use hash-verified requirements:
 
 ### pip-compile (from pip-tools)
 
-- **Purpose**: Generate requirements-hashed.txt from requirements.in
+- **Purpose**: Generate requirements.lock from requirements.in
 - **Installation**: `pip install pip-tools`
 - **Documentation**: https://pip-tools.readthedocs.io/
 
@@ -142,12 +150,13 @@ Critical vulnerabilities trigger automatic GitHub issues.
 
 ## Best Practices
 
-1. **Always use hash-verified requirements** in production
+1. **Always use hash-verified requirements** in production with `--require-hashes` flag
 2. **Review dependency updates** before merging Dependabot PRs
 3. **Keep requirements.in minimal** - only list direct dependencies
-4. **Run pip-compile** after changing requirements.in
+4. **Run pip-compile** after changing requirements.in to regenerate requirements.lock
 5. **Test updates** in development before production deployment
 6. **Monitor security advisories** for critical dependencies
+7. **Use `pip install --require-hashes -r requirements.lock`** to enforce hash verification
 
 ## Troubleshooting
 
@@ -161,8 +170,17 @@ ERROR: THESE PACKAGES DO NOT MATCH THE HASHES FROM THE REQUIREMENTS FILE
 **Solution**: Regenerate hashes with:
 ```bash
 cd secbrain
-pip-compile --generate-hashes --output-file=requirements-hashed.txt requirements.in
+pip-compile --generate-hashes --output-file=requirements.lock requirements.in
 ```
+
+### Installing packages without hashes fails
+
+When using `--require-hashes`, ALL packages must have hashes. If you need to install 
+additional packages (like dev tools), either:
+
+1. Install them without the requirements file: `pip install package-name`
+2. Add them to requirements.in and regenerate requirements.lock
+3. Use a separate requirements file for dev tools without the `--require-hashes` flag
 
 ### Dependency conflict
 

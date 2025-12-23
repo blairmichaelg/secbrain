@@ -12,13 +12,11 @@ on:
       - 'secbrain/pyproject.toml'
       - 'secbrain/requirements.lock'
       - 'secbrain/requirements.in'
-      - 'secbrain/requirements-hashed.txt'
   pull_request:
     paths:
       - 'requirements.txt'
       - 'secbrain/pyproject.toml'
       - 'secbrain/requirements.lock'
-      - 'secbrain/requirements-hashed.txt'
 
 permissions:
   contents: read
@@ -41,7 +39,7 @@ jobs:
           python -m pip install --upgrade pip
           cd secbrain
           # Use hash-verified requirements for supply chain security
-          pip install -r requirements-hashed.txt
+          pip install --require-hashes -r requirements.lock
           pip install pip-audit cyclonedx-bom pip-licenses
 
       - name: Generate CycloneDX SBOM (JSON)
@@ -51,7 +49,7 @@ jobs:
           cd secbrain
           mkdir -p ../sbom
           pip-audit --format cyclonedx-json --output ../sbom/sbom-cyclonedx.json || \
-          cyclonedx-py -r requirements-hashed.txt -o ../sbom/sbom-cyclonedx.json --format json
+          cyclonedx-py -r requirements.lock -o ../sbom/sbom-cyclonedx.json --format json
           echo "Generated CycloneDX JSON SBOM"
 
       - name: Generate CycloneDX SBOM (XML)
@@ -59,7 +57,7 @@ jobs:
         continue-on-error: true
         run: |
           cd secbrain
-          cyclonedx-py -r requirements-hashed.txt -o ../sbom/sbom-cyclonedx.xml --format xml
+          cyclonedx-py -r requirements.lock -o ../sbom/sbom-cyclonedx.xml --format xml
           echo "Generated CycloneDX XML SBOM"
 
       - name: Generate SPDX SBOM
@@ -164,7 +162,7 @@ jobs:
           - ✅ **Hash Verification**: All dependencies locked with SHA256 hashes
 
           ### Supply Chain Security (SLSA)
-          - 🔐 **Hash-Verified Dependencies**: Using requirements-hashed.txt with SHA256 checksums
+          - 🔐 **Hash-Verified Dependencies**: Using requirements.lock with SHA256 checksums
           - 🔒 **Tamper Detection**: pip rejects packages with mismatched hashes
           - 📋 **Reproducible Builds**: Identical dependencies across all environments
           - 🔍 **Audit Trail**: All hash changes tracked in version control

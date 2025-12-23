@@ -41,7 +41,7 @@ jobs:
           # Python tools
           python -m pip install --upgrade pip
           cd secbrain
-          pip install -r requirements.lock
+          pip install --require-hashes -r requirements.lock
           pip install -e ".[dev]"
           
           # Python security and quality tools

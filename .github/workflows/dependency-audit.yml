@@ -11,7 +11,6 @@ on:
       - 'requirements.txt'
       - 'secbrain/pyproject.toml'
       - 'secbrain/requirements.lock'
-      - 'secbrain/requirements-hashed.txt'
       - 'package.json'
       - 'package-lock.json'
 
@@ -37,7 +36,7 @@ jobs:
           python -m pip install --upgrade pip
           cd secbrain
           # Use hash-verified requirements for supply chain security
-          pip install -r requirements-hashed.txt
+          pip install --require-hashes -r requirements.lock
           pip install safety pip-audit
 
       - name: Run pip-audit
@@ -275,8 +274,8 @@ jobs:
           ### Best Practices
           - ✅ Keep dependencies up to date (Dependabot daily updates)
           - ✅ Review security advisories regularly (automated scanning)
-          - ✅ Pin versions in production with hashes (requirements-hashed.txt)
-          - ✅ Use lock files (requirements-hashed.txt with SHA256 hashes)
+          - ✅ Pin versions in production with hashes (requirements.lock)
+          - ✅ Use lock files (requirements.lock with SHA256 hashes)
           - ✅ Monitor for new vulnerabilities (daily scans)
           - ✅ Verify license compatibility (automated checks)
 

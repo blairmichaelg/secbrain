@@ -46,7 +46,7 @@ cd secbrain
 uv sync
 
 # Or with pip (using hash-verified requirements for security)
-pip install -r requirements-hashed.txt
+pip install --require-hashes -r requirements.lock
 
 # Or install in development mode
 pip install -e ".[dev]"
