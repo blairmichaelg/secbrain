@@ -90,3 +90,4 @@ build/
 # Insights reports generated in workspaces
 targets/**/insights/
 **/insights-dashboard.json
+targets/**/run-live-*
