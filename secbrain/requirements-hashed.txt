@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes --output-file=requirements-hashed.txt requirements.in
 #
-aiosqlite==0.22.0 \
-    --hash=sha256:7e9e52d72b319fcdeac727668975056c49720c995176dc57370935e5ba162bb9 \
-    --hash=sha256:96007fac2ce70eda3ca1bba7a3008c435258a592b8fbf2ee3eeaa36d33971a09
+aiosqlite==0.22.1 \
+    --hash=sha256:043e0bd78d32888c0a9ca90fc788b38796843360c855a7262a532813133a0650 \
+    --hash=sha256:21c002eb13823fad740196c5a2e9d8e62f6243bd9e7e4a1f87fb5e44ecb4fceb
     # via -r requirements.in
 annotated-types==0.7.0 \
     --hash=sha256:1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53 \
@@ -1013,9 +1013,9 @@ pygments==2.19.2 \
     # via
     #   pytest
     #   rich
-pyparsing==3.3.0 \
-    --hash=sha256:0de16f2661afbab11fe6645d9472c3b96968d2fffea5b0cc9da88f5be286f039 \
-    --hash=sha256:d15038408e0097d3a01e7e0846731f7f2450c5b6e4a75a52baabd6bbf24585be
+pyparsing==3.3.1 \
+    --hash=sha256:023b5e7e5520ad96642e2c6db4cb683d3970bd640cdf7115049a6e9c3682df82 \
+    --hash=sha256:47fad0f17ac1e2cad3de3b458570fbc9b03560aa029ed5e16ee5554da9a2251c
     # via httplib2
 pytest==9.0.2 \
     --hash=sha256:711ffd45bf766d5264d487b917733b453d917afd2b0ad65223959f59089f875b \
