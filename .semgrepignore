@@ -1,0 +1,43 @@
+# Semgrep ignore file
+# Directories and files to exclude from security scanning
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Dependencies
+node_modules/
+vendor/
+
+# Test files (reduce noise, they may have intentionally unsafe patterns)
+# Uncomment if you want to exclude tests
+# **/tests/
+# **/test_*.py
+# **/*_test.py
+
+# Large files
+*.lock
+*.log
+*.json.gz
+
+# Third-party code
+.venv/
+lib/
+libs/
+
+# Git
+.git/
+
+# Documentation
+docs/
+*.md

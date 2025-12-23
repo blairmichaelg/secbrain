@@ -156,6 +156,36 @@ python -m ruff check .
 python -m ruff check . --fix
 ```
 
+### Security Scanning
+
+SecBrain includes custom Semgrep rules for detecting security vulnerabilities:
+
+```bash
+# Run all custom security rules
+semgrep --config=.semgrep/rules/ secbrain/
+
+# Run specific rule categories
+semgrep --config=.semgrep/rules/subprocess-injection.yml secbrain/
+semgrep --config=.semgrep/rules/sql-injection.yml secbrain/
+semgrep --config=.semgrep/rules/command-injection.yml secbrain/
+semgrep --config=.semgrep/rules/general-security.yml secbrain/
+
+# Run Solidity security rules
+semgrep --config=.semgrep/rules/solidity-security.yml targets/
+
+# Run with auto-fix (where available)
+semgrep --config=.semgrep/rules/ --autofix secbrain/
+```
+
+Custom rules detect:
+- 🔒 **Subprocess injection** - Shell injection via subprocess calls
+- 🔒 **SQL injection** - Unsafe SQL query construction
+- 🔒 **Command injection** - OS command injection vulnerabilities
+- 🔒 **Solidity vulnerabilities** - Reentrancy, unchecked calls, access control issues
+- 🔒 **General security** - Hardcoded secrets, weak crypto, path traversal
+
+See [`.semgrep/README.md`](.semgrep/README.md) for detailed rule documentation.
+
 ### Running Tests
 
 SecBrain uses a comprehensive, multi-layered testing strategy:
