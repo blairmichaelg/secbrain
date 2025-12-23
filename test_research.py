@@ -28,8 +28,17 @@ async def test_rate_limiting():
     workspace_path = Path("/tmp/test_workspace")
     workspace_path.mkdir(parents=True, exist_ok=True)
     
+    # Create minimal scope and program files
+    scope_file = workspace_path / "scope.yaml"
+    scope_file.write_text("domains: ['example.com']\n")
+    
+    program_file = workspace_path / "program.yaml"
+    program_file.write_text("name: 'test-program'\n")
+    
     run_context = RunContext(
         workspace_path=workspace_path,
+        scope_path=scope_file,
+        program_path=program_file,
         dry_run=True,  # Use dry-run to avoid API calls
     )
     
@@ -62,8 +71,17 @@ async def test_ttl_caching():
     workspace_path = Path("/tmp/test_workspace")
     workspace_path.mkdir(parents=True, exist_ok=True)
     
+    # Create minimal scope and program files
+    scope_file = workspace_path / "scope.yaml"
+    scope_file.write_text("domains: ['example.com']\n")
+    
+    program_file = workspace_path / "program.yaml"
+    program_file.write_text("name: 'test-program'\n")
+    
     run_context = RunContext(
         workspace_path=workspace_path,
+        scope_path=scope_file,
+        program_path=program_file,
         dry_run=True,
     )
     
@@ -99,8 +117,17 @@ async def test_specialized_methods():
     workspace_path = Path("/tmp/test_workspace")
     workspace_path.mkdir(parents=True, exist_ok=True)
     
+    # Create minimal scope and program files
+    scope_file = workspace_path / "scope.yaml"
+    scope_file.write_text("domains: ['example.com']\n")
+    
+    program_file = workspace_path / "program.yaml"
+    program_file.write_text("name: 'test-program'\n")
+    
     run_context = RunContext(
         workspace_path=workspace_path,
+        scope_path=scope_file,
+        program_path=program_file,
         dry_run=True,
     )
     
@@ -140,8 +167,17 @@ async def test_backward_compatibility():
     workspace_path = Path("/tmp/test_workspace")
     workspace_path.mkdir(parents=True, exist_ok=True)
     
+    # Create minimal scope and program files
+    scope_file = workspace_path / "scope.yaml"
+    scope_file.write_text("domains: ['example.com']\n")
+    
+    program_file = workspace_path / "program.yaml"
+    program_file.write_text("name: 'test-program'\n")
+    
     run_context = RunContext(
         workspace_path=workspace_path,
+        scope_path=scope_file,
+        program_path=program_file,
         dry_run=True,
     )
     
@@ -187,8 +223,17 @@ async def test_call_limits():
     workspace_path = Path("/tmp/test_workspace")
     workspace_path.mkdir(parents=True, exist_ok=True)
     
+    # Create minimal scope and program files
+    scope_file = workspace_path / "scope.yaml"
+    scope_file.write_text("domains: ['example.com']\n")
+    
+    program_file = workspace_path / "program.yaml"
+    program_file.write_text("name: 'test-program'\n")
+    
     run_context = RunContext(
         workspace_path=workspace_path,
+        scope_path=scope_file,
+        program_path=program_file,
         dry_run=False,  # Not dry-run to test limit
     )
     

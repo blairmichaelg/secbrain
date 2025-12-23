@@ -167,11 +167,17 @@ class PerplexityResearch:
 
         # Check dry-run mode
         if run_context.dry_run:
-            return {
+            result = {
                 "answer": f"[DRY-RUN] Would research: {question[:100]}...",
                 "sources": ["dry-run-source"],
                 "cached": False,
             }
+            
+            # Cache dry-run results for consistency
+            run_context.cache_research(cache_key, result)
+            self._cache_ttl[cache_key] = datetime.now()
+            
+            return result
 
         # Enforce rate limiting
         await self._enforce_rate_limit()
