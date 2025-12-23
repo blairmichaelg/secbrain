@@ -13,6 +13,7 @@ import asyncio
 import hashlib
 import os
 import time
+import warnings
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -47,11 +48,10 @@ class PerplexityResearch:
         model: str = "sonar",  # Changed to sonar (faster, cheaper) from sonar-medium-online
         max_calls_per_run: int = 50,  # Increased from 20 for intensive research
     ):
-        self.api_key = api_key or os.environ.get("PERPLEXITY_API_KEY") or None
+        self.api_key = api_key or os.environ.get("PERPLEXITY_API_KEY")
         
         # Validate API key is provided (will be None in dry-run mode)
         if self.api_key is None:
-            import warnings
             warnings.warn(
                 "No API key provided for PerplexityResearch. "
                 "Set PERPLEXITY_API_KEY environment variable. "

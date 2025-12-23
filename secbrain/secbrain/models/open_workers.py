@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import warnings
 from typing import Any
 
 import httpx
@@ -40,12 +41,10 @@ class OpenWorkerClient(ModelClient):
             or os.environ.get("TOGETHER_API_KEY")
             or os.environ.get("OPENROUTER_API_KEY")
             or os.environ.get("OPENAI_API_KEY")
-            or None
         )
         
         # Validate API key is provided (will be None in dry-run mode)
         if self.api_key is None:
-            import warnings
             warnings.warn(
                 "No API key provided for OpenWorkerClient. "
                 "Set TOGETHER_API_KEY, OPENROUTER_API_KEY, or OPENAI_API_KEY environment variable. "

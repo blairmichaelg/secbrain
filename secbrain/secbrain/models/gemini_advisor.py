@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import warnings
 from typing import Any
 
 from secbrain.models.base import ModelClient, ModelResponse
@@ -27,11 +28,10 @@ class GeminiAdvisorClient(ModelClient):
         **kwargs: Any,
     ):
         super().__init__(model, **kwargs)
-        self.api_key = api_key or os.environ.get("GOOGLE_API_KEY") or None
+        self.api_key = api_key or os.environ.get("GOOGLE_API_KEY")
         
         # Validate API key is provided (will be None in dry-run mode)
         if self.api_key is None:
-            import warnings
             warnings.warn(
                 "No API key provided for GeminiAdvisorClient. "
                 "Set GOOGLE_API_KEY environment variable. "
