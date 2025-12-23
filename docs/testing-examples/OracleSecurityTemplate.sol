@@ -301,13 +301,16 @@ contract TWAPOracle {
      * @dev Production implementation would use Uniswap's OracleLibrary
      * @param tick The tick to convert
      * @return price The corresponding price
+     * 
+     * ⚠️ WARNING: This is a PLACEHOLDER implementation
+     * ⚠️ DO NOT use this in production without replacing with proper tick conversion
+     * ⚠️ Use: OracleLibrary.getQuoteAtTick(tick, baseAmount, baseToken, quoteToken)
      */
     function _getQuoteAtTick(int24 tick) internal pure returns (uint256 price) {
         // Simplified conversion: price = 1.0001^tick
-        // Production would use: OracleLibrary.getQuoteAtTick(tick, baseAmount, baseToken, quoteToken)
+        // Production MUST use: OracleLibrary.getQuoteAtTick(tick, baseAmount, baseToken, quoteToken)
         
-        // For this template, return a placeholder
-        // In production, use proper tick-to-price conversion
+        // ⚠️ PLACEHOLDER ONLY - Replace before production deployment
         return 1e18; // Placeholder
     }
 }

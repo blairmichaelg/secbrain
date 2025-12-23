@@ -283,6 +283,9 @@ contract SecureVault is ReentrancyGuard, AccessControl {
             revert SlippageExceeded(minAmount, amount);
         }
         
+        // Validate amount is not zero to prevent division by zero later
+        if (amount == 0) revert ZeroAmount();
+        
         // 2. EFFECTS - Update state BEFORE external calls
         unchecked {
             // Safe: checked above that balance >= amount
@@ -355,6 +358,10 @@ contract SecureVault is ReentrancyGuard, AccessControl {
      * @notice Get share price with oracle manipulation protection
      * @dev Uses TWAP to prevent flash loan price manipulation
      * @return Share price (protected)
+     * 
+     * ⚠️ WARNING: This is a SIMPLIFIED example implementation
+     * ⚠️ Production MUST calculate: totalAssets / totalShares
+     * ⚠️ Consider using proper vault accounting and price oracles
      */
     function getSharePrice() 
         external 
@@ -370,7 +377,7 @@ contract SecureVault is ReentrancyGuard, AccessControl {
         
         if (_totalDeposits == 0) return 0;
         
-        // Simplified: In production, use proper oracle
+        // ⚠️ SIMPLIFIED: Production MUST use: totalAssets / totalShares
         return 1e18; // 1:1 share price for example
     }
     

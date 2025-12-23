@@ -560,6 +560,10 @@ contract MEVProtectedDEX is
      * @notice Calculate swap output (simplified constant product)
      * @param amountIn Input amount
      * @return amountOut Output amount
+     * 
+     * ⚠️ WARNING: Simplified implementation for template purposes
+     * ⚠️ Production MUST include: fees, overflow protection, slippage
+     * ⚠️ Consider using SafeMath for large values
      */
     function _calculateSwapOutput(uint256 amountIn) 
         internal 
@@ -571,9 +575,13 @@ contract MEVProtectedDEX is
         
         if (reserveToken0 == 0 || reserveToken1 == 0) return 0;
         
+        // ⚠️ Add overflow protection for production:
+        // require(amountIn <= type(uint112).max, "Overflow protection");
+        
         uint256 numerator = amountIn * reserveToken1;
         uint256 denominator = reserveToken0 + amountIn;
         
+        require(denominator > 0, "Division by zero");
         amountOut = numerator / denominator;
         
         return amountOut;
