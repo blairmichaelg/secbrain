@@ -1,7 +1,5 @@
 """Tests for verification utilities."""
 
-from datetime import datetime
-
 import pytest
 
 from secbrain.verification import EvidenceBundle, VerificationResult

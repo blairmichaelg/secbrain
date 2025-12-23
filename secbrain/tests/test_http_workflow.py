@@ -320,7 +320,7 @@ class TestMultiStepHTTPWorkflow:
             label="API Call",
         )
         
-        result = await workflow.run([step])
+        await workflow.run([step])
         
         # Verify client was called with correct parameters
         workflow.client.request.assert_called_once()
