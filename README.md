@@ -99,6 +99,7 @@ secbrain insights --workspace ./targets/protocol1 --format html --open
 - 🔒 [Threat Model](secbrain/docs/threat_model.md) - Security considerations
 - 📊 [Insights Guide](secbrain/docs/INSIGHTS-GUIDE.md) - Turn data into actionable insights
 - 🧪 [Invariant Testing Guide](docs/INVARIANT-TESTING-GUIDE.md) - Property-based testing for smart contracts
+- 🔧 [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
 
 ### Contributing & Quality
 - 🤝 [Contributing Guide](CONTRIBUTING.md) - How to contribute

@@ -1,5 +1,22 @@
 # SecBrain Model Configuration
+#
+# This file configures AI model providers for different SecBrain components.
+# 
+# TROUBLESHOOTING PROVIDER SPEND LIMITS:
+# If you encounter spend limit errors (e.g., "spend_limit_reached"), you can:
+#   1. Switch to alternative providers by uncommenting one of the configurations below
+#   2. Increase your API provider's spend limit
+#   3. Use cached responses (SecBrain automatically caches to reduce API calls)
+#   4. Switch to local models (see 'local' configuration)
+#
+# REQUIRED API KEYS (set as environment variables):
+#   - TOGETHER_API_KEY: For Together AI (default provider)
+#   - OPENAI_API_KEY: For OpenAI models
+#   - GOOGLE_API_KEY: For Gemini models
+#   - GROQ_API_KEY: For Groq models
+#   - PERPLEXITY_API_KEY: For research capabilities
 
+# Default configuration - Uses Together AI for cost-effective, high-quality inference
 worker:
   provider: openai_compatible
   model: deepseek-ai/DeepSeek-V3          # Hypothesis generation / complex reasoning
@@ -22,18 +39,29 @@ research:
 
 # Alternative configurations for different environments
 
+# Local-only inference (no API costs, requires local Ollama installation)
 local:
   worker:
     provider: ollama
     model: llama3.1:70b
     base_url: http://localhost:11434
+  advisor:
+    provider: ollama
+    model: llama3.1:70b
+    base_url: http://localhost:11434
 
+# Budget-conscious configuration (faster, cheaper models)
 cheap:
   worker:
     provider: openai_compatible
     model: meta-llama/Llama-3.1-8B-Instruct-Turbo
     base_url: https://api.together.xyz/v1
+  advisor:
+    provider: openai_compatible
+    model: meta-llama/Llama-3.1-8B-Instruct-Turbo
+    base_url: https://api.together.xyz/v1
 
+# Premium configuration (highest quality, higher cost)
 premium:
   worker:
     provider: openai_compatible
@@ -42,3 +70,47 @@ premium:
   advisor:
     provider: gemini
     model: gemini-1.5-pro
+
+# Alternative provider configurations (uncomment to use)
+
+# OpenAI configuration
+# worker:
+#   provider: openai_compatible
+#   model: gpt-4-turbo-preview
+#   base_url: https://api.openai.com/v1
+#   max_tokens: 4096
+#   temperature: 0.3
+# advisor:
+#   provider: openai_compatible
+#   model: gpt-4
+#   base_url: https://api.openai.com/v1
+#   max_tokens: 2048
+#   temperature: 0.2
+
+# Groq configuration (fast inference, may have spend limits)
+# worker:
+#   provider: openai_compatible
+#   model: llama-3.1-70b-versatile
+#   base_url: https://api.groq.com/openai/v1
+#   max_tokens: 8192
+#   temperature: 0.3
+# advisor:
+#   provider: openai_compatible
+#   model: llama-3.1-70b-versatile
+#   base_url: https://api.groq.com/openai/v1
+#   max_tokens: 4096
+#   temperature: 0.2
+
+# OpenRouter configuration (access to multiple providers)
+# worker:
+#   provider: openai_compatible
+#   model: anthropic/claude-3-5-sonnet
+#   base_url: https://openrouter.ai/api/v1
+#   max_tokens: 8192
+#   temperature: 0.3
+# advisor:
+#   provider: openai_compatible
+#   model: anthropic/claude-3-5-sonnet
+#   base_url: https://openrouter.ai/api/v1
+#   max_tokens: 4096
+#   temperature: 0.2

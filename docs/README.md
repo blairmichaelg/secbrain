@@ -16,6 +16,7 @@ This docs directory contains contributor-focused guides. For core project docume
 | **CI/CD status** | [CI_STATUS.md](CI_STATUS.md) |
 | **Testing strategies** | [TESTING-STRATEGIES.md](TESTING-STRATEGIES.md) |
 | **Security patterns** | [SOLIDITY_SECURITY_PATTERNS.md](SOLIDITY_SECURITY_PATTERNS.md) |
+| **Troubleshooting** | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 | **SBOM & supply chain** | [SBOM-SECURITY.md](SBOM-SECURITY.md) |
 | **Gas optimizations** | [GAS_OPTIMIZATION_GUIDE.md](GAS_OPTIMIZATION_GUIDE.md) |
 | **Gas optimization how-to** ⭐ | [GAS_OPTIMIZATION_IMPLEMENTATION.md](GAS_OPTIMIZATION_IMPLEMENTATION.md) |
@@ -35,6 +36,10 @@ This docs directory contains contributor-focused guides. For core project docume
 - **[SBOM-SECURITY.md](SBOM-SECURITY.md)** - Software Bill of Materials and supply chain security
 - **[GAS_OPTIMIZATION_GUIDE.md](GAS_OPTIMIZATION_GUIDE.md)** - Comprehensive gas optimization patterns with examples
 - **[GAS_OPTIMIZATION_IMPLEMENTATION.md](GAS_OPTIMIZATION_IMPLEMENTATION.md)** ⭐ - Step-by-step implementation guide for gas optimizations
+
+### 🆘 Operations & Troubleshooting
+
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common runtime issues and solutions (spend limits, RPC configuration, etc.)
 
 ### 🤝 Contributing
 
@@ -154,6 +159,9 @@ This docs directory contains contributor-focused guides. For core project docume
 
 **"I accidentally committed to main"**
 → See [CONTRIBUTING.md](../CONTRIBUTING.md) "Common Issues and Solutions"
+
+**"SecBrain is giving errors about spend limits or RPC URLs"**
+→ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common runtime issues
 
 ## 🔗 External Resources
 
