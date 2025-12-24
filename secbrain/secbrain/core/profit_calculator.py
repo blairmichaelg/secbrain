@@ -12,6 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from secbrain.config.constants import PricingConfig
+
 # Maximum reasonable decimals for token (uint256 max is ~77 digits)
 MAX_TOKEN_DECIMALS = 77
 
@@ -19,13 +21,13 @@ MAX_TOKEN_DECIMALS = 77
 MAX_RAW_AMOUNT = 10**80
 
 # Default ETH price when no dynamic pricing is available
-ETH_PRICE_DEFAULT = 3000.0
+ETH_PRICE_DEFAULT = PricingConfig.ETH_PRICE_DEFAULT
 
 # Maximum gas cost as fraction of profit before warning (50%)
-MAX_GAS_COST_RATIO = 0.5
+MAX_GAS_COST_RATIO = PricingConfig.GAS_RATIO_THRESHOLD
 
 # Default gas price in wei (50 gwei)
-DEFAULT_GAS_PRICE_WEI = 50e9
+DEFAULT_GAS_PRICE_WEI = PricingConfig.DEFAULT_GAS_PRICE_GWEI * 1e9
 
 
 @dataclass(frozen=True)
@@ -57,17 +59,17 @@ class TokenSpec:
             raise ValueError(f"Invalid decimals: must be <= {MAX_TOKEN_DECIMALS}, got {self.decimals}")
         if self.price_usd < 0:
             raise ValueError(f"Negative price: price_usd must be non-negative, got {self.price_usd}")
-    
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "TokenSpec":
         """Create a TokenSpec from a dictionary.
-        
+
         Args:
             data: Dictionary containing symbol, address, decimals, and optionally price_usd
-            
+
         Returns:
             TokenSpec instance
-            
+
         Raises:
             ValueError: If required fields are missing or invalid
         """
@@ -77,7 +79,7 @@ class TokenSpec:
             raise ValueError("Missing required field: address")
         if "decimals" not in data:
             raise ValueError("Missing required field: decimals")
-        
+
         # Handle eth_equiv_multiplier in different formats
         eth_equiv_multiplier = data.get("eth_equiv_multiplier")
         if eth_equiv_multiplier is None and "mult_num" in data and "mult_den" in data:
@@ -86,7 +88,7 @@ class TokenSpec:
                 "numerator": data["mult_num"],
                 "denominator": data["mult_den"],
             }
-            
+
         return cls(
             symbol=str(data["symbol"]),
             address=str(data["address"]),
@@ -148,6 +150,37 @@ class ProfitCalculator:
         self.eth_price_usd = max(eth_price_usd, 0.0)
         self.price_cache = price_cache or {}
 
+    def _compute_token_value(
+        self,
+        raw_amount: int | float,
+        spec: TokenSpec,
+        price_cache: dict[str, float] | None = None,
+    ) -> tuple[float, float]:
+        """Compute normalized token amount and its USD value."""
+        try:
+            amount = float(raw_amount or 0)
+        except (TypeError, ValueError):
+            return (0.0, 0.0)
+
+        if amount <= 0 or amount > MAX_RAW_AMOUNT:
+            return (0.0, 0.0)
+
+        normalized = amount / (10 ** spec.decimals)
+
+        price = spec.price_usd
+        cache_sources = price_cache or {}
+        if cache_sources:
+            cached_price = cache_sources.get(spec.symbol.lower())
+            if cached_price is not None and cached_price >= 0:
+                price = cached_price
+        elif self.price_cache:
+            cached_price = self.price_cache.get(spec.symbol.lower())
+            if cached_price is not None and cached_price >= 0:
+                price = cached_price
+
+        usd_value = normalized * price
+        return (normalized, usd_value)
+
     def compute_usd(
         self,
         token_amounts: dict[str, int | float],
@@ -165,33 +198,18 @@ class ProfitCalculator:
         breakdown = ProfitBreakdown()
 
         for symbol, raw_amount in token_amounts.items():
-            try:
-                amount = float(raw_amount or 0)
-            except (TypeError, ValueError):
-                continue
-
-            # Sanity check for overflow
-            if amount > MAX_RAW_AMOUNT:
-                continue
-
-            if amount <= 0:
-                continue
-
             spec = self.tokens.get(symbol.lower())
             if not spec:
                 continue
 
-            # Normalize by decimals
-            normalized = amount / (10 ** spec.decimals)
+            _, usd_value = self._compute_token_value(
+                raw_amount=raw_amount,
+                spec=spec,
+                price_cache=price_cache,
+            )
+            if usd_value <= 0:
+                continue
 
-            # Get price (cache takes precedence)
-            price = spec.price_usd
-            if price_cache:
-                cached_price = price_cache.get(symbol.lower())
-                if cached_price is not None and cached_price >= 0:
-                    price = cached_price
-
-            usd_value = normalized * price
             breakdown.by_token[symbol] = usd_value
             breakdown.total_usd += usd_value
 
@@ -207,11 +225,11 @@ class ProfitCalculator:
         token_spec: TokenSpec,
     ) -> float:
         """Compute USD value of token amount.
-        
+
         Args:
             amount: Normalized token amount
             token_spec: Token specification
-            
+
         Returns:
             USD value
         """
@@ -314,7 +332,7 @@ class ProfitCalculator:
         cached_price = self.price_cache.get(token_spec.symbol.lower())
         if cached_price is not None and cached_price > 0:
             return float(cached_price)
-        
+
         # Fall back to spec price
         return float(token_spec.price_usd)
 
@@ -336,12 +354,12 @@ class ProfitCalculator:
                 denominator = multiplier.get('denominator', 1)
                 if denominator != 0:
                     return amount * numerator / denominator
-        
+
         # Use price-based calculation
         token_price = self.get_token_price(token_spec)
         if self.eth_price_usd > 0 and token_price > 0:
             return (amount * token_price) / self.eth_price_usd
-        
+
         return 0.0
 
     def calculate_profit_from_tokens(
@@ -446,7 +464,7 @@ class ProfitCalculator:
             # Normalize and calculate USD value
             normalized = self.normalize_token_amount(amount, spec.decimals)
             usd_value = self.compute_usd_value(normalized, spec)
-            
+
             total_usd += usd_value
             breakdown[address] = usd_value
 

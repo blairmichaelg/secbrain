@@ -1,6 +1,8 @@
 from pathlib import Path
 
 import pytest
+from hypothesis import given
+import hypothesis.strategies as st
 
 from secbrain.core.validation import (
     ValidationError,
@@ -9,6 +11,7 @@ from secbrain.core.validation import (
     validate_scope_file,
     validate_tools_on_path,
 )
+from secbrain.agents.exploit_agent import validate_function_signature
 
 
 def test_scope_requires_targets(tmp_path: Path) -> None:
@@ -42,3 +45,52 @@ def test_validate_tools_on_path(monkeypatch: pytest.MonkeyPatch) -> None:
 
     with pytest.raises(ValidationError):
         validate_tools_on_path(["definitely-not-a-real-tool-name-xyz"])
+
+
+# ---------------------------------------------------------------------------
+# Property-based tests for function signature validation
+# ---------------------------------------------------------------------------
+
+valid_names = st.text(
+    alphabet=st.characters(whitelist_categories=("Lu", "Ll"), min_codepoint=65, max_codepoint=122),
+    min_size=1,
+    max_size=50,
+).filter(lambda s: s and (s[0].isalpha() or s[0] == "_"))
+
+valid_types = st.sampled_from(
+    [
+        "address",
+        "uint256",
+        "uint8",
+        "bytes",
+        "bytes32",
+        "bool",
+        "string",
+        "address[]",
+        "uint256[]",
+        "bytes[]",
+    ]
+)
+
+
+@given(name=valid_names, types=st.lists(valid_types, max_size=10))
+def test_validate_function_signature_accepts_valid(name: str, types: list[str]) -> None:
+    """Property test: valid signatures should pass validation and normalize whitespace."""
+    sig = f"{name}({','.join(types)})"
+    result = validate_function_signature(sig)
+    assert result == sig.replace(" ", "")
+
+
+@given(sig=st.text())
+def test_validate_function_signature_safe(sig: str) -> None:
+    """Property test: validation should never allow injection patterns."""
+    try:
+        result = validate_function_signature(sig)
+        assert ";" not in result
+        assert "&&" not in result
+        assert "|" not in result
+        assert "$(" not in result
+        assert "`" not in result
+    except ValueError:
+        # Invalid inputs are expected to raise
+        pass

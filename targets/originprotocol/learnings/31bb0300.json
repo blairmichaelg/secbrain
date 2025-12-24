@@ -1,0 +1,64 @@
+{
+  "run_id": "31bb0300",
+  "program": "Origin Protocol",
+  "timestamp": "2025-12-23T07:13:46.836523",
+  "metrics": {
+    "recon": {
+      "assets_discovered": 7,
+      "live_hosts": 0
+    },
+    "hypotheses": {
+      "total_generated": 7,
+      "by_type": {
+        "generic_contract": 7
+      }
+    },
+    "exploitation": {
+      "tested": 0,
+      "confirmed": 0,
+      "confirmation_rate": 0
+    },
+    "findings": {
+      "total": 0,
+      "by_severity": {}
+    }
+  },
+  "analysis": {
+    "effective_types": {},
+    "ineffective_types": {
+      "generic_contract": 7
+    },
+    "success_rates": {
+      "generic_contract": 0.0
+    },
+    "top_performing": [
+      [
+        "generic_contract",
+        0.0
+      ]
+    ],
+    "hypothesis_effectiveness": {
+      "generic_contract": {
+        "generated": 7,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.3,
+        "hypothesis_ids": [
+          "hyp-dc599da2",
+          "hyp-3d22f1a5",
+          "hyp-3393a9df",
+          "hyp-546b79d1",
+          "hyp-08630a2d",
+          "hyp-cfa6857c",
+          "hyp-1dec0e26"
+        ],
+        "finding_ids": []
+      }
+    }
+  },
+  "recommendations": [
+    "Low confirmation rate - consider improving hypothesis quality or testing methodology",
+    "Focus on generic_contract vulnerabilities - highest success rate",
+    "No findings - consider expanding attack surface or trying new techniques"
+  ]
+}

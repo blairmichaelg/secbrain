@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import shutil
+import tempfile
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -122,8 +125,6 @@ class ReconToolRunner:
             )
 
         if self.run_context.requires_approval(tool_name) and not self.run_context.auto_approve:
-            from datetime import datetime
-
             from secbrain.core.approval import ApprovalRequest, new_request_id
 
             approval = await self.run_context.approval_manager.request_approval(
@@ -132,7 +133,7 @@ class ReconToolRunner:
                     tool_name=tool_name,
                     operation=f"{tool_name} {' '.join(args)}",
                     risk_level="high",
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                 )
             )
             if not approval.approved:
@@ -265,29 +266,31 @@ class ReconToolRunner:
         # Create a temp file with targets
         import tempfile
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-            f.write("\n".join(targets))
-            targets_file = f.name
+        targets_file: str | None = None
+        try:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+                f.write("\n".join(targets))
+                targets_file = f.name
 
-        args = ["-l", targets_file, "-silent", "-json"]
+            args = ["-l", targets_file, "-silent", "-json"]
 
-        result = await self._run_command("httpx", args, timeout)
+            result = await self._run_command("httpx", args, timeout)
 
-        # Parse JSON output
-        if result.success and result.output:
-            parsed = []
-            for line in result.output.strip().split("\n"):
-                if line.strip():
-                    try:
-                        parsed.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        pass
-            result.parsed_data = parsed
+            # Parse JSON output
+            if result.success and result.output:
+                parsed = []
+                for line in result.output.strip().split("\n"):
+                    if line.strip():
+                        try:
+                            parsed.append(json.loads(line))
+                        except json.JSONDecodeError:
+                            pass
+                result.parsed_data = parsed
 
-        # Cleanup
-        Path(targets_file).unlink(missing_ok=True)
-
-        return result
+            return result
+        finally:
+            if targets_file:
+                Path(targets_file).unlink(missing_ok=True)
 
     async def run_ffuf(
         self,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from secbrain.agents.hypothesis_enhancement import HypothesisEnhancer
+from secbrain.agents.hypothesis_enhancer import HypothesisEnhancer
 from secbrain.agents.research_orchestrator import ResearchOrchestrator
 
 

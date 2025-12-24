@@ -1,13 +1,13 @@
 {
-  "run_id": "b59e85f0",
+  "run_id": "3883eaeb",
   "phase": "meta",
   "success": true,
-  "duration_seconds": 0.002109,
+  "duration_seconds": 0.001995,
   "errors": [],
   "data": {
-    "run_id": "b59e85f0",
+    "run_id": "3883eaeb",
     "program": "Origin Protocol",
-    "timestamp": "2025-12-20T05:43:33.355417",
+    "timestamp": "2025-12-23T07:37:34.862920",
     "metrics": {
       "recon": {
         "assets_discovered": 7,
@@ -31,12 +31,13 @@
       "effective_types": {},
       "ineffective_types": {},
       "success_rates": {},
-      "top_performing": []
+      "top_performing": [],
+      "hypothesis_effectiveness": {}
     },
     "recommendations": [
       "Low confirmation rate - consider improving hypothesis quality or testing methodology",
       "No findings - consider expanding attack surface or trying new techniques"
     ]
   },
-  "timestamp": "2025-12-20T05:43:33.364189"
+  "timestamp": "2025-12-23T07:37:34.881744"
 }

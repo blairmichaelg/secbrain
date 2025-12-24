@@ -4,14 +4,20 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import signal
 import sys
 from pathlib import Path
+from typing import Any
 
 import typer
 import yaml
 from rich.console import Console
 from rich.table import Table
+
+from secbrain.models.base import DryRunModelClient, ModelClient
+from secbrain.models.gemini_advisor import GeminiAdvisorClient
+from secbrain.models.open_workers import OpenWorkerClient
 
 app = typer.Typer(
     name="secbrain",
@@ -226,6 +232,13 @@ async def _run_workflow(
         approval_audit_log=workspace_path / "audit.jsonl",
     )
 
+    # Load model clients (worker/advisor)
+    worker_model, advisor_model = _initialize_models(dry_run=dry_run)
+    if worker_model:
+        run_context.worker_model = worker_model
+    if advisor_model:
+        run_context.advisor_model = advisor_model
+
     # Set up logging
     logger = setup_logging(
         workspace_path=workspace_path,
@@ -233,17 +246,21 @@ async def _run_workflow(
     )
 
     # Run workflow
-    result = await run_bug_bounty(
-        run_context=run_context,
-        phases=phases,
-        source_path=source_path,
-        logger=logger,
-        rpc_url=rpc_url,
-        block_number=block_number,
-        chain_id=chain_id,
-        exploit_iterations=exploit_iterations,
-        profit_threshold=profit_threshold,
-    )
+    try:
+        result = await run_bug_bounty(
+            run_context=run_context,
+            phases=phases,
+            source_path=source_path,
+            logger=logger,
+            rpc_url=rpc_url,
+            block_number=block_number,
+            chain_id=chain_id,
+            exploit_iterations=exploit_iterations,
+            profit_threshold=profit_threshold,
+        )
+    finally:
+        await _shutdown_model_client(worker_model)
+        await _shutdown_model_client(advisor_model)
 
     return {
         "run_id": result.run_id,
@@ -255,6 +272,108 @@ async def _run_workflow(
         "duration": result.total_duration_seconds,
         "errors": result.errors,
     }
+
+
+def _initialize_models(dry_run: bool) -> tuple[ModelClient | None, ModelClient | None]:
+    """
+    Load model configuration and initialize worker/advisor clients.
+
+    Returns (worker_model, advisor_model)
+    """
+    if dry_run:
+        dummy = DryRunModelClient()
+        return dummy, dummy
+
+    config_path = Path(__file__).parent.parent / "config" / "models.yaml"
+    if not config_path.exists():
+        console.print(
+            "[yellow]Warning:[/] config/models.yaml not found; running without model clients."
+        )
+        return None, None
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+
+    profile = os.environ.get("SECBRAIN_MODELS_PROFILE")
+    config_data: dict[str, Any] = data
+    if profile:
+        profile_section = data.get(profile)
+        if isinstance(profile_section, dict):
+            config_data = profile_section
+        else:
+            console.print(
+                f"[yellow]Warning:[/] Requested models profile '{profile}' not found; "
+                "falling back to default."
+            )
+
+    worker_client = _create_worker_client(config_data.get("worker"))
+    advisor_client = _create_advisor_client(config_data.get("advisor"))
+    return worker_client, advisor_client
+
+
+def _create_worker_client(config: dict[str, Any] | None) -> ModelClient | None:
+    if not config:
+        console.print("[yellow]Warning:[/] Worker model configuration missing.")
+        return None
+
+    provider = (config.get("provider") or "openai_compatible").lower()
+    model_name = config.get("model", "deepseek-ai/DeepSeek-V3")
+    base_url = config.get("base_url")
+    api_key = config.get("api_key")
+    extra_args = {
+        key: config[key]
+        for key in ("max_tokens", "temperature", "top_p", "presence_penalty", "frequency_penalty")
+        if key in config
+    }
+
+    if provider in {"openai_compatible", "ollama"}:
+        return OpenWorkerClient(model=model_name, base_url=base_url, api_key=api_key, **extra_args)
+
+    console.print(
+        f"[yellow]Warning:[/] Unsupported worker model provider '{provider}'. Worker calls disabled."
+    )
+    return None
+
+
+def _create_advisor_client(config: dict[str, Any] | None) -> ModelClient | None:
+    if not config:
+        console.print("[yellow]Warning:[/] Advisor model configuration missing.")
+        return None
+
+    provider = (config.get("provider") or "openai_compatible").lower()
+    model_name = config.get("model", "Qwen/Qwen2.5-Coder-32B-Instruct")
+    base_url = config.get("base_url")
+    api_key = config.get("api_key")
+    extra_args = {
+        key: config[key]
+        for key in ("max_tokens", "temperature", "top_p", "presence_penalty", "frequency_penalty")
+        if key in config
+    }
+
+    if provider in {"openai_compatible", "ollama"}:
+        return OpenWorkerClient(model=model_name, base_url=base_url, api_key=api_key, **extra_args)
+    if provider == "gemini":
+        return GeminiAdvisorClient(model=model_name, api_key=api_key, **extra_args)
+
+    console.print(
+        f"[yellow]Warning:[/] Unsupported advisor model provider '{provider}'. Advisor calls disabled."
+    )
+    return None
+
+
+async def _shutdown_model_client(client: ModelClient | None) -> None:
+    """Attempt to gracefully close model client transports."""
+    if client is None:
+        return
+    close_coro = getattr(client, "close", None)
+    if close_coro is None:
+        return
+    maybe_coro = close_coro()
+    if asyncio.iscoroutine(maybe_coro):
+        try:
+            await maybe_coro
+        except Exception:
+            pass
 
 
 def _display_results(result: dict) -> None:

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -248,4 +251,74 @@ class BaseAgent(ABC):
             data=data or {},
             requires_approval=True,
             approval_reason=reason,
+        )
+
+    # ------------------------------------------------------------------
+    # Health checks
+    # ------------------------------------------------------------------
+    class HealthStatus(Enum):
+        """Health check status."""
+
+        HEALTHY = "healthy"
+        DEGRADED = "degraded"
+        UNHEALTHY = "unhealthy"
+
+    @dataclass
+    class HealthCheck:
+        """Health check result."""
+
+        component: str
+        status: "BaseAgent.HealthStatus"
+        timestamp: datetime
+        message: str = ""
+        metrics: dict[str, Any] | None = None
+
+    async def health_check(self) -> "BaseAgent.HealthCheck":
+        """Perform health check on agent (models, storage, kill switch)."""
+        checks: list[tuple[str, BaseAgent.HealthStatus, str]] = []
+
+        # Kill switch
+        if self._check_kill_switch():
+            checks.append(("kill_switch", BaseAgent.HealthStatus.UNHEALTHY, "Kill switch activated"))
+
+        # Worker model availability
+        if self.worker_model:
+            try:
+                await asyncio.wait_for(
+                    self.worker_model.generate("test", system="reply 'ok'"),
+                    timeout=5.0,
+                )
+                checks.append(("worker_model", BaseAgent.HealthStatus.HEALTHY, ""))
+            except asyncio.TimeoutError:
+                checks.append(("worker_model", BaseAgent.HealthStatus.DEGRADED, "Slow response"))
+            except Exception as exc:  # pragma: no cover - external service
+                checks.append(("worker_model", BaseAgent.HealthStatus.UNHEALTHY, str(exc)))
+
+        # Storage availability
+        if self.storage:
+            try:
+                await self.storage.ping()
+                checks.append(("storage", BaseAgent.HealthStatus.HEALTHY, ""))
+            except Exception as exc:  # pragma: no cover - external service
+                checks.append(("storage", BaseAgent.HealthStatus.UNHEALTHY, str(exc)))
+
+        statuses = [status for _, status, _ in checks]
+        if BaseAgent.HealthStatus.UNHEALTHY in statuses:
+            overall = BaseAgent.HealthStatus.UNHEALTHY
+        elif BaseAgent.HealthStatus.DEGRADED in statuses:
+            overall = BaseAgent.HealthStatus.DEGRADED
+        else:
+            overall = BaseAgent.HealthStatus.HEALTHY
+
+        return BaseAgent.HealthCheck(
+            component=self.name,
+            status=overall,
+            timestamp=datetime.now(),
+            message="; ".join(f"{comp}: {msg}" for comp, _, msg in checks if msg),
+            metrics={
+                "checks": len(checks),
+                "healthy": sum(1 for _, s, _ in checks if s == BaseAgent.HealthStatus.HEALTHY),
+                "degraded": sum(1 for _, s, _ in checks if s == BaseAgent.HealthStatus.DEGRADED),
+                "unhealthy": sum(1 for _, s, _ in checks if s == BaseAgent.HealthStatus.UNHEALTHY),
+            },
         )

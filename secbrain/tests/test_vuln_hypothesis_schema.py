@@ -109,59 +109,68 @@ def test_hypothesis_schema_rejects_missing_required_fields():
         validate(instance=invalid_hypothesis2, schema=schema)
 
 
-def test_checksum_address_lenient():
-    """Test that _checksum_address handles various inputs gracefully."""
-    from secbrain.agents.vuln_hypothesis_agent import VulnHypothesisAgent
+class MinimalContext:
+    worker_model = None
+    advisor_model = None
 
-    # Create a minimal instance just to test the method
-    class MinimalContext:
-        worker_model = None
-        advisor_model = None
+    def is_killed(self):
+        return False
 
-        def is_killed(self):
-            return False
+    def get_cached_llm(self, key):
+        return None
 
-        def get_cached_llm(self, key):
-            return None
+    def cache_llm(self, key, value):
+        pass
 
-        def cache_llm(self, key, value):
-            pass
 
-    class MinimalModel:
-        async def generate(self, prompt, system=None, **kwargs):
-            class Response:
-                content = "test"
+class MinimalModel:
+    async def generate(self, prompt, system=None, **kwargs):
+        class Response:
+            content = "test"
 
-            return Response()
+        return Response()
 
-    agent = VulnHypothesisAgent(
+
+@pytest.fixture()
+def hypothesis_agent():
+    return VulnHypothesisAgent(
         run_context=MinimalContext(),
         worker_model=MinimalModel(),
     )
 
-    # Test None - should return placeholder
-    result = agent._checksum_address(None)
-    assert result == "0x0000000000000000000000000000000000000000"
 
-    # Test empty string - should return placeholder
-    result = agent._checksum_address("")
-    assert result == "0x0000000000000000000000000000000000000000"
+def test_checksum_address_strict_validation(hypothesis_agent):
+    """_checksum_address should raise for invalid inputs and checksum valid ones."""
+    valid_addr = "0x000000000000000000000000000000000000dEaD"
+    assert hypothesis_agent._checksum_address(valid_addr) == "0x000000000000000000000000000000000000dEaD"
 
-    # Test short address - should pad
-    result = agent._checksum_address("0x123")
-    assert len(result) == 42
-    assert result.startswith("0x")
+    with pytest.raises(ValueError, match="cannot be None or empty"):
+        hypothesis_agent._checksum_address(None)
 
-    # Test address without 0x - should add it
-    result = agent._checksum_address("1234567890123456789012345678901234567890")
-    assert result.startswith("0x")
+    with pytest.raises(ValueError, match="cannot be None or empty"):
+        hypothesis_agent._checksum_address("")
 
-    # Test too long address - should truncate
-    result = agent._checksum_address("0x" + "1" * 50)
-    assert len(result) == 42
+    with pytest.raises(ValueError, match="start with '0x'"):
+        hypothesis_agent._checksum_address("1234567890123456789012345678901234567890")
 
-    # Test valid address - should return checksum
-    valid_addr = "0x1234567890123456789012345678901234567890"
-    result = agent._checksum_address(valid_addr)
-    assert len(result) == 42
-    assert result.startswith("0x")
+    with pytest.raises(ValueError, match="42 characters"):
+        hypothesis_agent._checksum_address("0x1234")
+
+    with pytest.raises(ValueError, match="invalid hex"):
+        hypothesis_agent._checksum_address("0xZZZZ0000000000000000000000000000000000")
+
+
+def test_normalize_address_lenient_helper(hypothesis_agent):
+    """_normalize_address should attempt recovery but return None on failure."""
+    # Missing 0x but otherwise valid
+    normalized = hypothesis_agent._normalize_address("deadbeefdeadbeefdeadbeefdeadbeefdeadbeef")
+    assert normalized == "0xDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF"
+
+    # Short address should be padded and normalized
+    normalized_short = hypothesis_agent._normalize_address("0x123")
+    assert normalized_short is not None
+    assert normalized_short.startswith("0x")
+    assert len(normalized_short) == 42
+
+    # Completely invalid should return None
+    assert hypothesis_agent._normalize_address("not-an-address") is None

@@ -3,13 +3,15 @@ from __future__ import annotations
 import json
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 
 @dataclass(frozen=True)
 class ApprovalRequest:
+    """Immutable request payload for approval checks."""
+
     request_id: str
     tool_name: str
     operation: str
@@ -19,6 +21,8 @@ class ApprovalRequest:
 
 @dataclass(frozen=True)
 class ApprovalResponse:
+    """Immutable response payload describing an approval decision."""
+
     request_id: str
     approved: bool
     approver: str
@@ -27,6 +31,8 @@ class ApprovalResponse:
 
 
 class ApprovalManager:
+    """Coordinate human-in-the-loop approval flows for sensitive tool use."""
+
     def __init__(
         self,
         *,
@@ -39,11 +45,46 @@ class ApprovalManager:
         self.approver = approver
 
     def _append_audit(self, entry: dict[str, Any]) -> None:
+        """Persist an audit record as JSONL."""
         self.audit_log_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.audit_log_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
     async def request_approval(self, req: ApprovalRequest) -> ApprovalResponse:
+        """Request approval for a high-risk operation.
+
+        This method implements the approval workflow based on the configured mode:
+
+        - ``auto``: Automatically approves every request.
+        - ``deny``: Automatically denies every request.
+        - ``ask``: Prompts the operator interactively for each request.
+
+        All requests and responses are logged to the audit log for compliance.
+        Timestamps are stored in UTC to ensure consistency across systems.
+
+        Args:
+            req: The approval request containing the operation metadata.
+
+        Returns:
+            ApprovalResponse containing the decision and accompanying metadata.
+
+        Raises:
+            OSError: If writing to the audit log fails. The exception is propagated
+                after logging, but the approval result is still returned to callers.
+
+        Example:
+            >>> manager = ApprovalManager(mode="ask", audit_log_path=Path("audit.jsonl"))
+            >>> request = ApprovalRequest(
+            ...     request_id="123",
+            ...     tool_name="http_client",
+            ...     operation="GET https://example.com",
+            ...     risk_level="medium",
+            ...     timestamp=datetime.now(timezone.utc),
+            ... )
+            >>> response = await manager.request_approval(request)
+            >>> print(response.approved)
+            True
+        """
         approved = False
         reason: str | None = None
 
@@ -67,7 +108,7 @@ class ApprovalManager:
             approved=approved,
             approver=self.approver,
             reason=reason,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
         )
 
         self._append_audit(

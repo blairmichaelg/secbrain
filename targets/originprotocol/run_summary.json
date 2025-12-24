@@ -1,41 +1,42 @@
 {
-  "run_id": "b59e85f0",
+  "run_id": "3883eaeb",
   "success": true,
   "phases_completed": [
     "ingest",
     "plan",
     "recon",
-    "hypothesis",
     "static",
     "triage",
     "report",
     "meta"
   ],
   "phases_failed": [
+    "hypothesis",
     "exploit"
   ],
   "findings_count": 0,
   "reports_generated": 0,
-  "duration_seconds": 0.080616,
+  "duration_seconds": 11.19248,
   "errors": [
+    "None of these hashing backends are installed: ['pycryptodome', 'pysha3'].\nInstall with `python -m pip install \"eth-hash[pycryptodome]\"`.",
     "No hypotheses to test"
   ],
   "economic": {
     "decision": "SKIP",
     "reason": "no_attempts",
-    "max_profit_eth": 0.0
+    "max_profit_eth": 0.0,
+    "max_profit_usd": 0.0,
+    "gas_cost_usd_est": 0.0,
+    "net_usd_est": 0.0
   },
   "attempts_count": 0,
   "meta_metrics": {
     "hypotheses_count": 0,
     "hypotheses_with_concrete_target": 0,
-    "missing_targets": {
-      "missing_contract_or_function": 0,
-      "total_hypotheses": 0
-    },
+    "missing_targets": {},
     "attempts_count": 0,
     "attempts_with_profit": 0,
     "economic_decision": "SKIP",
-    "total_duration_seconds": 0.080616
+    "total_duration_seconds": 11.19248
   }
 }

@@ -1,20 +1,11 @@
 {
-  "run_id": "b59e85f0",
+  "run_id": "3883eaeb",
   "phase": "hypothesis",
-  "success": true,
-  "duration_seconds": 0.001478,
-  "errors": [],
-  "data": {
-    "hypotheses": [],
-    "top_hypotheses": [],
-    "review": {
-      "reviewed": false
-    },
-    "by_vuln_type": {},
-    "missing_targets": {
-      "missing_contract_or_function": 0,
-      "total_hypotheses": 0
-    }
-  },
-  "timestamp": "2025-12-20T05:43:33.360770"
+  "success": false,
+  "duration_seconds": 0.021265,
+  "errors": [
+    "None of these hashing backends are installed: ['pycryptodome', 'pysha3'].\nInstall with `python -m pip install \"eth-hash[pycryptodome]\"`."
+  ],
+  "data": {},
+  "timestamp": "2025-12-23T07:37:34.876390"
 }

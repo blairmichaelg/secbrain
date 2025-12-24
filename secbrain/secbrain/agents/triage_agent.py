@@ -6,7 +6,173 @@ import json
 from typing import Any
 
 from secbrain.agents.base import AgentResult, BaseAgent
-from secbrain.core.profit_calculator import ProfitCalculator, TokenSpec
+
+
+class EconomicAnalyzer:
+    """Analyze exploit profitability with gas cost estimation."""
+
+    def __init__(
+        self,
+        min_profit_usd: float = 300.0,
+        gas_ratio_threshold: float = 0.5,
+        default_eth_price: float = 3000.0,
+        default_gas_price_gwei: float = 50.0,
+    ) -> None:
+        self.min_profit_usd = min_profit_usd
+        self.gas_ratio_threshold = gas_ratio_threshold
+        self.default_eth_price = default_eth_price
+        self.default_gas_price_gwei = default_gas_price_gwei
+
+    def analyze_attempts(
+        self,
+        attempts: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Analyze exploit attempts for profitability."""
+        if not attempts:
+            return {
+                "decision": "SKIP",
+                "reason": "no_attempts",
+                "max_profit_eth": 0.0,
+                "max_profit_usd": 0.0,
+                "gas_cost_usd_est": 0.0,
+                "net_usd_est": 0.0,
+            }
+
+        eth_price = self.default_eth_price
+        max_profit_eth = 0.0
+        max_profit_usd = 0.0
+        gas_info: dict[str, Any] | None = None
+
+        for attempt in attempts:
+            profit_eth, profit_usd = self._extract_profit(attempt, eth_price)
+
+            if profit_eth > max_profit_eth:
+                max_profit_eth = profit_eth
+                gas_info = self._extract_gas_info(attempt)
+            if profit_usd > max_profit_usd:
+                max_profit_usd = profit_usd
+
+            if attempt.get("eth_price_usd"):
+                try:
+                    eth_price = float(attempt["eth_price_usd"])
+                except (TypeError, ValueError):
+                    pass
+
+        gas_cost_usd = self._estimate_gas_cost(gas_info, eth_price)
+        net_usd = max_profit_usd - gas_cost_usd
+
+        decision = self._make_decision(max_profit_usd, gas_cost_usd, net_usd)
+
+        return {
+            "decision": decision["decision"],
+            "reason": decision["reason"],
+            "max_profit_eth": round(max_profit_eth, 4),
+            "max_profit_usd": round(max_profit_usd, 2),
+            "gas_used": gas_info["gas_used"] if gas_info else None,
+            "gas_cost_usd_est": round(gas_cost_usd, 2),
+            "net_usd_est": round(net_usd, 2),
+            "threshold_usd": self.min_profit_usd,
+            "gas_price_gwei": gas_info["gas_price_gwei"] if gas_info else self.default_gas_price_gwei,
+        }
+
+    def _extract_profit(
+        self,
+        attempt: dict[str, Any],
+        eth_price: float,
+    ) -> tuple[float, float]:
+        """Extract profit values from attempt."""
+        try:
+            profit_eth = float(attempt.get("profit_eth", 0) or 0)
+            profit_usd = float(attempt.get("profit_usd_estimate", 0) or 0)
+        except (TypeError, ValueError):
+            return (0.0, 0.0)
+
+        if not profit_usd and eth_price:
+            profit_usd = profit_eth * eth_price
+
+        breakdown = attempt.get("profit_breakdown") or {}
+        if isinstance(breakdown, dict):
+            try:
+                token_sum = sum(float(value or 0) for value in breakdown.values())
+                if token_sum:
+                    profit_usd = max(profit_usd, token_sum)
+            except (TypeError, ValueError):
+                pass
+
+        return (profit_eth, profit_usd)
+
+    def _extract_gas_info(self, attempt: dict[str, Any]) -> dict[str, Any] | None:
+        """Extract gas usage information."""
+        gas_used = attempt.get("gas_used")
+        if not gas_used:
+            return None
+
+        try:
+            gas_used_int = int(gas_used)
+        except (TypeError, ValueError):
+            return None
+
+        gas_price_wei = attempt.get("gas_price_wei") or attempt.get("gas_price")
+        if gas_price_wei:
+            try:
+                gas_price_wei = float(gas_price_wei)
+            except (TypeError, ValueError):
+                gas_price_wei = self.default_gas_price_gwei * 1e9
+        else:
+            gas_price_wei = self.default_gas_price_gwei * 1e9
+
+        return {
+            "gas_used": gas_used_int,
+            "gas_price_wei": gas_price_wei,
+            "gas_price_gwei": gas_price_wei / 1e9,
+        }
+
+    def _estimate_gas_cost(
+        self,
+        gas_info: dict[str, Any] | None,
+        eth_price: float,
+    ) -> float:
+        """Estimate gas cost in USD."""
+        if not gas_info:
+            return 0.0
+
+        gas_eth = (gas_info["gas_used"] * gas_info["gas_price_wei"]) / 1e18
+        return gas_eth * eth_price
+
+    def _make_decision(
+        self,
+        max_profit_usd: float,
+        gas_cost_usd: float,
+        net_usd: float,
+    ) -> dict[str, str]:
+        """Make economic decision."""
+        if max_profit_usd == 0:
+            return {
+                "decision": "SKIP",
+                "reason": "No profit detected",
+            }
+
+        gas_ratio = gas_cost_usd / max_profit_usd if max_profit_usd > 0 else float("inf")
+        if gas_ratio > self.gas_ratio_threshold:
+            return {
+                "decision": "SKIP",
+                "reason": f"Gas cost too high ({gas_ratio:.1%} of profit)",
+            }
+
+        if net_usd >= self.min_profit_usd:
+            return {
+                "decision": "PURSUE",
+                "reason": f"Net profit ${net_usd:.0f} exceeds threshold ${self.min_profit_usd:.0f}",
+            }
+        if net_usd > 0:
+            return {
+                "decision": "CONSIDER",
+                "reason": f"Marginal profit ${net_usd:.0f} (below threshold ${self.min_profit_usd:.0f})",
+            }
+        return {
+            "decision": "SKIP",
+            "reason": "Negative or zero net profit",
+        }
 
 
 class TriageAgent(BaseAgent):
@@ -223,7 +389,8 @@ Respond with JSON:
 
         # Filter out false positives and duplicates
         active = [
-            f for f in findings
+            f
+            for f in findings
             if f.get("status") not in ["false_positive", "duplicate"]
         ]
 
@@ -241,84 +408,6 @@ Respond with JSON:
         return counts
 
     def _economic_decision(self, attempts: list[dict[str, Any]]) -> dict[str, Any]:
-        """Compute a profitability gate from exploit attempts (ETH + tokens)."""
-        if not attempts:
-            return {"decision": "SKIP", "reason": "no_attempts", "max_profit_eth": 0.0}
-
-        eth_price = 3000.0  # fallback; prefer attempt-provided estimates
-        max_profit_eth = 0.0
-        max_profit_usd = 0.0
-        gas_used = None
-        gas_price_wei = None
-
-        for att in attempts:
-            try:
-                p_eth = float(att.get("profit_eth") or 0.0)
-                p_usd = float(att.get("profit_usd_estimate") or 0.0)
-            except (TypeError, ValueError):
-                continue
-
-            # Use any ETH price hint attached to attempt
-            try:
-                eth_price = float(att.get("eth_price_usd") or eth_price)
-            except Exception:
-                pass
-
-            # Derive USD from ETH if not provided
-            if not p_usd and eth_price:
-                p_usd = p_eth * eth_price
-
-            # Include token breakdown if present (already USD or normalized values)
-            breakdown = att.get("profit_breakdown") or {}
-            if isinstance(breakdown, dict):
-                try:
-                    token_sum = sum(float(v or 0.0) for v in breakdown.values())
-                    p_usd = max(p_usd, token_sum) if token_sum else p_usd
-                except Exception:
-                    pass
-
-            if p_eth > max_profit_eth:
-                max_profit_eth = p_eth
-                gas_used = att.get("gas_used")
-                gas_price_wei = att.get("gas_price_wei") or att.get("gas_price")
-            if p_usd > max_profit_usd:
-                max_profit_usd = p_usd
-
-        # Estimate gas cost with EIP-1559-style baseline + priority fee if available
-        base_gas_price_wei = 50e9  # 50 gwei fallback
-        try:
-            if gas_price_wei:
-                base_gas_price_wei = float(gas_price_wei)
-        except Exception:
-            pass
-        gas_cost_eth = (float(gas_used or 0) * base_gas_price_wei) / 1e18
-        gas_cost = gas_cost_eth * eth_price if eth_price else 0.0
-        net_usd = max_profit_usd - gas_cost
-
-        gas_ratio = (gas_cost / max_profit_usd) if max_profit_usd > 0 else float("inf")
-        min_profit_threshold = 300
-        if gas_ratio > 0.5:
-            decision = "SKIP"
-            reason = "Gas cost too high relative to profit"
-        elif net_usd >= min_profit_threshold:
-            decision = "PURSUE"
-            reason = f"Net profit ${net_usd:.0f} exceeds threshold"
-        elif net_usd > 0:
-            decision = "CONSIDER"
-            reason = f"Marginal profit ${net_usd:.0f}"
-        else:
-            decision = "SKIP"
-            reason = "Negative or zero profit"
-
-        return {
-            "decision": decision,
-            "reason": reason,
-            "max_profit_eth": max_profit_eth,
-            "max_profit_usd": round(max_profit_usd, 2),
-            "gas_used": gas_used,
-            "gas_cost_usd_est": round(gas_cost, 2) if gas_used else 0,
-            "net_usd_est": round(net_usd, 2),
-            "threshold_eth": 0.1,
-            "threshold_usd": min_profit_threshold,
-            "gas_price_wei": base_gas_price_wei,
-        }
+        """Compute a profitability gate from exploit attempts."""
+        analyzer = EconomicAnalyzer(min_profit_usd=300.0, gas_ratio_threshold=0.5)
+        return analyzer.analyze_attempts(attempts)

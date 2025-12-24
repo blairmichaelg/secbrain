@@ -10,10 +10,91 @@ import tomllib
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Awaitable, Callable, TypeVar
 
 from secbrain.agents.base import AgentResult, BaseAgent
 from secbrain.tools.recon_cli_wrappers import ReconToolRunner
+
+T = TypeVar("T")
+
+
+class NonRetryableCompilationError(Exception):
+    """Raised when forge compilation fails with a non-retryable error."""
+
+    def __init__(self, message: str, *, stdout: str = "", stderr: str = "") -> None:
+        super().__init__(message)
+        self.stdout = stdout
+        self.stderr = stderr
+
+
+class CompilationRetryHelper:
+    """Helper for retrying compilation with exponential backoff."""
+
+    def __init__(
+        self,
+        max_retries: int = 3,
+        base_wait: float = 2.0,
+        logger=None,
+    ) -> None:
+        self.max_retries = max_retries
+        self.base_wait = base_wait
+        self.logger = logger
+
+    def is_retryable_error(self, error_text: str) -> bool:
+        """Check if error is transient and retryable."""
+        retryable_keywords = [
+            "timeout",
+            "connection",
+            "network",
+            "rpc",
+            "econnrefused",
+            "temporary",
+        ]
+        error_lower = (error_text or "").lower()
+        return any(keyword in error_lower for keyword in retryable_keywords)
+
+    async def retry_with_backoff(
+        self,
+        operation: Callable[[], Awaitable[T]],
+        *,
+        context: str = "operation",
+    ) -> T:
+        """Execute operation with exponential backoff retry."""
+        last_exception: Exception | None = None
+
+        for attempt in range(self.max_retries):
+            try:
+                return await operation()
+            except TimeoutError as exc:
+                last_exception = exc
+                if attempt < self.max_retries - 1:
+                    wait_time = self.base_wait ** (attempt + 1)
+                    if self.logger:
+                        self.logger.info(
+                            f"{context}_timeout_retry",
+                            attempt=attempt + 1,
+                            wait_time=wait_time,
+                        )
+                    await asyncio.sleep(wait_time)
+                    continue
+            except Exception as exc:
+                last_exception = exc
+                if self.is_retryable_error(str(exc)) and attempt < self.max_retries - 1:
+                    wait_time = self.base_wait ** (attempt + 1)
+                    if self.logger:
+                        self.logger.info(
+                            f"{context}_exception_retry",
+                            attempt=attempt + 1,
+                            exception=str(exc)[:100],
+                            wait_time=wait_time,
+                        )
+                    await asyncio.sleep(wait_time)
+                    continue
+                raise
+
+        if last_exception:
+            raise last_exception
+        raise RuntimeError(f"{context} failed after {self.max_retries} retries")
 
 
 class ReconAgent(BaseAgent):
@@ -279,9 +360,7 @@ class ReconAgent(BaseAgent):
         except Exception:
             foundry_toml = {}
 
-        # Constants for retry logic
-        MAX_COMPILE_RETRIES = 3
-        BASE_RETRY_WAIT = 2.0  # seconds
+        retry_helper = CompilationRetryHelper(max_retries=3, base_wait=2.0, logger=self.logger)
 
         # Compile each contract using its profile
         async def _compile_contract(contract) -> dict[str, Any]:
@@ -316,191 +395,149 @@ class ReconAgent(BaseAgent):
                     }
                     return {"killed": False, "assets": [asset], "compiled": True, "address": contract.address}
 
-                last_error: str | None = None
-                last_stdout: str = ""
-                last_stderr: str = ""
+                async def run_build_step() -> dict[str, Any]:
+                    env = os.environ.copy()
+                    env["FOUNDRY_PROFILE"] = profile
 
-                for attempt in range(MAX_COMPILE_RETRIES):
-                    if self._check_kill_switch():
-                        return {"killed": True, "assets": [], "compiled": False}
+                    proc = await asyncio.create_subprocess_exec(
+                        "forge",
+                        "build",
+                        cwd=foundry_root,
+                        env=env,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
 
                     try:
-                        env = os.environ.copy()
-                        env["FOUNDRY_PROFILE"] = profile
+                        stdout_bytes, stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=300)
+                    except asyncio.TimeoutError as exc:
+                        raise TimeoutError("Forge build timeout after 300s") from exc
 
-                        proc = await asyncio.create_subprocess_exec(
-                            "forge", "build",
-                            cwd=foundry_root,
-                            env=env,
-                            stdout=asyncio.subprocess.PIPE,
-                            stderr=asyncio.subprocess.PIPE,
-                        )
+                    stdout = stdout_bytes.decode()
+                    stderr = stderr_bytes.decode()
 
+                    if proc.returncode == 0:
+                        solc_version = None
                         try:
-                            stdout_bytes, stderr_bytes = await asyncio.wait_for(
-                                proc.communicate(),
-                                timeout=300
+                            solc_version = (
+                                (foundry_toml.get("profile", {}) or {})
+                                .get(profile, {})
+                                .get("solc")
                             )
-                            stdout = stdout_bytes.decode()
-                            stderr = stderr_bytes.decode()
-                            return_code = proc.returncode
-                            last_stdout = stdout
-                            last_stderr = stderr
+                        except Exception:
+                            solc_version = None
 
-                            if return_code == 0:
-                                solc_version = None
-                                try:
-                                    solc_version = (
-                                        (foundry_toml.get("profile", {}) or {})
-                                        .get(profile, {})
-                                        .get("solc")
-                                    )
-                                except Exception:
-                                    solc_version = None
+                        abi, functions = self._extract_contract_metadata(foundry_root, contract.name)
+                        classification = self._classify_contract(contract.name, functions)
 
-                                abi, functions = self._extract_contract_metadata(foundry_root, contract.name)
-                                classification = self._classify_contract(contract.name, functions)
-
-                                asset = {
-                                    "type": "contract",
-                                    "value": contract.address,
-                                    "name": contract.name,
-                                    "chain_id": contract.chain_id,
-                                    "profile": profile,
-                                    "status": "compiled",
-                                    "metadata": {
-                                        "source_path": str(contract.source_path) if contract.source_path else None,
-                                        "verified": contract.verified,
-                                        "build_output": stdout,
-                                        "solc": solc_version,
-                                        "abi": abi,
-                                        "functions": functions,
-                                        "classification": classification,
-                                    },
-                                }
-
-                                if self.storage:
-                                    await self.storage.save_asset(asset)
-
-                                return {"killed": False, "assets": [asset], "compiled": True, "address": contract.address}
-                            # Check if error is retryable (transient RPC or network issues)
-                            is_retryable = any(
-                                keyword in stderr.lower()
-                                for keyword in ["timeout", "connection", "network", "rpc", "econnrefused"]
-                            )
-                            if is_retryable and attempt < MAX_COMPILE_RETRIES - 1:
-                                wait_time = BASE_RETRY_WAIT ** (attempt + 1)
-                                self._log(
-                                    "forge_build_retry",
-                                    contract=contract.name,
-                                    profile=profile,
-                                    attempt=attempt + 1,
-                                    wait_time=wait_time,
-                                )
-                                await asyncio.sleep(wait_time)
-                                continue
-
-                            # Non-retryable error or exhausted retries
-                            self._log_error(
-                                "forge_build_failed",
-                                contract=contract.name,
-                                profile=profile,
-                                stderr_msg=stderr[:500] if stderr else "Unknown error",
-                            )
-                            error_asset = {
-                                "id": f"error-{uuid.uuid4().hex[:8]}",
-                                "type": "compilation_error",
-                                "value": contract.address,
-                                "name": contract.name,
-                                "chain_id": contract.chain_id,
-                                "status": "compilation_failed",
-                                "metadata": {
-                                    "error": stderr,
-                                    "output": stdout,
-                                },
-                            }
-                            if self.storage:
-                                await self.storage.save_asset(error_asset)
-                            return {"killed": False, "assets": [error_asset], "compiled": False}
-
-                        except TimeoutError:
-                            # Timeout is retryable
-                            if attempt < MAX_COMPILE_RETRIES - 1:
-                                wait_time = BASE_RETRY_WAIT ** (attempt + 1)
-                                self._log(
-                                    "forge_build_timeout_retry",
-                                    contract=contract.name,
-                                    profile=profile,
-                                    attempt=attempt + 1,
-                                    wait_time=wait_time,
-                                )
-                                await asyncio.sleep(wait_time)
-                                continue
-
-                            self._log_error(
-                                "forge_build_timeout",
-                                contract=contract.name,
-                                profile=profile,
-                                duration="300s",
-                            )
-                            error_asset = {
-                                "id": f"error-{uuid.uuid4().hex[:8]}",
-                                "type": "compilation_error",
-                                "value": contract.address,
-                                "name": contract.name,
-                                "chain_id": contract.chain_id,
-                                "status": "compilation_timeout",
-                                "metadata": {
-                                    "error": "Forge build timeout after 300s",
-                                    "timestamp": datetime.now().isoformat(),
-                                },
-                            }
-                            if self.storage:
-                                await self.storage.save_asset(error_asset)
-                            return {"killed": False, "assets": [error_asset], "compiled": False}
-
-                    except Exception as e:
-                        last_error = str(e)
-                        # Retryable exception
-                        if attempt < MAX_COMPILE_RETRIES - 1:
-                            wait_time = BASE_RETRY_WAIT ** (attempt + 1)
-                            self._log(
-                                "forge_build_exception_retry",
-                                contract=contract.name,
-                                profile=profile,
-                                attempt=attempt + 1,
-                                exception=str(e),
-                                wait_time=wait_time,
-                            )
-                            await asyncio.sleep(wait_time)
-                            continue
-
-                        self._log_error(
-                            "forge_build_exception",
-                            contract=contract.name,
-                            profile=profile,
-                            exception=str(e),
-                            exception_type=type(e).__name__,
-                        )
-                        error_asset = {
-                            "id": f"error-{uuid.uuid4().hex[:8]}",
-                            "type": "compilation_error",
+                        asset = {
+                            "type": "contract",
                             "value": contract.address,
                             "name": contract.name,
                             "chain_id": contract.chain_id,
-                            "status": "compilation_error",
+                            "profile": profile,
+                            "status": "compiled",
                             "metadata": {
-                                "error": str(e),
-                                "error_type": type(e).__name__,
-                                "timestamp": datetime.now().isoformat(),
+                                "source_path": str(contract.source_path) if contract.source_path else None,
+                                "verified": contract.verified,
+                                "build_output": stdout,
+                                "solc": solc_version,
+                                "abi": abi,
+                                "functions": functions,
+                                "classification": classification,
                             },
                         }
-                        if self.storage:
-                            await self.storage.save_asset(error_asset)
-                        return {"killed": False, "assets": [error_asset], "compiled": False}
 
-                # Should not reach here, but return failure if we do
-                return {"killed": False, "assets": [], "compiled": False}
+                        if self.storage:
+                            await self.storage.save_asset(asset)
+
+                        return {"killed": False, "assets": [asset], "compiled": True, "address": contract.address}
+
+                    if retry_helper.is_retryable_error(stderr):
+                        raise RuntimeError(stderr or "retryable forge build failure")
+
+                    raise NonRetryableCompilationError(
+                        "Forge build failed",
+                        stdout=stdout,
+                        stderr=stderr,
+                    )
+
+                if self._check_kill_switch():
+                    return {"killed": True, "assets": [], "compiled": False}
+
+                try:
+                    return await retry_helper.retry_with_backoff(
+                        run_build_step,
+                        context=f"forge_build_{contract.name}",
+                    )
+                except NonRetryableCompilationError as exc:
+                    self._log_error(
+                        "forge_build_failed",
+                        contract=contract.name,
+                        profile=profile,
+                        stderr_msg=(exc.stderr or "Unknown error")[:500],
+                    )
+                    error_asset = {
+                        "id": f"error-{uuid.uuid4().hex[:8]}",
+                        "type": "compilation_error",
+                        "value": contract.address,
+                        "name": contract.name,
+                        "chain_id": contract.chain_id,
+                        "status": "compilation_failed",
+                        "metadata": {
+                            "error": exc.stderr,
+                            "output": exc.stdout,
+                        },
+                    }
+                    if self.storage:
+                        await self.storage.save_asset(error_asset)
+                    return {"killed": False, "assets": [error_asset], "compiled": False}
+                except TimeoutError:
+                    self._log_error(
+                        "forge_build_timeout",
+                        contract=contract.name,
+                        profile=profile,
+                        duration="300s",
+                    )
+                    error_asset = {
+                        "id": f"error-{uuid.uuid4().hex[:8]}",
+                        "type": "compilation_error",
+                        "value": contract.address,
+                        "name": contract.name,
+                        "chain_id": contract.chain_id,
+                        "status": "compilation_timeout",
+                        "metadata": {
+                            "error": "Forge build timeout after 300s",
+                            "timestamp": datetime.now().isoformat(),
+                        },
+                    }
+                    if self.storage:
+                        await self.storage.save_asset(error_asset)
+                    return {"killed": False, "assets": [error_asset], "compiled": False}
+                except Exception as exc:
+                    self._log_error(
+                        "forge_build_exception",
+                        contract=contract.name,
+                        profile=profile,
+                        exception=str(exc),
+                        exception_type=type(exc).__name__,
+                    )
+                    error_asset = {
+                        "id": f"error-{uuid.uuid4().hex[:8]}",
+                        "type": "compilation_error",
+                        "value": contract.address,
+                        "name": contract.name,
+                        "chain_id": contract.chain_id,
+                        "status": "compilation_error",
+                        "metadata": {
+                            "error": str(exc),
+                            "error_type": type(exc).__name__,
+                            "timestamp": datetime.now().isoformat(),
+                        },
+                    }
+                    if self.storage:
+                        await self.storage.save_asset(error_asset)
+                    return {"killed": False, "assets": [error_asset], "compiled": False}
 
         tasks = [asyncio.create_task(_compile_contract(contract)) for contract in contracts]
         compile_results = await asyncio.gather(*tasks)

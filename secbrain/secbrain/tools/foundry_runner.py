@@ -14,6 +14,8 @@ from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
+from secbrain.core.foundry_runner import ForgeOutputParser
+
 
 @dataclass
 class FoundryRunResult:
@@ -91,6 +93,36 @@ class FoundryRunner:
         self._compile_cache_dir = Path(run_context.workspace_path) / ".secbrain_cache" / "compile"
         self._compile_cache_dir.mkdir(parents=True, exist_ok=True)
 
+    async def _compile_with_cache(self, profile: str | None) -> None:
+        """Precompile contracts per profile to reduce test latency."""
+        if not self.project_root:
+            return
+
+        cache_key = profile or "default"
+        cache_marker = self._compile_cache_dir / f"{cache_key}.compiled"
+        if cache_marker.exists():
+            return
+
+        try:
+            args = ["forge", "build"]
+            env = os.environ.copy() if profile else None
+            if profile and env is not None:
+                env["FOUNDRY_PROFILE"] = profile
+
+            proc = await asyncio.create_subprocess_exec(
+                *args,
+                cwd=self.project_root,
+                env=env,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            await asyncio.wait_for(proc.communicate(), timeout=120)
+            if proc.returncode == 0:
+                cache_marker.touch()
+        except Exception:
+            # If compilation fails here, forge test will attempt compilation again.
+            pass
+
     async def run_exploit_attempt(
         self,
         hypothesis: dict[str, Any],
@@ -153,7 +185,7 @@ class FoundryRunner:
                 gas_used=None,
                 execution_trace=None,
                 revert_reason="missing_foundry_root",
-                logs=["No scope.foundry_root configured; cannot run forge tests"],
+                logs=["Nd; cannot run forge tests"],
                 attempt_index=attempt_index,
             )
         if not self.project_root.exists():
@@ -284,7 +316,7 @@ class FoundryRunner:
         stdout_path.write_text(stdout)
         output_path.write_text(stdout)
 
-        parsed = self._parse_forge_output(stdout, return_code=(last_return_code or 1), json_path=output_path)
+        parsed = ForgeOutputParser.parse(stdout, return_code=(last_return_code or 1), json_path=output_path)
         return FoundryRunResult(
             status=parsed["status"],
             profit_eth=parsed["profit_eth"],
@@ -562,122 +594,3 @@ class FoundryRunner:
             return (1, 1)
         return (1, 1)
 
-    def _parse_forge_output(self, stdout: str, return_code: int, json_path: Path | None = None) -> dict[str, Any]:
-        """Parse forge output for profit, gas, and revert signals."""
-        status = "failed" if return_code else "success"
-        profit_eth = None
-        profit_tokens: dict[str, float] = {}
-        profit_breakdown: dict[str, float] = {}
-        gas_used = None
-        revert_reason = None
-        state_changes: dict[str, Any] = {}
-
-        # Regex scan of stdout
-        profit_equiv_match = re.search(
-            r"Profit\s*\(ETH-equivalent\)\s*:\s*(-?[0-9]+\.?[0-9]*)",
-            stdout,
-            re.IGNORECASE,
-        )
-        if profit_equiv_match:
-            try:
-                profit_eth = float(profit_equiv_match.group(1))
-            except ValueError:
-                profit_eth = None
-
-        if profit_eth is None:
-            profit_match = re.search(r"Profit\s*\(ETH\)\s*:\s*([0-9]+\.?[0-9]*)", stdout, re.IGNORECASE)
-            if profit_match:
-                try:
-                    profit_eth = float(profit_match.group(1))
-                except ValueError:
-                    profit_eth = None
-
-        # If profit was logged as a raw int/uint256 (common in solidity logs), treat large magnitudes as wei.
-        if profit_eth is not None and abs(profit_eth) > 1e9:
-            profit_eth = profit_eth / 1e18
-
-        revert_match = re.search(r"revert(?: reason)?:\s*(.+)", stdout, re.IGNORECASE)
-        if revert_match:
-            revert_reason = revert_match.group(1).strip()
-
-        gas_match = re.search(r"gas used[:\s]+([0-9]+)", stdout, re.IGNORECASE)
-        if gas_match:
-            try:
-                gas_used = int(gas_match.group(1))
-            except ValueError:
-                gas_used = None
-
-        # JSON parse (forge --json)
-        json_obj = None
-        if json_path and json_path.exists():
-            try:
-                json_obj = json.loads(json_path.read_text())
-            except Exception:
-                json_obj = None
-        if json_obj is None:
-            try:
-                json_obj = json.loads(stdout)
-            except Exception:
-                json_obj = None
-
-        if json_obj:
-            try:
-                def _iter_testcases(obj: Any):
-                    if isinstance(obj, dict):
-                        if "test_results" in obj and isinstance(obj.get("test_results"), dict):
-                            for _k, v in obj.get("test_results", {}).items():
-                                yield v
-                        for v in obj.values():
-                            yield from _iter_testcases(v)
-                    elif isinstance(obj, list):
-                        for v in obj:
-                            yield from _iter_testcases(v)
-
-                for tc in _iter_testcases(json_obj):
-                    if not isinstance(tc, dict):
-                        continue
-                    decoded = tc.get("decoded_logs") or []
-                    if not isinstance(decoded, list):
-                        decoded = []
-                    state_changes.update(tc.get("state_changes") or {})
-                    for line in decoded:
-                        if not isinstance(line, str):
-                            continue
-                        m_equiv = re.search(
-                            r"Profit\s*\(ETH-equivalent\)\s*:\s*(-?[0-9]+\.?[0-9]*)",
-                            line,
-                            re.IGNORECASE,
-                        )
-                        if m_equiv:
-                            profit_eth = float(m_equiv.group(1))
-                            if abs(profit_eth) > 1e9:
-                                profit_eth = profit_eth / 1e18
-                        m_eth = re.search(r"Profit\s*\(ETH\)\s*:\s*([0-9]+\.?[0-9]*)", line, re.IGNORECASE)
-                        if m_eth and profit_eth is None:
-                            profit_eth = float(m_eth.group(1))
-                            if abs(profit_eth) > 1e9:
-                                profit_eth = profit_eth / 1e18
-                        m_tok = re.search(r"Profit\s+([A-Za-z0-9_\-]{1,16})\s*:\s*([0-9]+\.?[0-9]*)", line)
-                        if m_tok:
-                            profit_tokens[m_tok.group(1)] = float(m_tok.group(2))
-                            profit_breakdown[m_tok.group(1)] = float(m_tok.group(2))
-
-                    if tc.get("status") == "Failure":
-                        status = "failed"
-                        revert_reason = revert_reason or tc.get("reason")
-            except Exception:
-                pass
-
-        if status == "success" and profit_eth is None:
-            profit_eth = 0.0
-
-        return {
-            "status": status,
-            "profit_eth": profit_eth,
-            "profit_tokens": profit_tokens or {},
-            "profit_breakdown": profit_breakdown or (profit_tokens or {}),
-            "gas_used": gas_used,
-            "revert_reason": revert_reason,
-            "logs": stdout.splitlines()[-50:],
-            "state_changes": state_changes or {},
-        }

@@ -167,20 +167,21 @@ class ResearchOrchestrator:
     async def _execute_query(self, query: ResearchQuery) -> ResearchResult:
         """Execute a single research query with rate limiting."""
         async with self._semaphore, self._rate_limiter:
-            # Rate limiting with lock to prevent race conditions
+            # Atomic time reservation
             async with self._time_lock:
                 current_time = asyncio.get_event_loop().time()
                 time_since_last = current_time - self._last_query_time
-                
+
                 if time_since_last < self._min_query_interval:
                     sleep_time = self._min_query_interval - time_since_last
-                    # Update timestamp before releasing the lock
+                    # Reserve the time slot BEFORE releasing lock
                     self._last_query_time = current_time + sleep_time
                 else:
                     self._last_query_time = current_time
-            
-            # Sleep outside the lock to allow other queries to check timing
-            if time_since_last < self._min_query_interval:
+                    sleep_time = 0.0
+
+            # Sleep outside lock to allow other queries to proceed
+            if sleep_time > 0:
                 await asyncio.sleep(sleep_time)
 
             try:
@@ -222,7 +223,7 @@ class ResearchOrchestrator:
         protocol_type: str,
         functions: list[str] | None = None,
         priority: int = 7,
-    ) -> ResearchResult | None:
+    ) -> ResearchResult:
         """Research vulnerabilities specific to a protocol type."""
         question = f"What are the most common vulnerabilities in {protocol_type} protocols?"
 
@@ -241,6 +242,13 @@ class ResearchOrchestrator:
         )
 
         query_hash = await self.queue_research(query)
+
+        # Check cache first
+        if query_hash in self._cache:
+            cached = self._cache[query_hash]
+            logger.debug(f"Research cache hit for protocol type: {protocol_type}")
+            return cached
+
         results = await self.execute_batch(max_queries=1)
 
         # Find the result for this query
@@ -248,12 +256,12 @@ class ResearchOrchestrator:
             if result.query.hash_key() == query_hash:
                 return result
 
-        # Check cache
-        if query_hash in self._cache:
-            return self._cache[query_hash]
+        # If we reach here, the query was filtered out by priority threshold
+        logger.warning(
+            f"Research query for protocol '{protocol_type}' was filtered out. "
+            f"Priority {priority} < threshold {self.priority_threshold}"
+        )
 
-        # If we reach here, the query was queued but no result was produced or cached.
-        # This can happen if the query was filtered out by a priority threshold.
         return ResearchResult(
             query=query,
             answer="",
@@ -261,9 +269,9 @@ class ResearchOrchestrator:
             sources=[],
             cached=False,
             error=(
-                "No research result was produced for this protocol type query. "
-                "The query may have been filtered out by a priority threshold or "
-                "failed to execute."
+                "Query filtered by priority threshold. "
+                f"Priority {priority} is below threshold {self.priority_threshold}. "
+                "Increase query priority or lower threshold."
             ),
         )
 
@@ -299,31 +307,54 @@ class ResearchOrchestrator:
         with open(filepath, "w") as f:
             json.dump(cache_data, f, indent=2)
 
-    def load_cache(self, filepath: str) -> None:
+    def load_cache(self, filepath: str) -> int:
         """Load cache from a JSON file."""
         try:
             with open(filepath) as f:
                 cache_data = json.load(f)
 
+            loaded_count = 0
             for query_hash, data in cache_data.items():
-                query = ResearchQuery(
-                    question=data["question"],
-                    context=data.get("context", ""),
-                )
-                result = ResearchResult(
-                    query=query,
-                    answer=data["answer"],
-                    confidence=data.get("confidence", 0.5),
-                    sources=data.get("sources", []),
-                    cached=True,
-                )
-                self._cache[query_hash] = result
-        except (FileNotFoundError, json.JSONDecodeError, KeyError):
-            # Expected errors when cache doesn't exist or is corrupted - silently continue
-            pass
+                try:
+                    if not isinstance(data, dict):
+                        logger.warning(f"Invalid cache entry (not dict): {query_hash}")
+                        continue
+
+                    if "question" not in data or "answer" not in data:
+                        logger.warning(f"Cache entry missing required fields: {query_hash}")
+                        continue
+
+                    query = ResearchQuery(
+                        question=data["question"],
+                        context=data.get("context", ""),
+                    )
+                    result = ResearchResult(
+                        query=query,
+                        answer=data["answer"],
+                        confidence=data.get("confidence", 0.5),
+                        sources=data.get("sources", []),
+                        cached=True,
+                    )
+                    self._cache[query_hash] = result
+                    loaded_count += 1
+                except Exception as e:
+                    logger.warning(f"Failed to load cache entry {query_hash}: {e}")
+                    continue
+
+            logger.info(f"Loaded {loaded_count} research cache entries from {filepath}")
+            return loaded_count
+        except FileNotFoundError:
+            logger.debug(f"No research cache file found at {filepath}")
+            return 0
+        except json.JSONDecodeError as e:
+            logger.warning(f"Research cache file corrupted at {filepath}: {e}")
+            return 0
         except Exception as e:
-            # Unexpected errors - log but don't fail
-            logger.warning("Unexpected error loading research cache: %s", str(e), exc_info=True)
+            logger.error(
+                f"Unexpected error loading research cache from {filepath}: {e}",
+                exc_info=True,
+            )
+            return 0
 
     async def research_vulnerability_pattern(
         self,

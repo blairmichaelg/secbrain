@@ -43,37 +43,43 @@ python -m pip install -e ".[dev]"
 
 ## Git Workflow
 
-### Understanding Branches
+> 📌 **Updated Workflow**: This repository now uses a simplified single-branch workflow. See [BRANCH-STRATEGY.md](BRANCH-STRATEGY.md) for details.
 
-**Main Branches:**
-- `main` - Production-ready code, always stable
-- `develop` - Integration branch for features (if used)
+### Simplified Approach
 
-**Working Branches:**
-- `feature/feature-name` - For new features
-- `bugfix/issue-description` - For bug fixes  
-- `hotfix/urgent-fix` - For urgent production fixes
+**All work happens on `main`:**
+- Direct commits to `main` are encouraged
+- No feature branches needed for most work
+- Faster iteration and zero merge conflicts
+
+### When to Use Branches (Optional)
+
+Only create a branch if:
+- Testing breaking/experimental changes
+- Working on something that needs review before merging
+
+**If you create a branch:**
+- Merge it quickly (same day or next day)
+- Delete it immediately after merging
+- Don't let branches accumulate
 
 ### Best Practices
 
-1. **Always work on a branch**, never directly on `main`
-2. **Keep your branch up to date** with the latest changes from `main`
+1. **Work directly on `main`** for most changes
+2. **Keep main up to date**: `git pull origin main` before starting work
 3. **Write clear, descriptive commit messages**
-4. **Test your changes** before creating a PR
+4. **Test your changes** before pushing
 
 ---
 
 ## Making Changes
 
-### 1. Create a Feature Branch
+### 1. Start Working on Main
 
 ```bash
 # Make sure you're on main and it's up to date
 git checkout main
 git pull origin main
-
-# Create and switch to a new branch
-git checkout -b feature/my-new-feature
 ```
 
 ### 2. Make Your Changes
@@ -198,38 +204,59 @@ git show abc123
 
 ## Creating Pull Requests
 
-### 1. Push Your Branch to GitHub
+> 📌 **Note**: With the simplified single-branch workflow, PRs are optional for most work. You can commit directly to `main`. PRs are useful for:
+> - Getting review on complex changes
+> - Discussing architectural decisions
+> - Automated testing via GitHub Actions
+
+### Option 1: Direct Push to Main (Recommended for most changes)
 
 ```bash
-# Push your feature branch
-git push origin feature/my-new-feature
+# Stage and commit your changes
+git add .
+git commit -m "Add feature X to improve Y"
 
-# If this is the first push for this branch
-git push -u origin feature/my-new-feature
+# Push directly to main
+git push origin main
 ```
 
-### 2. Create the Pull Request
+### Option 2: Create a Pull Request (For changes needing review)
 
+**1. Create a temporary branch:**
+```bash
+# Create a branch for review
+git checkout -b review/my-changes
+
+# Push the branch
+git push -u origin review/my-changes
+```
+
+**2. Create the PR:**
 1. Go to https://github.com/blairmichaelg/secbrain
-2. You'll see a yellow banner suggesting to create a PR - click "Compare & pull request"
+2. Click "Compare & pull request"
 3. Fill in the PR description:
    - **Title**: Clear summary of what this PR does
    - **Description**: Explain what changes you made and why
-   - Link any relevant issues
 4. Click "Create pull request"
 
-### 3. Responding to Review Comments
+**3. After approval, merge and delete:**
+```bash
+# After PR is merged, delete the branch
+git push origin --delete review/my-changes
+git checkout main
+git pull origin main
+git branch -d review/my-changes
+```
 
-When reviewers leave comments:
+### Responding to Review Comments
 
 ```bash
 # Make the requested changes
-# Stage and commit them
 git add .
 git commit -m "Address review feedback"
 
 # Push the updates
-git push origin feature/my-new-feature
+git push origin your-branch-name
 ```
 
 The PR will automatically update!
@@ -270,14 +297,30 @@ git rebase main
 
 ## Dealing with Merge Conflicts
 
-### What is a Merge Conflict?
+### With Single-Branch Workflow
 
-A **conflict** happens when:
-- You changed a file
-- Someone else changed the same file
-- Git can't automatically figure out which version to keep
+> 🎉 **Good News**: With everyone working on `main`, merge conflicts are **extremely rare**!
 
-### How to Resolve Conflicts
+Since there are no parallel branches being developed:
+- No need to merge feature branches
+- No conflicts between different development lines
+- Linear history is easy to understand
+
+### If a Conflict Does Happen
+
+Conflicts might still occur if:
+- Multiple people push to `main` at the exact same time
+- You have local unpushed commits and someone else pushed first
+
+**Simple resolution:**
+
+```bash
+# Pull the latest changes
+git pull origin main
+
+# If there's a conflict, Git will tell you which files
+# Open the conflicted files and look for conflict markers
+```
 
 1. **Git will mark the conflict** in your files:
 

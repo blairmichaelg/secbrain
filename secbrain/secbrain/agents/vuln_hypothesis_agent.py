@@ -8,6 +8,7 @@ import logging
 import math
 import uuid
 from dataclasses import dataclass, field
+import re
 from typing import Any, ClassVar
 
 from eth_utils import is_address, to_checksum_address
@@ -170,12 +171,14 @@ class VulnHypothesisAgent(BaseAgent):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._oracle_detector = OracleManipulationDetector()
-        self._contract_llm_sem = asyncio.Semaphore(5)
+        # Configurable concurrency limits
+        self._max_llm_concurrent = getattr(self.run_context.scope, "max_llm_concurrent", 5)
+        self._contract_llm_sem = asyncio.Semaphore(self._max_llm_concurrent)
 
         # Add hypothesis enhancer
         self.hyp_enhancer = None
         if self.research_orch:
-            from secbrain.agents.hypothesis_enhancement import HypothesisEnhancer
+            from secbrain.agents.hypothesis_enhancer import HypothesisEnhancer
 
             self.hyp_enhancer = HypothesisEnhancer(self.research_orch)
 
@@ -204,28 +207,22 @@ class VulnHypothesisAgent(BaseAgent):
 
         # Parallelize with modest bounds to avoid flooding LLM or RPC
         host_sem = asyncio.Semaphore(5)
-        contract_sem = asyncio.Semaphore(5)
 
         async def _gen_host(asset: dict[str, Any]) -> list[dict[str, Any]]:
             async with host_sem:
                 return await self._generate_hypotheses_for_asset(asset, technologies)
 
-        async def _gen_contract(asset: dict[str, Any]) -> list[dict[str, Any]]:
-            async with contract_sem:
-                return await self._generate_hypotheses_for_contract_asset(asset)
-
         host_tasks = [asyncio.create_task(_gen_host(h)) for h in live_hosts[:10]]
-        contract_tasks = [asyncio.create_task(_gen_contract(c)) for c in contract_assets[:10]]
-
         if host_tasks:
             host_results = await asyncio.gather(*host_tasks)
             for hs in host_results:
                 all_hypotheses.extend(hs or [])
 
-        if contract_tasks:
-            contract_results = await asyncio.gather(*contract_tasks)
-            for cs in contract_results:
-                all_hypotheses.extend(cs or [])
+        # Batch contract hypotheses to reduce sequential LLM calls
+        if contract_assets:
+            contract_batches = await self._generate_batch_hypotheses(contract_assets, batch_size=10)
+            for batch in contract_batches:
+                all_hypotheses.extend(batch or [])
 
         # Research: validate hypothesis viability
         if all_hypotheses and self.research_client:
@@ -277,6 +274,35 @@ class VulnHypothesisAgent(BaseAgent):
             next_actions=["exploit"],
         )
 
+    async def _generate_batch_hypotheses(
+        self,
+        contracts: list[dict[str, Any]],
+        batch_size: int = 10,
+    ) -> list[list[dict[str, Any]]]:
+        """Generate hypotheses for multiple contracts in batches."""
+        results: list[list[dict[str, Any]]] = []
+
+        for i in range(0, len(contracts), batch_size):
+            batch = contracts[i : i + batch_size]
+            batch_tasks = [
+                asyncio.create_task(self._generate_hypotheses_for_contract_asset(contract))
+                for contract in batch
+            ]
+            batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
+
+            for contract, result in zip(batch, batch_results):
+                if isinstance(result, Exception):
+                    self._log_error(
+                        "batch_hypothesis_failed",
+                        contract=contract.get("name"),
+                        error=str(result),
+                    )
+                    results.append([])
+                else:
+                    results.append(result or [])
+
+        return results
+
     async def _generate_hypotheses_for_contract_asset(
         self,
         asset: dict[str, Any],
@@ -286,7 +312,7 @@ class VulnHypothesisAgent(BaseAgent):
             contract_address = self._checksum_address(asset.get("value"))
         except ValueError as e:
             self._log_error(
-                "invalid_contract_address",
+                "invalid_contract_address_skipping",
                 contract=asset.get("name"),
                 address=asset.get("value"),
                 error=str(e),
@@ -499,15 +525,11 @@ Additional note: The contract contains functions that may be vulnerable to preci
                         oracle_functions=oracle_info.get("oracle_functions"),
                     )
 
-                try:
-                    normalized_addr = self._checksum_address(h.get("contract_address") or contract_address)
-                except ValueError as e:
-                    self._log_error(
-                        "hypothesis_contract_address_invalid",
-                        contract=name,
-                        address=h.get("contract_address"),
-                        error=str(e),
-                    )
+                normalized_addr = self._validate_and_normalize_address(
+                    h.get("contract_address") or contract_address,
+                    context="hypothesis",
+                )
+                if not normalized_addr:
                     continue
 
                 candidate = {
@@ -571,60 +593,44 @@ Additional note: The contract contains functions that may be vulnerable to preci
                     oracle_info,
                     pool_registry=pool_registry,
                 )
-                try:
-                    normalized_addr = self._checksum_address(address)
-                except ValueError as e:
-                    self._log_error(
-                        "hypothesis_contract_address_invalid",
-                        contract=name,
-                        address=address,
-                        error=str(e),
-                    )
-                    return []
-
-                hypotheses.append({
-                    "id": f"hyp-{uuid.uuid4().hex[:8]}",
-                    "asset_id": asset.get("id"),
-                    "target": f"{name}@{address}" if name else address,
-                    "vuln_type": "oracle_manipulation",
-                    "confidence": 0.85,
-                    "rationale": f"Detected oracle functions: {', '.join(oracle_info['oracle_functions'])}",
-                    "test_approach": "Manipulate oracle via flash swap and trigger price-dependent path.",
-                    "contract_address": normalized_addr,
-                    "chain_id": chain_id,
-                    "function_signature": oracle_sig,
-                    "foundry_profile": foundry_profile,
-                    "solc": solc,
-                    "abi": abi,
-                    "profit_tokens": scope_profit_tokens,
-                    "exploit_notes": [
-                        "Flash swap to skew reserves",
-                        "Oracle reads manipulated price",
-                        "Execute settlement with favorable price",
-                    ],
-                    "expected_profit_hint_eth": 5.0,
-                    "function_state_mutability": state_mutability,
-                    "function_is_payable": is_payable,
-                    "function_writes_state": writes_state,
-                    "function_returns_value": returns_value,
-                    "function_param_count": len(param_types),
-                    "function_param_types": param_types,
-                    "status": "pending",
-                    "exploit_body": exploit_body,
-                })
+                normalized_addr = self._validate_and_normalize_address(address, context="hypothesis_oracle")
+                if normalized_addr:
+                    hypotheses.append({
+                        "id": f"hyp-{uuid.uuid4().hex[:8]}",
+                        "asset_id": asset.get("id"),
+                        "target": f"{name}@{address}" if name else address,
+                        "vuln_type": "oracle_manipulation",
+                        "confidence": 0.85,
+                        "rationale": f"Detected oracle functions: {', '.join(oracle_info['oracle_functions'])}",
+                        "test_approach": "Manipulate oracle via flash swap and trigger price-dependent path.",
+                        "contract_address": normalized_addr,
+                        "chain_id": chain_id,
+                        "function_signature": oracle_sig,
+                        "foundry_profile": foundry_profile,
+                        "solc": solc,
+                        "abi": abi,
+                        "profit_tokens": scope_profit_tokens,
+                        "exploit_notes": [
+                            "Flash swap to skew reserves",
+                            "Oracle reads manipulated price",
+                            "Execute settlement with favorable price",
+                        ],
+                        "expected_profit_hint_eth": 5.0,
+                        "function_state_mutability": state_mutability,
+                        "function_is_payable": is_payable,
+                        "function_writes_state": writes_state,
+                        "function_returns_value": returns_value,
+                        "function_param_count": len(param_types),
+                        "function_param_types": param_types,
+                        "status": "pending",
+                        "exploit_body": exploit_body,
+                    })
 
             combined_hypotheses.extend(hypotheses[: profile.budget])
 
         else:
-            try:
-                normalized_addr = self._checksum_address(address)
-            except ValueError as e:
-                self._log_error(
-                    "hypothesis_contract_address_invalid",
-                    contract=name,
-                    address=address,
-                    error=str(e),
-                )
+            normalized_addr = self._validate_and_normalize_address(address, context="hypothesis_fallback")
+            if not normalized_addr:
                 return []
 
             combined_hypotheses.append({
@@ -684,11 +690,45 @@ Additional note: The contract contains functions that may be vulnerable to preci
 
         parsed: list[dict[str, Any]] = []
 
+        allowed_vuln_types = set(
+            self.HYPOTHESIS_SCHEMA["items"]["properties"]["vuln_type"]["enum"]
+        )
+
+        def _normalize_item(item: dict[str, Any]) -> dict[str, Any]:
+            """Coerce common LLM variations into the expected schema."""
+            out = dict(item)
+            # Map alternate keys
+            if "vuln_type" not in out and "vulnerability" in out:
+                out["vuln_type"] = str(out.get("vulnerability") or "").strip().lower()
+            if "function_signature" not in out and "function" in out:
+                out["function_signature"] = out.get("function")
+            # Default confidence if missing
+            if "confidence" not in out or out.get("confidence") is None:
+                out["confidence"] = 0.5
+            # Normalize vuln_type to allowed set
+            vt = str(out.get("vuln_type") or "").strip().lower()
+            if not vt:
+                vt = "generic_contract"
+            # Common alias mapping
+            aliases = {
+                "owner_privilege_escalation": "access_control",
+                "privilege_escalation": "access_control",
+                "admin_takeover": "access_control",
+                "governance_hijack": "flash_loan_governance_attack",
+                "price_oracle": "oracle_manipulation",
+            }
+            vt = aliases.get(vt, vt)
+            if vt not in allowed_vuln_types:
+                vt = "generic_contract"
+            out["vuln_type"] = vt
+            return out
+
         for attempt in range(max_retries):
             try:
                 raw = _extract_json_array(response)
-                validate(instance=raw, schema=self.HYPOTHESIS_SCHEMA)
-                parsed = raw
+                normalized = [_normalize_item(i) for i in raw]
+                validate(instance=normalized, schema=self.HYPOTHESIS_SCHEMA)
+                parsed = normalized
                 self._log(
                     "hypothesis_validation_success",
                     contract=contract_name,
@@ -746,37 +786,66 @@ Fix and return ONLY a JSON array matching the schema and using function signatur
         return parsed
 
     def _checksum_address(self, address: str | None) -> str:
-        """Validate and return checksum address with better error handling."""
-        if not address or not isinstance(address, str):
-            # Return a placeholder instead of raising
-            logger.warning("Invalid or missing address (None or non-string), returning placeholder: %s", address)
-            return "0x0000000000000000000000000000000000000000"
-        
+        """Validate and return checksummed Ethereum address."""
+        if not address:
+            raise ValueError("Address cannot be None or empty")
+        if not isinstance(address, str):
+            raise ValueError(f"Address must be string, got {type(address).__name__}")
+
         addr = address.strip()
-        
-        # Be lenient with address format
         if not addr.startswith("0x"):
-            addr = "0x" + addr
-        
-        # Pad if too short
-        if len(addr) < 42:
-            addr = addr + "0" * (42 - len(addr))
-            logger.debug("Padded short address: original=%s, padded=%s", address, addr)
-        
-        # Truncate if too long
-        if len(addr) > 42:
-            addr = addr[:42]
-            logger.debug("Truncated long address: original=%s, truncated=%s", address, addr)
-        
+            raise ValueError(f"Address must start with '0x': {address}")
+        if len(addr) != 42:
+            raise ValueError(f"Address must be 42 characters, got {len(addr)}: {address}")
+
         try:
+            int(addr, 16)
+        except ValueError as exc:
+            raise ValueError(f"Address contains invalid hex characters: {address}") from exc
+
+        if not is_address(addr):
+            raise ValueError(f"Invalid Ethereum address format: {address}")
+
+        return to_checksum_address(addr)
+
+    def _normalize_address(self, address: str | None) -> str | None:
+        """Attempt to normalize an address, returning None if invalid."""
+        if not address or not isinstance(address, str):
+            return None
+
+        try:
+            addr = address.strip()
+            if not addr.startswith("0x"):
+                addr = "0x" + addr
+
+            if len(addr) < 42:
+                addr = addr + "0" * (42 - len(addr))
+            if len(addr) > 42:
+                addr = addr[:42]
+
             if is_address(addr):
                 return to_checksum_address(addr)
-            else:
-                logger.warning("Invalid address format, returning placeholder: %s", address)
-                return "0x0000000000000000000000000000000000000000"
-        except Exception as e:
-            logger.warning("Exception validating address, returning placeholder: %s (error: %s)", address, str(e))
-            return "0x0000000000000000000000000000000000000000"
+        except Exception as exc:
+            logger.debug("Failed to normalize address '%s': %s", address, exc)
+
+        return None
+
+    def _validate_and_normalize_address(
+        self,
+        address: str | None,
+        *,
+        context: str = "hypothesis",
+    ) -> str | None:
+        """Validate address with logging, return None if invalid."""
+        try:
+            return self._checksum_address(address)
+        except ValueError as e:
+            self._log_error(
+                f"invalid_address_in_{context}",
+                address=address,
+                error=str(e),
+            )
+            return None
 
     def _static_vulnerability_patterns(
         self,
@@ -945,18 +1014,73 @@ Fix and return ONLY a JSON array matching the schema and using function signatur
         return hypotheses
 
     def _validate_hypothesis(self, hyp: dict[str, Any]) -> bool:
-        """Cheap sanity gate before downstream phases."""
+        """Validate hypothesis has required fields and valid data."""
         required_fields = ["vuln_type", "confidence", "contract_address", "function_signature"]
-        if not all(hyp.get(f) for f in required_fields):
-            return False
+        for field in required_fields:
+            if field not in hyp or not hyp[field]:
+                logger.debug("Hypothesis missing required field '%s'", field)
+                return False
+
         try:
-            self._checksum_address(hyp.get("contract_address"))
-        except Exception:
+            self._checksum_address(hyp["contract_address"])
+        except ValueError as e:
+            logger.debug("Hypothesis has invalid contract address: %s", e)
             return False
-        conf = hyp.get("confidence")
-        if conf is None or not isinstance(conf, (float | int)):
+
+        try:
+            conf = float(hyp["confidence"])
+            if not 0.0 <= conf <= 1.0:
+                logger.debug("Hypothesis confidence out of range: %s", conf)
+                return False
+        except (TypeError, ValueError) as e:
+            logger.debug("Hypothesis has invalid confidence: %s", e)
             return False
-        return 0.0 <= float(conf) <= 1.0
+
+        func_sig = hyp["function_signature"]
+        if not isinstance(func_sig, str) or not re.match(r"^[a-zA-Z_]\w*\([^)]*\)$", func_sig):
+            logger.debug("Hypothesis has invalid function signature: %s", func_sig)
+            return False
+
+        valid_vuln_types = {
+            "reentrancy",
+            "access_control",
+            "integer_overflow",
+            "unchecked_call",
+            "delegatecall_confusion",
+            "oracle_manipulation",
+            "flash_loan",
+            "mev_sandwich",
+            "precision_error",
+            "state_inconsistency",
+            "generic_contract",
+            "storage_collision",
+            "signature_replay",
+            "first_depositor_inflation",
+            "cross_function_reentrancy",
+            "unchecked_arithmetic",
+            "read_only_reentrancy",
+            "cei_violation",
+            "flash_loan_price_manipulation",
+            "flash_loan_governance_attack",
+            "same_block_borrow_repay",
+            "oracle_manipulation_flash",
+            "missing_access_control",
+            "weak_access_control",
+            "role_based_access_needed",
+            "front_running_vulnerable",
+            "missing_commit_reveal",
+            "no_timelock",
+            "missing_eip712_signature",
+            "stale_price_data",
+            "single_oracle_dependency",
+            "missing_twap",
+            "no_price_deviation_check",
+        }
+        if hyp["vuln_type"] not in valid_vuln_types:
+            logger.debug("Hypothesis has invalid vuln_type: %s", hyp["vuln_type"])
+            return False
+
+        return True
 
     def _feasibility_gate(self, hyp: dict[str, Any], abi: list[Any], functions: list[str] | None = None) -> bool:
         """

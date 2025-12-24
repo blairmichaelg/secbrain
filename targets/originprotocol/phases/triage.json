@@ -1,8 +1,8 @@
 {
-  "run_id": "b59e85f0",
+  "run_id": "3883eaeb",
   "phase": "triage",
   "success": true,
-  "duration_seconds": 0.000467,
+  "duration_seconds": 0.001001,
   "errors": [],
   "data": {
     "findings": [],
@@ -10,8 +10,11 @@
     "economic": {
       "decision": "SKIP",
       "reason": "no_attempts",
-      "max_profit_eth": 0.0
+      "max_profit_eth": 0.0,
+      "max_profit_usd": 0.0,
+      "gas_cost_usd_est": 0.0,
+      "net_usd_est": 0.0
     }
   },
-  "timestamp": "2025-12-20T05:43:33.363089"
+  "timestamp": "2025-12-23T07:37:34.879705"
 }

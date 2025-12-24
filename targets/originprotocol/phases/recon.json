@@ -1,107 +1,1406 @@
 {
-  "run_id": "b59e85f0",
+  "run_id": "3883eaeb",
   "phase": "recon",
   "success": true,
-  "duration_seconds": 0.066915,
+  "duration_seconds": 11.156594,
   "errors": [],
   "data": {
     "assets": [
       {
-        "id": "error-533517eb",
-        "type": "compilation_error",
+        "type": "contract",
         "value": "0x85b78aCa6DeaE198fBf201c82dAf6cA21942ACc6",
         "name": "Proxy",
         "chain_id": 1,
-        "status": "compilation_error",
+        "profile": "contract_Proxy_85b7",
+        "status": "compiled",
         "metadata": {
-          "error": "[WinError 267] The directory name is invalid",
-          "error_type": "NotADirectoryError",
-          "timestamp": "2025-12-20T05:43:33.335429"
+          "source_path": null,
+          "verified": true,
+          "build_output": "No files changed, compilation skipped\n",
+          "solc": "0.8.23",
+          "abi": [
+            {
+              "type": "fallback",
+              "stateMutability": "payable"
+            }
+          ],
+          "functions": [],
+          "classification": {
+            "protocol_type": "generic",
+            "indicators": [],
+            "function_count": 0,
+            "withdrawal_functions": [],
+            "deposit_functions": [],
+            "approval_functions": [],
+            "delegatecall_functions": []
+          }
         }
       },
       {
-        "id": "error-f8facc5c",
-        "type": "compilation_error",
+        "type": "contract",
         "value": "0x1827F9eA98E0bf96550b2FC20F7233277FcD7E63",
         "name": "ConvexEthMetaStrategyProxy",
         "chain_id": 1,
-        "status": "compilation_error",
+        "profile": "contract_ConvexEthMetaStrategyProxy_1827",
+        "status": "compiled",
         "metadata": {
-          "error": "[WinError 267] The directory name is invalid",
-          "error_type": "NotADirectoryError",
-          "timestamp": "2025-12-20T05:43:33.337082"
+          "source_path": null,
+          "verified": true,
+          "build_output": "No files changed, compilation skipped\n",
+          "solc": "0.8.7",
+          "abi": [
+            {
+              "type": "fallback",
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "admin",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "claimGovernance",
+              "inputs": [],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "governor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "implementation",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "initialize",
+              "inputs": [
+                {
+                  "name": "_logic",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_initGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "isGovernor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "bool",
+                  "internalType": "bool"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "transferGovernance",
+              "inputs": [
+                {
+                  "name": "_newGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeTo",
+              "inputs": [
+                {
+                  "name": "newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeToAndCall",
+              "inputs": [
+                {
+                  "name": "newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "event",
+              "name": "GovernorshipTransferred",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "PendingGovernorshipTransfer",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "Upgraded",
+              "inputs": [
+                {
+                  "name": "implementation",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            }
+          ],
+          "functions": [
+            "admin()",
+            "claimGovernance()",
+            "governor()",
+            "implementation()",
+            "initialize(address,address,bytes)",
+            "isGovernor()",
+            "transferGovernance(address)",
+            "upgradeTo(address)",
+            "upgradeToAndCall(address,bytes)"
+          ],
+          "classification": {
+            "protocol_type": "defi_vault",
+            "indicators": [
+              "vault",
+              "strategy",
+              "oeth",
+              "share",
+              "rebalance",
+              "deposit",
+              "withdraw"
+            ],
+            "function_count": 9,
+            "withdrawal_functions": [
+              "claimgovernance()"
+            ],
+            "deposit_functions": [],
+            "approval_functions": [],
+            "delegatecall_functions": []
+          }
         }
       },
       {
-        "id": "error-18a2cbcf",
-        "type": "compilation_error",
+        "type": "contract",
         "value": "0xe75D77b1865Ae93c7eAa3040b038D7aA7BC02F70",
         "name": "VaultProxy",
         "chain_id": 1,
-        "status": "compilation_error",
+        "profile": "contract_VaultProxy_e75d",
+        "status": "compiled",
         "metadata": {
-          "error": "[WinError 267] The directory name is invalid",
-          "error_type": "NotADirectoryError",
-          "timestamp": "2025-12-20T05:43:33.338530"
+          "source_path": null,
+          "verified": true,
+          "build_output": "No files changed, compilation skipped\n",
+          "solc": "0.5.11",
+          "abi": [
+            {
+              "type": "fallback",
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "admin",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "claimGovernance",
+              "inputs": [],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "governor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "implementation",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "initialize",
+              "inputs": [
+                {
+                  "name": "_logic",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_initGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "isGovernor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "bool",
+                  "internalType": "bool"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "transferGovernance",
+              "inputs": [
+                {
+                  "name": "_newGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeTo",
+              "inputs": [
+                {
+                  "name": "newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeToAndCall",
+              "inputs": [
+                {
+                  "name": "newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "event",
+              "name": "GovernorshipTransferred",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "PendingGovernorshipTransfer",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "Upgraded",
+              "inputs": [
+                {
+                  "name": "implementation",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            }
+          ],
+          "functions": [
+            "admin()",
+            "claimGovernance()",
+            "governor()",
+            "implementation()",
+            "initialize(address,address,bytes)",
+            "isGovernor()",
+            "transferGovernance(address)",
+            "upgradeTo(address)",
+            "upgradeToAndCall(address,bytes)"
+          ],
+          "classification": {
+            "protocol_type": "defi_vault",
+            "indicators": [
+              "vault",
+              "strategy",
+              "oeth",
+              "share",
+              "rebalance",
+              "deposit",
+              "withdraw"
+            ],
+            "function_count": 9,
+            "withdrawal_functions": [
+              "claimgovernance()"
+            ],
+            "deposit_functions": [],
+            "approval_functions": [],
+            "delegatecall_functions": []
+          }
         }
       },
       {
-        "id": "error-96453793",
-        "type": "compilation_error",
+        "type": "contract",
         "value": "0xaF04828Ed923216c77dC22a2fc8E077FDaDAA87d",
         "name": "OETHCurveAMOProxy",
         "chain_id": 1,
-        "status": "compilation_error",
+        "profile": "contract_OETHCurveAMOProxy_af04",
+        "status": "compiled",
         "metadata": {
-          "error": "[WinError 267] The directory name is invalid",
-          "error_type": "NotADirectoryError",
-          "timestamp": "2025-12-20T05:43:33.340001"
+          "source_path": null,
+          "verified": true,
+          "build_output": "No files changed, compilation skipped\n",
+          "solc": "0.8.28",
+          "abi": [
+            {
+              "type": "fallback",
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "admin",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "claimGovernance",
+              "inputs": [],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "governor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "implementation",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "initialize",
+              "inputs": [
+                {
+                  "name": "_logic",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_initGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "isGovernor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "bool",
+                  "internalType": "bool"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "transferGovernance",
+              "inputs": [
+                {
+                  "name": "_newGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeTo",
+              "inputs": [
+                {
+                  "name": "_newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeToAndCall",
+              "inputs": [
+                {
+                  "name": "newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "event",
+              "name": "GovernorshipTransferred",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "PendingGovernorshipTransfer",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "Upgraded",
+              "inputs": [
+                {
+                  "name": "implementation",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            }
+          ],
+          "functions": [
+            "admin()",
+            "claimGovernance()",
+            "governor()",
+            "implementation()",
+            "initialize(address,address,bytes)",
+            "isGovernor()",
+            "transferGovernance(address)",
+            "upgradeTo(address)",
+            "upgradeToAndCall(address,bytes)"
+          ],
+          "classification": {
+            "protocol_type": "defi_vault",
+            "indicators": [
+              "vault",
+              "strategy",
+              "oeth",
+              "share",
+              "rebalance",
+              "deposit",
+              "withdraw"
+            ],
+            "function_count": 9,
+            "withdrawal_functions": [
+              "claimgovernance()"
+            ],
+            "deposit_functions": [],
+            "approval_functions": [],
+            "delegatecall_functions": []
+          }
         }
       },
       {
-        "id": "error-3d0b94b0",
-        "type": "compilation_error",
+        "type": "contract",
         "value": "0x7609C88e5880E934DD3a75BCfeF44E31B1BAdb8b",
         "name": "FixedRateRewardsSourceProxy",
         "chain_id": 1,
-        "status": "compilation_error",
+        "profile": "contract_FixedRateRewardsSourceProxy_7609",
+        "status": "compiled",
         "metadata": {
-          "error": "[WinError 267] The directory name is invalid",
-          "error_type": "NotADirectoryError",
-          "timestamp": "2025-12-20T05:43:33.342035"
+          "source_path": null,
+          "verified": true,
+          "build_output": "No files changed, compilation skipped\n",
+          "solc": "0.8.10",
+          "abi": [
+            {
+              "type": "fallback",
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "admin",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "claimGovernance",
+              "inputs": [],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "governor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "implementation",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "initialize",
+              "inputs": [
+                {
+                  "name": "_logic",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_initGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "isGovernor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "bool",
+                  "internalType": "bool"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "transferGovernance",
+              "inputs": [
+                {
+                  "name": "_newGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeTo",
+              "inputs": [
+                {
+                  "name": "newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeToAndCall",
+              "inputs": [
+                {
+                  "name": "newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "event",
+              "name": "GovernorshipTransferred",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "PendingGovernorshipTransfer",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "Upgraded",
+              "inputs": [
+                {
+                  "name": "implementation",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            }
+          ],
+          "functions": [
+            "admin()",
+            "claimGovernance()",
+            "governor()",
+            "implementation()",
+            "initialize(address,address,bytes)",
+            "isGovernor()",
+            "transferGovernance(address)",
+            "upgradeTo(address)",
+            "upgradeToAndCall(address,bytes)"
+          ],
+          "classification": {
+            "protocol_type": "lending",
+            "indicators": [
+              "lend",
+              "borrow",
+              "collateral",
+              "reserve",
+              "interest",
+              "rate",
+              "loan"
+            ],
+            "function_count": 9,
+            "withdrawal_functions": [
+              "claimgovernance()"
+            ],
+            "deposit_functions": [],
+            "approval_functions": [],
+            "delegatecall_functions": []
+          }
         }
       },
       {
-        "id": "error-08e5ee5f",
-        "type": "compilation_error",
+        "type": "contract",
         "value": "0x63898B3B6EF3D39332082178656E9862BEE45c57",
         "name": "ExponentialStakingProxy",
         "chain_id": 1,
-        "status": "compilation_error",
+        "profile": "contract_ExponentialStakingProxy_6389",
+        "status": "compiled",
         "metadata": {
-          "error": "[WinError 267] The directory name is invalid",
-          "error_type": "NotADirectoryError",
-          "timestamp": "2025-12-20T05:43:33.344029"
+          "source_path": null,
+          "verified": true,
+          "build_output": "No files changed, compilation skipped\n",
+          "solc": "0.8.10",
+          "abi": [
+            {
+              "type": "fallback",
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "admin",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "claimGovernance",
+              "inputs": [],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "governor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "implementation",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "initialize",
+              "inputs": [
+                {
+                  "name": "_logic",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_initGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "isGovernor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "bool",
+                  "internalType": "bool"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "transferGovernance",
+              "inputs": [
+                {
+                  "name": "_newGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeTo",
+              "inputs": [
+                {
+                  "name": "newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeToAndCall",
+              "inputs": [
+                {
+                  "name": "newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "event",
+              "name": "GovernorshipTransferred",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "PendingGovernorshipTransfer",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "Upgraded",
+              "inputs": [
+                {
+                  "name": "implementation",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            }
+          ],
+          "functions": [
+            "admin()",
+            "claimGovernance()",
+            "governor()",
+            "implementation()",
+            "initialize(address,address,bytes)",
+            "isGovernor()",
+            "transferGovernance(address)",
+            "upgradeTo(address)",
+            "upgradeToAndCall(address,bytes)"
+          ],
+          "classification": {
+            "protocol_type": "governance",
+            "indicators": [
+              "gov",
+              "dao",
+              "proposal",
+              "vote",
+              "timelock",
+              "delegate"
+            ],
+            "function_count": 9,
+            "withdrawal_functions": [
+              "claimgovernance()"
+            ],
+            "deposit_functions": [],
+            "approval_functions": [],
+            "delegatecall_functions": []
+          }
         }
       },
       {
-        "id": "error-71e9f342",
-        "type": "compilation_error",
+        "type": "contract",
         "value": "0x501804B374EF06fa9C427476147ac09F1551B9A0",
         "name": "InitializeGovernedUpgradeabilityProxy",
         "chain_id": 1,
-        "status": "compilation_error",
+        "profile": "contract_InitializeGovernedUpgradeabilityProxy_5018",
+        "status": "compiled",
         "metadata": {
-          "error": "[WinError 267] The directory name is invalid",
-          "error_type": "NotADirectoryError",
-          "timestamp": "2025-12-20T05:43:33.346251"
+          "source_path": null,
+          "verified": true,
+          "build_output": "No files changed, compilation skipped\n",
+          "solc": "0.5.11",
+          "abi": [
+            {
+              "type": "fallback",
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "admin",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "claimGovernance",
+              "inputs": [],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "governor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "implementation",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "initialize",
+              "inputs": [
+                {
+                  "name": "_logic",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_initGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "_data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "function",
+              "name": "isGovernor",
+              "inputs": [],
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "bool",
+                  "internalType": "bool"
+                }
+              ],
+              "stateMutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "transferGovernance",
+              "inputs": [
+                {
+                  "name": "_newGovernor",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeTo",
+              "inputs": [
+                {
+                  "name": "newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "nonpayable"
+            },
+            {
+              "type": "function",
+              "name": "upgradeToAndCall",
+              "inputs": [
+                {
+                  "name": "newImplementation",
+                  "type": "address",
+                  "internalType": "address"
+                },
+                {
+                  "name": "data",
+                  "type": "bytes",
+                  "internalType": "bytes"
+                }
+              ],
+              "outputs": [],
+              "stateMutability": "payable"
+            },
+            {
+              "type": "event",
+              "name": "GovernorshipTransferred",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "PendingGovernorshipTransfer",
+              "inputs": [
+                {
+                  "name": "previousGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                },
+                {
+                  "name": "newGovernor",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            },
+            {
+              "type": "event",
+              "name": "Upgraded",
+              "inputs": [
+                {
+                  "name": "implementation",
+                  "type": "address",
+                  "indexed": true,
+                  "internalType": "address"
+                }
+              ],
+              "anonymous": false
+            }
+          ],
+          "functions": [
+            "admin()",
+            "claimGovernance()",
+            "governor()",
+            "implementation()",
+            "initialize(address,address,bytes)",
+            "isGovernor()",
+            "transferGovernance(address)",
+            "upgradeTo(address)",
+            "upgradeToAndCall(address,bytes)"
+          ],
+          "classification": {
+            "protocol_type": "governance",
+            "indicators": [
+              "gov",
+              "dao",
+              "proposal",
+              "vote",
+              "timelock",
+              "delegate"
+            ],
+            "function_count": 9,
+            "withdrawal_functions": [
+              "claimgovernance()"
+            ],
+            "deposit_functions": [],
+            "approval_functions": [],
+            "delegatecall_functions": []
+          }
         }
       }
     ],
     "contracts_count": 7,
-    "compiled_count": 0,
-    "failed_count": 7,
-    "foundry_root": "C:\\Users\\Michael\\CascadeProjects\\windsurf-project-2\\originprotocol"
+    "compiled_count": 7,
+    "failed_count": 0,
+    "foundry_root": "C:\\Users\\Michael\\CascadeProjects\\windsurf-project-2\\targets\\originprotocol\\instascope"
   },
-  "timestamp": "2025-12-20T05:43:33.360089"
+  "timestamp": "2025-12-23T07:37:34.869155"
 }

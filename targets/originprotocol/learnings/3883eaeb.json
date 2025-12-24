@@ -1,0 +1,35 @@
+{
+  "run_id": "3883eaeb",
+  "program": "Origin Protocol",
+  "timestamp": "2025-12-23T07:37:34.862920",
+  "metrics": {
+    "recon": {
+      "assets_discovered": 7,
+      "live_hosts": 0
+    },
+    "hypotheses": {
+      "total_generated": 0,
+      "by_type": {}
+    },
+    "exploitation": {
+      "tested": 0,
+      "confirmed": 0,
+      "confirmation_rate": 0
+    },
+    "findings": {
+      "total": 0,
+      "by_severity": {}
+    }
+  },
+  "analysis": {
+    "effective_types": {},
+    "ineffective_types": {},
+    "success_rates": {},
+    "top_performing": [],
+    "hypothesis_effectiveness": {}
+  },
+  "recommendations": [
+    "Low confirmation rate - consider improving hypothesis quality or testing methodology",
+    "No findings - consider expanding attack surface or trying new techniques"
+  ]
+}

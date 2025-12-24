@@ -4,10 +4,22 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime
+import time
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+import yaml
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing_extensions import TypedDict
+
+from secbrain.core.approval import ApprovalManager
+
+from .identity import IdentityRegistry
+
+if TYPE_CHECKING:
+    from secbrain.models.base import ModelClient
 
 
 def _default_research_config() -> dict[str, Any]:
@@ -23,21 +35,10 @@ def _default_research_config() -> dict[str, Any]:
         },
     }
 
-import yaml
-from pydantic import BaseModel, ConfigDict, Field
-from typing_extensions import TypedDict
-
-from secbrain.core.approval import ApprovalManager
-
-from .identity import IdentityRegistry
-
-if TYPE_CHECKING:
-    from secbrain.models.base import ModelClient
-
 
 class SessionErrorDict(TypedDict, total=False):
     """Structure for session error records."""
-    
+
     phase: str
     error: str
     timestamp: str
@@ -46,7 +47,7 @@ class SessionErrorDict(TypedDict, total=False):
 
 class SessionFindingDict(TypedDict, total=False):
     """Structure for session finding records."""
-    
+
     id: str
     title: str
     severity: str
@@ -56,7 +57,7 @@ class SessionFindingDict(TypedDict, total=False):
 
 class ContractConfig(BaseModel):
     """Configuration for a smart contract target.
-    
+
     Uses Pydantic V2 strict mode for enhanced type safety.
     """
 
@@ -69,10 +70,20 @@ class ContractConfig(BaseModel):
     source_path: Path | None = Field(None, description="Path to contract source files")
     verified: bool = Field(default=True, description="Whether contract is verified on-chain")
 
+    @field_validator("source_path", mode="before")
+    @classmethod
+    def _coerce_source_path(cls, value: Any) -> Path | None:
+        """Allow string paths in strict mode configs."""
+        if value is None or isinstance(value, Path):
+            return value
+        if isinstance(value, str):
+            return Path(value)
+        raise TypeError("source_path must be a string or pathlib.Path")
+
 
 class ScopeConfig(BaseModel):
     """Target scope configuration.
-    
+
     Uses Pydantic V2 strict mode for enhanced type safety.
     """
 
@@ -106,10 +117,20 @@ class ScopeConfig(BaseModel):
         description="Research orchestrator configuration",
     )
 
+    @field_validator("foundry_root", mode="before")
+    @classmethod
+    def _coerce_foundry_root(cls, value: Any) -> Path | None:
+        """Allow string paths while keeping strict validation."""
+        if value is None or isinstance(value, Path):
+            return value
+        if isinstance(value, str):
+            return Path(value)
+        raise TypeError("foundry_root must be a string or pathlib.Path")
+
 
 class ProgramConfig(BaseModel):
     """Bug bounty program configuration.
-    
+
     Uses Pydantic V2 strict mode for enhanced type safety.
     """
 
@@ -130,7 +151,7 @@ class ProgramConfig(BaseModel):
 
 class ToolACL(BaseModel):
     """Access control for a tool.
-    
+
     Uses Pydantic V2 strict mode for enhanced type safety.
     """
 
@@ -145,7 +166,7 @@ class ToolACL(BaseModel):
 
 class RateLimitConfig(BaseModel):
     """Rate limiting configuration.
-    
+
     Uses Pydantic V2 strict mode for enhanced type safety.
     """
 
@@ -159,7 +180,7 @@ class RateLimitConfig(BaseModel):
 
 class ToolsConfig(BaseModel):
     """Tools configuration with ACLs and rate limits.
-    
+
     Uses Pydantic V2 strict mode for enhanced type safety.
     """
 
@@ -172,40 +193,57 @@ class ToolsConfig(BaseModel):
 
 @dataclass
 class RateLimiter:
-    """Simple token bucket rate limiter."""
+    """Simple token bucket rate limiter that is event-loop aware."""
 
     tokens: float
     max_tokens: float
     refill_rate: float  # tokens per second
-    last_refill: float = field(default_factory=lambda: asyncio.get_event_loop().time() if asyncio.get_event_loop().is_running() else 0)
+    last_refill: float = 0.0
+
+    def _loop_time(self) -> float:
+        """Return the appropriate monotonic clock for the active loop."""
+        try:
+            return asyncio.get_running_loop().time()
+        except RuntimeError:
+            return time.monotonic()
 
     def _refill(self) -> None:
-        now = asyncio.get_event_loop().time()
-        elapsed = now - self.last_refill
+        """Refill tokens based on elapsed time."""
+        now = self._loop_time()
+        if self.last_refill == 0.0:
+            self.last_refill = now
+            return
+        elapsed = max(0.0, now - self.last_refill)
+        if elapsed <= 0.0:
+            return
         self.tokens = min(self.max_tokens, self.tokens + elapsed * self.refill_rate)
         self.last_refill = now
 
     async def acquire(self, tokens: float = 1.0) -> None:
         """Acquire tokens, waiting if necessary."""
+        if tokens <= 0:
+            return
         while True:
             self._refill()
             if self.tokens >= tokens:
                 self.tokens -= tokens
                 return
+            if self.refill_rate <= 0:
+                raise RuntimeError("RateLimiter refill_rate must be positive")
             wait_time = (tokens - self.tokens) / self.refill_rate
-            await asyncio.sleep(min(wait_time, 1.0))
+            await asyncio.sleep(min(max(wait_time, 0.0), 1.0))
 
 
 class Session(BaseModel):
     """Session state for a run.
-    
+
     Uses Pydantic V2 strict mode for enhanced type safety.
     """
 
     model_config = ConfigDict(strict=True, arbitrary_types_allowed=True)
 
     run_id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
-    start_time: datetime = Field(default_factory=datetime.now)
+    start_time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     current_phase: str = "init"
     phases_completed: list[str] = Field(default_factory=list)
     tool_call_counts: dict[str, int] = Field(default_factory=dict)
@@ -306,7 +344,7 @@ class RunContext:
 
     def _load_tools_config(self) -> ToolsConfig:
         """Load tools configuration from config directory."""
-        config_path = Path(__file__).parent.parent.parent / "config" / "tools.yaml"
+        config_path = Path(__file__).parent.parent / "config" / "tools.yaml"
         if config_path.exists():
             with open(config_path) as f:
                 data = yaml.safe_load(f) or {}
@@ -497,7 +535,7 @@ class RunContext:
         error_dict: SessionErrorDict = {
             "phase": error.get("phase", ""),
             "error": error.get("error", ""),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "agent": error.get("agent", ""),
         }
         self.session.errors.append(error_dict)

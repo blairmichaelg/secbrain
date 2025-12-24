@@ -41,7 +41,7 @@ urls: []
 excluded_paths: []
 allowed_methods: [GET, POST, PUT, HEAD, OPTIONS]
 notes: "Origin Protocol (Immunefi) contract-only run. Use forked execution; do not test on mainnet directly."
-foundry_root: C:\\Users\\Michael\\CascadeProjects\\windsurf-project-2\\originprotocol
+foundry_root: C:\\Users\\Michael\\CascadeProjects\\windsurf-project-2\\targets\\originprotocol\\instascope
 max_requests_per_second: 10
 respect_robots_txt: true
 
