@@ -4,6 +4,8 @@
 
 All development work is now consolidated on the **main** branch.
 
+> ⚠️ **Action Required**: This change is implemented via PR. Once this PR is merged to `main`, delete all `copilot/*` branches and work directly on `main` going forward. See [BRANCH-CONSOLIDATION.md](BRANCH-CONSOLIDATION.md) for details.
+
 ## Why Main Only?
 
 To avoid merge conflicts and branch management complexity, this repository uses a simplified single-branch strategy:
