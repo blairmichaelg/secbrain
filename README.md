@@ -103,6 +103,7 @@ secbrain insights --workspace ./targets/protocol1 --format html --open
 
 ### Contributing & Quality
 - 🤝 [Contributing Guide](CONTRIBUTING.md) - How to contribute
+- 🌿 [Branch Strategy](BRANCH-STRATEGY.md) - Simple single-branch workflow
 - 🧪 [Testing Strategies](docs/TESTING-STRATEGIES.md) - Advanced testing approaches
 - 🔐 [Security Patterns](docs/SOLIDITY_SECURITY_PATTERNS.md) - Smart contract security
 - 🎯 [Git Quick Start](docs/GIT_QUICK_START.md) - Git workflow basics
