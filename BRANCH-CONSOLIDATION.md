@@ -19,10 +19,35 @@ All work is now consolidated into a **single-branch workflow** using `main`.
 
 **This PR must be merged into `main` to complete the consolidation.**
 
+### Step-by-Step Instructions:
+
+1. **Review this PR** on GitHub:
+   - All changes are documentation updates
+   - No code changes that could break functionality
+   - Zero conflicts with main (verified)
+
+2. **Merge the PR:**
+   - Go to the PR page on GitHub
+   - Click "Merge pull request"
+   - Choose "Squash and merge" or "Create a merge commit"
+   - Confirm the merge
+
+3. **Switch to main locally:**
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+
+4. **Delete this PR branch:**
+   ```bash
+   git branch -d copilot/merge-all-changes-into-one-branch
+   git push origin --delete copilot/merge-all-changes-into-one-branch
+   ```
+
 After merging:
-1. Delete this branch (`copilot/merge-all-changes-into-one-branch`)
-2. All future work should be done directly on `main`
-3. No more feature branches needed
+1. ✅ Main branch has all documentation updates
+2. ✅ All future work should be done directly on `main`
+3. ✅ No more feature branches needed
 
 ## For Future Development
 
@@ -44,19 +69,36 @@ git push origin main
 
 ## Cleaning Up Old Branches
 
-After this PR is merged, you can delete all old `copilot/*` branches:
+After this PR is merged, you should delete all old `copilot/*` branches to complete the consolidation.
+
+### Quick Cleanup (All copilot branches at once):
 
 ```bash
-# List all remote copilot branches
+# List all copilot branches (to see what will be deleted)
 git ls-remote --heads origin | grep copilot
 
-# Delete them (example)
-git push origin --delete copilot/branch-name
+# Delete all copilot branches in one command
+git ls-remote --heads origin | grep copilot | sed 's|.*refs/heads/||' | xargs -I {} git push origin --delete {}
 ```
 
-Or delete them via GitHub's web interface:
+### Manual Cleanup (One at a time):
+
+```bash
+# Delete specific branches
+git push origin --delete copilot/add-comprehensive-test-coverage
+git push origin --delete copilot/debug-failing-test
+git push origin --delete copilot/enhance-testing-strategies
+git push origin --delete copilot/fix-constants-and-config-files
+git push origin --delete copilot/fix-ruff-check-issues
+# ... etc
+```
+
+### Using GitHub Web Interface:
+
 1. Go to: https://github.com/blairmichaelg/secbrain/branches
-2. Delete all branches except `main`
+2. Search for "copilot"
+3. Delete each branch by clicking the trash icon
+4. Or use "Stale branches" to bulk delete old branches
 
 ## Benefits of This Approach
 
