@@ -63,9 +63,12 @@ async def test_enhance_contract_hypotheses_no_research():
         static_hypotheses=static_hyps,
     )
 
-    # Should return hypotheses as-is when no research available
+    # Should return hypotheses with Immunefi intelligence enhancements even when no research available
     assert len(enhanced) == 1
-    assert enhanced[0]["confidence"] == 0.6
+    # Confidence is boosted by Immunefi intelligence (withdraw function gets priority 9, +20% boost)
+    assert enhanced[0]["confidence"] == 0.72
+    assert enhanced[0].get("detection_priority") == 9
+    assert "confidence_boost_reasons" in enhanced[0]
 
 
 @pytest.mark.asyncio
