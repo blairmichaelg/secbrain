@@ -1,5 +1,35 @@
 # Automated Agent Suite - Quick Reference
 
+## 🚀 NEW: Comprehensive Security Analysis
+
+**Analyze ANY repository with 12+ security tools:**
+
+```bash
+# Quick scan (5-15 min)
+gh workflow run comprehensive-security-analysis.yml \
+  -f target_repo=https://github.com/owner/repo \
+  -f analysis_depth=quick
+
+# Standard analysis (30-60 min) - RECOMMENDED
+gh workflow run comprehensive-security-analysis.yml \
+  -f target_repo=https://github.com/owner/repo \
+  -f target_type=mixed \
+  -f analysis_depth=standard \
+  -f enable_ai_analysis=true \
+  -f enable_fuzzing=true
+
+# Deep audit (2-4 hours)
+gh workflow run comprehensive-security-analysis.yml \
+  -f target_repo=https://github.com/owner/repo \
+  -f analysis_depth=deep \
+  -f enable_ai_analysis=true \
+  -f enable_fuzzing=true
+```
+
+**See:** [Quick Reference](COMPREHENSIVE_SECURITY_ANALYSIS_QUICKREF.md) | [Examples](COMPREHENSIVE_SECURITY_ANALYSIS_EXAMPLES.md) | [Full Docs](.github/workflows/COMPREHENSIVE_SECURITY_ANALYSIS_README.md)
+
+---
+
 ## Daily Workflows
 
 ### Morning Security Review (After 2-4 AM UTC)
