@@ -25,6 +25,14 @@ async def storage(temp_workspace):
     await stor.close()
 
 
+async def fetch_one(storage, cursor):
+    """Helper to fetch one row from cursor, handling both aiosqlite and sqlite3."""
+    if storage._sqlite_backend == "aiosqlite":
+        return await cursor.fetchone()
+    import asyncio
+    return await asyncio.to_thread(cursor.fetchone)
+
+
 class TestWorkspaceStorageInit:
     """Test WorkspaceStorage initialization."""
 
@@ -73,11 +81,7 @@ class TestWorkspaceStorageRuns:
             "SELECT * FROM runs WHERE run_id = ?",
             (storage.run_id,)
         )
-        if storage._sqlite_backend == "aiosqlite":
-            row = await cursor.fetchone()
-        else:
-            import asyncio
-            row = await asyncio.to_thread(cursor.fetchone)
+        row = await fetch_one(storage, cursor)
         
         assert row is not None
         assert row[0] == storage.run_id  # run_id
@@ -95,11 +99,7 @@ class TestWorkspaceStorageRuns:
             "SELECT status, end_time FROM runs WHERE run_id = ?",
             (storage.run_id,)
         )
-        if storage._sqlite_backend == "aiosqlite":
-            row = await cursor.fetchone()
-        else:
-            import asyncio
-            row = await asyncio.to_thread(cursor.fetchone)
+        row = await fetch_one(storage, cursor)
         
         assert row is not None
         assert row[0] == "completed"  # status
@@ -115,11 +115,7 @@ class TestWorkspaceStorageRuns:
             "SELECT metadata FROM runs WHERE run_id = ?",
             (storage.run_id,)
         )
-        if storage._sqlite_backend == "aiosqlite":
-            row = await cursor.fetchone()
-        else:
-            import asyncio
-            row = await asyncio.to_thread(cursor.fetchone)
+        row = await fetch_one(storage, cursor)
         
         stored_metadata = json.loads(row[0])
         assert stored_metadata == metadata
@@ -146,11 +142,7 @@ class TestWorkspaceStorageAssets:
             "SELECT * FROM assets WHERE id = ?",
             ("asset-1",)
         )
-        if storage._sqlite_backend == "aiosqlite":
-            row = await cursor.fetchone()
-        else:
-            import asyncio
-            row = await asyncio.to_thread(cursor.fetchone)
+        row = await fetch_one(storage, cursor)
         
         assert row is not None
         assert row[2] == "domain"  # type
@@ -171,11 +163,7 @@ class TestWorkspaceStorageAssets:
             "SELECT COUNT(*) FROM assets WHERE run_id = ?",
             (storage.run_id,)
         )
-        if storage._sqlite_backend == "aiosqlite":
-            row = await cursor.fetchone()
-        else:
-            import asyncio
-            row = await asyncio.to_thread(cursor.fetchone)
+        row = await fetch_one(storage, cursor)
         
         assert row[0] == 2
 
@@ -248,11 +236,7 @@ class TestWorkspaceStorageHypotheses:
             "SELECT * FROM hypotheses WHERE id = ?",
             ("hyp-1",)
         )
-        if storage._sqlite_backend == "aiosqlite":
-            row = await cursor.fetchone()
-        else:
-            import asyncio
-            row = await asyncio.to_thread(cursor.fetchone)
+        row = await fetch_one(storage, cursor)
         
         assert row is not None
         assert row[3] == "sqli"  # vuln_type
@@ -338,11 +322,7 @@ class TestWorkspaceStorageFindings:
             "SELECT * FROM findings WHERE id = ?",
             ("finding-1",)
         )
-        if storage._sqlite_backend == "aiosqlite":
-            row = await cursor.fetchone()
-        else:
-            import asyncio
-            row = await asyncio.to_thread(cursor.fetchone)
+        row = await fetch_one(storage, cursor)
         
         assert row is not None
         assert row[2] == "SQL Injection"  # title
@@ -423,11 +403,7 @@ class TestWorkspaceStorageToolCalls:
             "SELECT * FROM tool_calls WHERE run_id = ?",
             (storage.run_id,)
         )
-        if storage._sqlite_backend == "aiosqlite":
-            row = await cursor.fetchone()
-        else:
-            import asyncio
-            row = await asyncio.to_thread(cursor.fetchone)
+        row = await fetch_one(storage, cursor)
         
         assert row is not None
         assert row[2] == "nmap"  # tool
@@ -451,11 +427,7 @@ class TestWorkspaceStorageToolCalls:
             "SELECT success FROM tool_calls WHERE tool = ?",
             ("nuclei",)
         )
-        if storage._sqlite_backend == "aiosqlite":
-            row = await cursor.fetchone()
-        else:
-            import asyncio
-            row = await asyncio.to_thread(cursor.fetchone)
+        row = await fetch_one(storage, cursor)
         
         assert row[0] == 0  # success (False -> 0)
 
