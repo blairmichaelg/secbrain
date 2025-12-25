@@ -7,7 +7,7 @@ inform AI-generated recommendations.
 """
 import json
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 
