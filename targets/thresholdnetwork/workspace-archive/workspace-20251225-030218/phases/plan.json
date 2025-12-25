@@ -1,0 +1,140 @@
+{
+  "run_id": "8e0cee57",
+  "phase": "plan",
+  "success": true,
+  "duration_seconds": 36.325073,
+  "errors": [],
+  "data": {
+    "plan": {
+      "phases": [
+        {
+          "phase": "recon",
+          "objectives": [
+            "Discover and map target domains",
+            "Identify potential weak points in the bug bounty program",
+            "Determine the scope of the bug bounty program"
+          ],
+          "tools": [
+            "Netcraft",
+            "DomainTools",
+            "Subdomain Search tools like Subfinder, Amass"
+          ],
+          "time_estimate": "4 days",
+          "success_criteria": [
+            "All target domains are discovered and mapped",
+            "All weak points in the bug bounty program are identified",
+            "The scope of the bug bounty program is determined"
+          ]
+        },
+        {
+          "phase": "hypothesis",
+          "objectives": [
+            "Identify potential vulnerability classes",
+            "Analyze the smart contracts and their implementations",
+            "Determine the potential attack vectors"
+          ],
+          "tools": [
+            "Smart contract analyzers like Etherscan, Remix",
+            "Vulnerability scanning tools like OpenVAS, Nessus"
+          ],
+          "time_estimate": "6 days",
+          "success_criteria": [
+            "All potential vulnerability classes are identified",
+            "All smart contracts and their implementations are analyzed",
+            "All potential attack vectors are determined"
+          ]
+        },
+        {
+          "phase": "exploit",
+          "objectives": [
+            "Test hypotheses with payloads",
+            "Identify the severity of the vulnerabilities",
+            "Validate the findings"
+          ],
+          "tools": [
+            "Exploit frameworks like Metasploit, Burp Suite",
+            "Smart contract testing frameworks like Truffle, OpenZeppelin"
+          ],
+          "time_estimate": "8 days",
+          "success_criteria": [
+            "All hypotheses are tested with payloads",
+            "All vulnerabilities are identified and their severity is determined",
+            "All findings are validated"
+          ]
+        },
+        {
+          "phase": "triage",
+          "objectives": [
+            "Validate and prioritize findings",
+            "Determine the severity of the vulnerabilities",
+            "Identify the potential impact of the vulnerabilities"
+          ],
+          "tools": [
+            "Vulnerability severity classification system V2.3",
+            "Risk assessment frameworks like NIST, ISO 27001"
+          ],
+          "time_estimate": "4 days",
+          "success_criteria": [
+            "All findings are validated",
+            "All vulnerabilities are prioritized",
+            "All potential impact of the vulnerabilities is determined"
+          ]
+        },
+        {
+          "phase": "report",
+          "objectives": [
+            "Document and prepare submissions",
+            "Ensure that all findings meet the bug bounty program requirements",
+            "Prepare the submissions for review"
+          ],
+          "tools": [
+            "Documentation templates",
+            "Submission formats like CSV, JSON"
+          ],
+          "time_estimate": "2 days",
+          "success_criteria": [
+            "All findings are documented and prepared for submission",
+            "All submissions meet the bug bounty program requirements",
+            "All submissions are prepared for review"
+          ]
+        }
+      ],
+      "priority_targets": [
+        "Smart contract vulnerabilities",
+        "Loss of user funds",
+        "Bitcoin bridge security (tBTC)",
+        "Threshold cryptography implementation",
+        "Token staking mechanisms",
+        "Governance vulnerabilities",
+        "Cross-chain bridge security",
+        "Proxy pattern implementations",
+        "Access control vulnerabilities",
+        "Reentrancy attacks",
+        "Flash loan attacks",
+        "Oracle manipulation",
+        "Front-running vulnerabilities"
+      ],
+      "risk_considerations": [
+        "Potential for data breaches",
+        "Potential for financial losses",
+        "Potential for reputational damage",
+        "Potential for regulatory issues",
+        "Potential for unintended consequences"
+      ]
+    },
+    "review": {
+      "approved": true,
+      "concerns": [],
+      "suggestions": [],
+      "risk_level": "medium"
+    },
+    "phases": [
+      "recon",
+      "hypothesis",
+      "exploit",
+      "triage",
+      "report"
+    ]
+  },
+  "timestamp": "2025-12-25T02:37:08.264625"
+}

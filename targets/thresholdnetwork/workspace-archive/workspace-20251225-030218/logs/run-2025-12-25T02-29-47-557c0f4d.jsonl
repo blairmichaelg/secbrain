@@ -1,0 +1,10 @@
+{"run_id": "557c0f4d", "phases": ["ingest", "plan", "recon", "hypothesis", "exploit", "static", "triage", "report", "meta"], "dry_run": false, "event": "workflow_started", "level": "info", "timestamp": "2025-12-25T02:29:47.083561"}
+{"run_id": "557c0f4d", "phase": "ingest", "agent": "supervisor", "event": "pre_phase_check", "level": "info", "timestamp": "2025-12-25T02:29:47.084200"}
+{"run_id": "557c0f4d", "phase": "ingest", "from_phase": "ingest", "event": "phase_transition", "level": "info", "timestamp": "2025-12-25T02:29:47.084592"}
+{"run_id": "557c0f4d", "agent": "program_ingest", "phase": "ingest", "event": "starting_ingest", "level": "info", "timestamp": "2025-12-25T02:29:47.084880"}
+{"run_id": "557c0f4d", "phase": "ingest", "success": false, "agent": "supervisor", "event": "post_phase_check", "level": "info", "timestamp": "2025-12-25T02:29:47.091919"}
+{"run_id": "557c0f4d", "phase": "plan", "agent": "supervisor", "event": "pre_phase_check", "level": "info", "timestamp": "2025-12-25T02:29:47.092355"}
+{"run_id": "557c0f4d", "phase": "plan", "from_phase": "plan", "event": "phase_transition", "level": "info", "timestamp": "2025-12-25T02:29:47.092720"}
+{"run_id": "557c0f4d", "agent": "planner", "phase": "plan", "event": "starting_planning", "level": "info", "timestamp": "2025-12-25T02:29:47.093072"}
+{"run_id": "557c0f4d", "prompt_preview": "Review this security testing plan for safety and effectiveness.\n\nProgram: Threshold Network\nScope: [", "agent": "planner", "phase": "plan", "event": "advisor_call", "level": "info", "timestamp": "2025-12-25T02:31:47.194388"}
+{"run_id": "557c0f4d", "success": false, "phases_completed": ["ingest"], "findings": 0, "duration": 120.111186, "event": "workflow_completed", "level": "info", "timestamp": "2025-12-25T02:31:47.194737"}

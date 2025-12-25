@@ -1,0 +1,143 @@
+{
+  "run_id": "540345d5",
+  "program": "Threshold Network",
+  "timestamp": "2025-12-25T02:15:54.603052",
+  "metrics": {
+    "recon": {
+      "assets_discovered": 39,
+      "live_hosts": 0
+    },
+    "hypotheses": {
+      "total_generated": 45,
+      "by_type": {
+        "generic_contract": 39,
+        "reentrancy": 3,
+        "access_control": 3
+      }
+    },
+    "exploitation": {
+      "tested": 5,
+      "confirmed": 5,
+      "confirmation_rate": 1.0
+    },
+    "findings": {
+      "total": 2,
+      "by_severity": {
+        "critical": 2
+      }
+    }
+  },
+  "analysis": {
+    "effective_types": {
+      "reentrancy": 1,
+      "access_control": 1
+    },
+    "ineffective_types": {
+      "reentrancy": 2,
+      "access_control": 2,
+      "generic_contract": 39
+    },
+    "success_rates": {
+      "reentrancy": 0.333,
+      "generic_contract": 0.0,
+      "access_control": 0.333
+    },
+    "top_performing": [
+      [
+        "reentrancy",
+        0.333
+      ],
+      [
+        "access_control",
+        0.333
+      ],
+      [
+        "generic_contract",
+        0.0
+      ]
+    ],
+    "hypothesis_effectiveness": {
+      "reentrancy": {
+        "generated": 3,
+        "confirmed": 1,
+        "success_rate": 0.333,
+        "avg_confidence": 0.45,
+        "hypothesis_ids": [
+          "dfe28e7c-c55c-4ed4-8bcd-249832ed830b",
+          "f0e87fe4-09ad-45f0-87bc-f8b341eab198",
+          "f6d57fbb-99ba-4ebd-974f-b2808dc166cb"
+        ],
+        "finding_ids": [
+          "finding-4c740144"
+        ]
+      },
+      "access_control": {
+        "generated": 3,
+        "confirmed": 1,
+        "success_rate": 0.333,
+        "avg_confidence": 0.45,
+        "hypothesis_ids": [
+          "33888413-ffe5-4663-b7bb-9b01c0efb41b",
+          "ce1970cb-d8f0-4299-a464-ed7a9dd27ea3",
+          "9d3dc125-7293-4d37-9419-5c8e1db13aca"
+        ],
+        "finding_ids": [
+          "finding-a8691b42"
+        ]
+      },
+      "generic_contract": {
+        "generated": 39,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.3,
+        "hypothesis_ids": [
+          "hyp-ec1d4bff",
+          "hyp-0b2f3df3",
+          "hyp-024a59d3",
+          "hyp-187b01ab",
+          "hyp-4acd7a04",
+          "hyp-4dd07f59",
+          "hyp-02591e20",
+          "hyp-e9d5cb72",
+          "hyp-ebed43f6",
+          "hyp-db04bcbc",
+          "hyp-3677c38a",
+          "hyp-2565ad94",
+          "hyp-6d4907e8",
+          "hyp-69ac4d75",
+          "hyp-fcdcd477",
+          "hyp-2cfbfeeb",
+          "hyp-0945fb25",
+          "hyp-151d0df4",
+          "hyp-bc056e86",
+          "hyp-6d162c1e",
+          "hyp-98fa63aa",
+          "hyp-c0fc9dc2",
+          "hyp-23d1fd7d",
+          "hyp-845b26d7",
+          "hyp-125061c8",
+          "hyp-7e9929d5",
+          "hyp-f0f5bcb1",
+          "hyp-f1dc26ce",
+          "hyp-2d62fc00",
+          "hyp-0f40c5ee",
+          "hyp-5e6fd949",
+          "hyp-f57a4fc6",
+          "hyp-a1634d5f",
+          "hyp-8da96d1b",
+          "hyp-8b349394",
+          "hyp-cc6f08f6",
+          "hyp-ff46d467",
+          "hyp-a5993cb0",
+          "hyp-29d4622a"
+        ],
+        "finding_ids": []
+      }
+    }
+  },
+  "recommendations": [
+    "High confirmation rate - current approach is effective, consider expanding scope",
+    "Focus on reentrancy vulnerabilities - highest success rate",
+    "AI Insights: [DRY-RUN] Mock response for prompt: Based on this security testing run analysis, provide 2-3 specific recommendations.\n\nMetrics:\n{\n  \"re..."
+  ]
+}

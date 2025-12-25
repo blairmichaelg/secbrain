@@ -1,0 +1,312 @@
+{
+  "run_id": "0b6aca0d",
+  "program": "Threshold Network",
+  "timestamp": "2025-12-25T01:36:55.281718",
+  "metrics": {
+    "recon": {
+      "assets_discovered": 39,
+      "live_hosts": 0
+    },
+    "hypotheses": {
+      "total_generated": 82,
+      "by_type": {
+        "generic_contract": 15,
+        "reentrancy": 5,
+        "storage_collision": 7,
+        "first_depositor_inflation": 9,
+        "cross_function_reentrancy": 4,
+        "unchecked_arithmetic": 11,
+        "role_based_access_needed": 9,
+        "missing_commit_reveal": 5,
+        "access_control": 8,
+        "integer_overflow": 1,
+        "precision_error": 3,
+        "stale_price_data": 2,
+        "single_oracle_dependency": 2,
+        "no_price_deviation_check": 1
+      }
+    },
+    "exploitation": {
+      "tested": 12,
+      "confirmed": 0,
+      "confirmation_rate": 0.0
+    },
+    "findings": {
+      "total": 0,
+      "by_severity": {}
+    }
+  },
+  "analysis": {
+    "effective_types": {},
+    "ineffective_types": {
+      "reentrancy": 5,
+      "precision_error": 3,
+      "cross_function_reentrancy": 4,
+      "generic_contract": 15,
+      "first_depositor_inflation": 9,
+      "integer_overflow": 1,
+      "storage_collision": 7,
+      "stale_price_data": 2,
+      "role_based_access_needed": 9,
+      "access_control": 8,
+      "single_oracle_dependency": 2,
+      "unchecked_arithmetic": 11,
+      "missing_commit_reveal": 5,
+      "no_price_deviation_check": 1
+    },
+    "success_rates": {
+      "access_control": 0.0,
+      "precision_error": 0.0,
+      "first_depositor_inflation": 0.0,
+      "role_based_access_needed": 0.0,
+      "integer_overflow": 0.0,
+      "cross_function_reentrancy": 0.0,
+      "stale_price_data": 0.0,
+      "reentrancy": 0.0,
+      "single_oracle_dependency": 0.0,
+      "unchecked_arithmetic": 0.0,
+      "generic_contract": 0.0,
+      "missing_commit_reveal": 0.0,
+      "storage_collision": 0.0,
+      "no_price_deviation_check": 0.0
+    },
+    "top_performing": [
+      [
+        "access_control",
+        0.0
+      ],
+      [
+        "precision_error",
+        0.0
+      ],
+      [
+        "first_depositor_inflation",
+        0.0
+      ],
+      [
+        "role_based_access_needed",
+        0.0
+      ],
+      [
+        "integer_overflow",
+        0.0
+      ]
+    ],
+    "hypothesis_effectiveness": {
+      "reentrancy": {
+        "generated": 5,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.84,
+        "hypothesis_ids": [
+          "hyp-425dc964",
+          "hyp-942de729",
+          "hyp-4d6450a9",
+          "hyp-a13a5434",
+          "hyp-a86acf67"
+        ],
+        "finding_ids": []
+      },
+      "precision_error": {
+        "generated": 3,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.75,
+        "hypothesis_ids": [
+          "hyp-ec3247a5",
+          "hyp-cbc22b52",
+          "hyp-5751c6f8"
+        ],
+        "finding_ids": []
+      },
+      "cross_function_reentrancy": {
+        "generated": 4,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.7,
+        "hypothesis_ids": [
+          "hyp-04578eb3",
+          "hyp-8f08f25b",
+          "hyp-b2202ef7",
+          "hyp-9fe735eb"
+        ],
+        "finding_ids": []
+      },
+      "generic_contract": {
+        "generated": 15,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.707,
+        "hypothesis_ids": [
+          "hyp-908c6022",
+          "hyp-aee14fb0",
+          "hyp-9d9a56ef",
+          "hyp-7644d447",
+          "hyp-c32d18ab",
+          "hyp-4669887e",
+          "hyp-617d446b",
+          "hyp-c3c4b2cc",
+          "hyp-0beb77dc",
+          "hyp-d94fe44a",
+          "hyp-657d7f44",
+          "hyp-bf53cc4f",
+          "hyp-637b8ab5",
+          "hyp-f20303d5",
+          "hyp-aeb09164"
+        ],
+        "finding_ids": []
+      },
+      "first_depositor_inflation": {
+        "generated": 9,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.7,
+        "hypothesis_ids": [
+          "hyp-a55a2627",
+          "hyp-19cb03a0",
+          "hyp-9910c607",
+          "hyp-065b1763",
+          "hyp-76bd7340",
+          "hyp-6dcb8975",
+          "hyp-9c35fef5",
+          "hyp-b124a032",
+          "hyp-54778c0b"
+        ],
+        "finding_ids": []
+      },
+      "integer_overflow": {
+        "generated": 1,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.7,
+        "hypothesis_ids": [
+          "hyp-f79c3a4b"
+        ],
+        "finding_ids": []
+      },
+      "storage_collision": {
+        "generated": 7,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.7,
+        "hypothesis_ids": [
+          "hyp-574e6cbd",
+          "hyp-958e20ef",
+          "hyp-e70ed496",
+          "hyp-a791d41d",
+          "hyp-9de0d1d3",
+          "hyp-8eef60e8",
+          "hyp-d0087af7"
+        ],
+        "finding_ids": []
+      },
+      "stale_price_data": {
+        "generated": 2,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.75,
+        "hypothesis_ids": [
+          "hyp-8c2742d2",
+          "hyp-4798d913"
+        ],
+        "finding_ids": []
+      },
+      "role_based_access_needed": {
+        "generated": 9,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.65,
+        "hypothesis_ids": [
+          "hyp-701e7d56",
+          "hyp-8daf3538",
+          "hyp-55b806ef",
+          "hyp-960838c2",
+          "hyp-2bdafb62",
+          "hyp-027fda1e",
+          "hyp-1c84a3a5",
+          "hyp-2a37cab6",
+          "hyp-3bac6901"
+        ],
+        "finding_ids": []
+      },
+      "access_control": {
+        "generated": 8,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.55,
+        "hypothesis_ids": [
+          "hyp-b87536af",
+          "hyp-ac3fd74f",
+          "hyp-f930b892",
+          "hyp-a1673e26",
+          "hyp-77801e82",
+          "hyp-0d56a893",
+          "hyp-6587e284",
+          "hyp-24be06aa"
+        ],
+        "finding_ids": []
+      },
+      "single_oracle_dependency": {
+        "generated": 2,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.65,
+        "hypothesis_ids": [
+          "hyp-0f678697",
+          "hyp-45e1686b"
+        ],
+        "finding_ids": []
+      },
+      "unchecked_arithmetic": {
+        "generated": 11,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.55,
+        "hypothesis_ids": [
+          "hyp-b4cac29e",
+          "hyp-c2b99076",
+          "hyp-d5cff61f",
+          "hyp-57592802",
+          "hyp-7181c40c",
+          "hyp-38f93ef2",
+          "hyp-ee487716",
+          "hyp-c417a3ce",
+          "hyp-d3f3ede1",
+          "hyp-57932196",
+          "hyp-f69d3d83"
+        ],
+        "finding_ids": []
+      },
+      "missing_commit_reveal": {
+        "generated": 5,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.6,
+        "hypothesis_ids": [
+          "hyp-2250f554",
+          "hyp-ccf866c0",
+          "hyp-4e1a4ccf",
+          "hyp-088c98c4",
+          "hyp-d8007862"
+        ],
+        "finding_ids": []
+      },
+      "no_price_deviation_check": {
+        "generated": 1,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.6,
+        "hypothesis_ids": [
+          "hyp-c6518a3f"
+        ],
+        "finding_ids": []
+      }
+    }
+  },
+  "recommendations": [
+    "Low confirmation rate - consider improving hypothesis quality or testing methodology",
+    "Focus on access_control vulnerabilities - highest success rate",
+    "No findings - consider expanding attack surface or trying new techniques",
+    "AI Insights: Based on the security testing run analysis, here are 2-3 specific recommendations for improving future runs:\n\n1. **Prioritize Hypothesis Testing with High Success Rates**: The analysis shows that some hypotheses have a success rate of 0.0, indicating that they have not been successfully tested. Howe"
+  ]
+}

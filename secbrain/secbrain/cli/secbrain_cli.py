@@ -63,9 +63,9 @@ def run(
         help="Directory for run artifacts, logs, and findings",
     ),
     dry_run: bool = typer.Option(
-        True,
+        False,
         "--dry-run/--no-dry-run",
-        help="Simulate run without making real HTTP calls or tool executions (default: dry-run)",
+        help="Simulate run without making real HTTP calls or tool executions",
     ),
     phases: str | None = typer.Option(
         None,

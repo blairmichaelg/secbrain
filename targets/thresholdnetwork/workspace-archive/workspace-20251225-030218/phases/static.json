@@ -1,0 +1,12 @@
+{
+  "run_id": "8e0cee57",
+  "phase": "static",
+  "success": true,
+  "duration_seconds": 0.000578,
+  "errors": [],
+  "data": {
+    "skipped": true,
+    "reason": "no_source"
+  },
+  "timestamp": "2025-12-25T02:37:08.311202"
+}

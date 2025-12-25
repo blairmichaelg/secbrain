@@ -546,26 +546,60 @@ class FoundryRunner:
         return test_rel_path
 
     def _sanitize_attack_body(self, text: str) -> str:
-        """Remove markdown/code fences and backticks that break Solidity compilation.
-
-        This prevents compilation errors from injected markdown fences like:
-        ```solidity
-        // code here
-        ```
-
-        Args:
-            text: Raw attack body that may contain markdown fences
-
-        Returns:
-            Sanitized text with all markdown fences and backticks removed
-        """
+        """Scrub attack bodies to keep the generated solidity harness compilable."""
         if not text:
             return ""
-        # Strip fenced code blocks like ```solidity ... ``` and standalone backticks
-        body = re.sub(r"```[\w-]*", "", text)
+        body = re.sub(r"```[\w-]*", "", text or "")
         body = body.replace("```", "")
         body = body.replace("`", "")
-        return body.strip()
+
+        lines: list[str] = []
+        for line in body.splitlines():
+            stripped = line.strip()
+            lower = stripped.lower()
+            if not stripped:
+                continue
+            if lower.startswith(("pragma ", "contract ", "import ")):
+                continue
+            if lower.startswith("function"):
+                continue
+            lines.append(line)
+
+        cleaned = "\n".join(lines).strip()
+        if not cleaned:
+            return ""
+
+        cleaned = re.sub(r"\b(public|private|internal|external)\b", "", cleaned)
+        cleaned = self._rebalance_braces(cleaned)
+        cleaned = "\n".join(line.rstrip() for line in cleaned.splitlines() if line.strip())
+
+        forbidden = (
+            r"\bpragma\b",
+            r"\bcontract\b",
+            r"\bimport\b",
+            r"\bfunction\b",
+        )
+        if any(re.search(pattern, cleaned) for pattern in forbidden):
+            return ""
+        return cleaned
+
+    def _rebalance_braces(self, text: str) -> str:
+        balance = 0
+        result_chars: list[str] = []
+        for ch in text:
+            if ch == "{":
+                balance += 1
+                result_chars.append(ch)
+            elif ch == "}":
+                if balance == 0:
+                    continue
+                balance -= 1
+                result_chars.append(ch)
+            else:
+                result_chars.append(ch)
+        if balance > 0:
+            result_chars.append("\n" + "}" * balance)
+        return "".join(result_chars)
 
     def _normalize_address(self, addr: Any) -> str | None:
         if not addr:

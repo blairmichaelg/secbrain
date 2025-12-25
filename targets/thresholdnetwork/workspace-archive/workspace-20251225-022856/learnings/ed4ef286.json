@@ -1,0 +1,293 @@
+{
+  "run_id": "ed4ef286",
+  "program": "Threshold Network",
+  "timestamp": "2025-12-25T02:23:20.907582",
+  "metrics": {
+    "recon": {
+      "assets_discovered": 39,
+      "live_hosts": 0
+    },
+    "hypotheses": {
+      "total_generated": 75,
+      "by_type": {
+        "generic_contract": 12,
+        "reentrancy": 4,
+        "storage_collision": 7,
+        "first_depositor_inflation": 9,
+        "cross_function_reentrancy": 4,
+        "unchecked_arithmetic": 11,
+        "role_based_access_needed": 9,
+        "missing_commit_reveal": 5,
+        "access_control": 8,
+        "stale_price_data": 2,
+        "single_oracle_dependency": 2,
+        "no_price_deviation_check": 1,
+        "precision_error": 1
+      }
+    },
+    "exploitation": {
+      "tested": 12,
+      "confirmed": 0,
+      "confirmation_rate": 0.0
+    },
+    "findings": {
+      "total": 0,
+      "by_severity": {}
+    }
+  },
+  "analysis": {
+    "effective_types": {},
+    "ineffective_types": {
+      "reentrancy": 4,
+      "cross_function_reentrancy": 4,
+      "generic_contract": 12,
+      "first_depositor_inflation": 9,
+      "precision_error": 1,
+      "storage_collision": 7,
+      "stale_price_data": 2,
+      "role_based_access_needed": 9,
+      "access_control": 8,
+      "single_oracle_dependency": 2,
+      "unchecked_arithmetic": 11,
+      "missing_commit_reveal": 5,
+      "no_price_deviation_check": 1
+    },
+    "success_rates": {
+      "storage_collision": 0.0,
+      "first_depositor_inflation": 0.0,
+      "missing_commit_reveal": 0.0,
+      "no_price_deviation_check": 0.0,
+      "role_based_access_needed": 0.0,
+      "unchecked_arithmetic": 0.0,
+      "reentrancy": 0.0,
+      "cross_function_reentrancy": 0.0,
+      "precision_error": 0.0,
+      "single_oracle_dependency": 0.0,
+      "access_control": 0.0,
+      "stale_price_data": 0.0,
+      "generic_contract": 0.0
+    },
+    "top_performing": [
+      [
+        "storage_collision",
+        0.0
+      ],
+      [
+        "first_depositor_inflation",
+        0.0
+      ],
+      [
+        "missing_commit_reveal",
+        0.0
+      ],
+      [
+        "no_price_deviation_check",
+        0.0
+      ],
+      [
+        "role_based_access_needed",
+        0.0
+      ]
+    ],
+    "hypothesis_effectiveness": {
+      "reentrancy": {
+        "generated": 4,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.85,
+        "hypothesis_ids": [
+          "hyp-84f48667",
+          "hyp-3c1e7478",
+          "hyp-81c26a9a",
+          "hyp-2d976f79"
+        ],
+        "finding_ids": []
+      },
+      "cross_function_reentrancy": {
+        "generated": 4,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.7,
+        "hypothesis_ids": [
+          "hyp-4847932f",
+          "hyp-68d4e6f7",
+          "hyp-cc612bbe",
+          "hyp-0526872c"
+        ],
+        "finding_ids": []
+      },
+      "generic_contract": {
+        "generated": 12,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.671,
+        "hypothesis_ids": [
+          "hyp-6913ecdf",
+          "hyp-25613259",
+          "hyp-a73e6167",
+          "hyp-b3c76764",
+          "hyp-e9ab85e7",
+          "hyp-67219b8c",
+          "hyp-7d7c0e27",
+          "hyp-f99f480f",
+          "hyp-5dbc30fb",
+          "hyp-ea70d07f",
+          "hyp-5333f83c",
+          "hyp-98580324"
+        ],
+        "finding_ids": []
+      },
+      "first_depositor_inflation": {
+        "generated": 9,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.7,
+        "hypothesis_ids": [
+          "hyp-e962d6af",
+          "hyp-4160e34b",
+          "hyp-c34177df",
+          "hyp-084725d5",
+          "hyp-f2840142",
+          "hyp-80264da2",
+          "hyp-2b4954cf",
+          "hyp-cc631531",
+          "hyp-468dc58a"
+        ],
+        "finding_ids": []
+      },
+      "precision_error": {
+        "generated": 1,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.65,
+        "hypothesis_ids": [
+          "hyp-488a68bc"
+        ],
+        "finding_ids": []
+      },
+      "storage_collision": {
+        "generated": 7,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.7,
+        "hypothesis_ids": [
+          "hyp-b2cc6720",
+          "hyp-f956e6f4",
+          "hyp-67692e64",
+          "hyp-719e3193",
+          "hyp-5490534d",
+          "hyp-6979c62e",
+          "hyp-58c6a213"
+        ],
+        "finding_ids": []
+      },
+      "stale_price_data": {
+        "generated": 2,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.75,
+        "hypothesis_ids": [
+          "hyp-732b5dab",
+          "hyp-fbc724c7"
+        ],
+        "finding_ids": []
+      },
+      "role_based_access_needed": {
+        "generated": 9,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.65,
+        "hypothesis_ids": [
+          "hyp-31516ce5",
+          "hyp-b83d6cd3",
+          "hyp-f947a5a2",
+          "hyp-8025941b",
+          "hyp-0db3ffff",
+          "hyp-e299b44c",
+          "hyp-5e275350",
+          "hyp-73fe5d76",
+          "hyp-b50a1f5e"
+        ],
+        "finding_ids": []
+      },
+      "access_control": {
+        "generated": 8,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.55,
+        "hypothesis_ids": [
+          "hyp-47df4630",
+          "hyp-a9ebc1ec",
+          "hyp-1bbd9715",
+          "hyp-3ef68d81",
+          "hyp-75cdaae2",
+          "hyp-420e6896",
+          "hyp-4c9128dc",
+          "hyp-894e3bcc"
+        ],
+        "finding_ids": []
+      },
+      "single_oracle_dependency": {
+        "generated": 2,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.65,
+        "hypothesis_ids": [
+          "hyp-5a702b24",
+          "hyp-cca98b40"
+        ],
+        "finding_ids": []
+      },
+      "unchecked_arithmetic": {
+        "generated": 11,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.55,
+        "hypothesis_ids": [
+          "hyp-e7383129",
+          "hyp-1910c9a7",
+          "hyp-24978e2d",
+          "hyp-b92ded6c",
+          "hyp-e7a3ab95",
+          "hyp-259683b5",
+          "hyp-4472af1e",
+          "hyp-11f988af",
+          "hyp-e6787afe",
+          "hyp-5e24b9c3",
+          "hyp-6284f019"
+        ],
+        "finding_ids": []
+      },
+      "missing_commit_reveal": {
+        "generated": 5,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.6,
+        "hypothesis_ids": [
+          "hyp-612689c9",
+          "hyp-e59f2d95",
+          "hyp-3d3174f6",
+          "hyp-d666971d",
+          "hyp-a2cdaabb"
+        ],
+        "finding_ids": []
+      },
+      "no_price_deviation_check": {
+        "generated": 1,
+        "confirmed": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.6,
+        "hypothesis_ids": [
+          "hyp-09cb3d36"
+        ],
+        "finding_ids": []
+      }
+    }
+  },
+  "recommendations": [
+    "Low confirmation rate - consider improving hypothesis quality or testing methodology",
+    "Focus on storage_collision vulnerabilities - highest success rate",
+    "No findings - consider expanding attack surface or trying new techniques",
+    "AI Insights: Based on the provided security testing run analysis, here are 2-3 specific recommendations for improving future runs:\n\n1. **Prioritize and Focus on High-Confidence Hypotheses**: The analysis shows that some hypotheses have very low success rates (0.0) and confidence levels (e.g., `unchecked_arithmet"
+  ]
+}

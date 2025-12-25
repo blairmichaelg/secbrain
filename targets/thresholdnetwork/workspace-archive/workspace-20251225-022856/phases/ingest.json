@@ -1,0 +1,54 @@
+{
+  "run_id": "ed4ef286",
+  "phase": "ingest",
+  "success": true,
+  "duration_seconds": 0.00906,
+  "errors": [],
+  "data": {
+    "program_name": "Threshold Network",
+    "platform": "Immunefi",
+    "domains": [],
+    "urls": [],
+    "focus_areas": [
+      "Smart contract vulnerabilities",
+      "Loss of user funds",
+      "Bitcoin bridge security (tBTC)",
+      "Threshold cryptography implementation",
+      "Token staking mechanisms",
+      "Governance vulnerabilities",
+      "Cross-chain bridge security",
+      "Proxy pattern implementations",
+      "Access control vulnerabilities",
+      "Reentrancy attacks",
+      "Flash loan attacks",
+      "Oracle manipulation",
+      "Front-running vulnerabilities"
+    ],
+    "rules": [
+      "All testing must be done on local-forks of either public testnet or mainnet",
+      "Proof of Concept is required for all severities",
+      "No KYC required for payouts under $100,000",
+      "KYC required for payouts above $100,000",
+      "Rewards distributed according to Immunefi Vulnerability Severity Classification System V2.3",
+      "Critical smart contract vulnerabilities capped at 10% of funds at risk",
+      "Payouts are denominated in USD and made in USDC, USDT, ETH, or T tokens",
+      "All payouts are handled by the Threshold Network team",
+      "Duplicates and private known issues are not eligible for rewards"
+    ],
+    "research": {},
+    "normalized": {
+      "domains": [],
+      "urls": [],
+      "target_types": [],
+      "excluded_paths": [],
+      "allowed_methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "HEAD",
+        "OPTIONS"
+      ]
+    }
+  },
+  "timestamp": "2025-12-25T02:23:20.911132"
+}

@@ -1,0 +1,23 @@
+{
+  "run_id": "ed4ef286",
+  "phase": "triage",
+  "success": true,
+  "duration_seconds": 0.000323,
+  "errors": [],
+  "data": {
+    "findings": [],
+    "triaged": 0,
+    "economic": {
+      "decision": "SKIP",
+      "reason": "No profit detected",
+      "max_profit_eth": 0.0,
+      "max_profit_usd": 0.0,
+      "gas_used": null,
+      "gas_cost_usd_est": 0.0,
+      "net_usd_est": 0.0,
+      "threshold_usd": 300.0,
+      "gas_price_gwei": 50.0
+    }
+  },
+  "timestamp": "2025-12-25T02:23:20.946179"
+}

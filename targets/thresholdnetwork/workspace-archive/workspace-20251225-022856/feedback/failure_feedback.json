@@ -1,0 +1,78 @@
+{
+  "generated_at": "2025-12-25T08:23:15.741984+00:00",
+  "entries": [
+    {
+      "hypothesis_id": "hyp-84f48667",
+      "contract_address": "0x836cdFE63fe2d63f8Bdb69b96f6097F36635896E",
+      "function_signature": "authorize(address)",
+      "categories": {
+        "unknown_failure": 3
+      },
+      "targets": [
+        "exploit"
+      ],
+      "recommendations": [
+        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x3)"
+      ]
+    },
+    {
+      "hypothesis_id": "hyp-3c1e7478",
+      "contract_address": "0x18084fbA666a33d37592fA2633fD49a74DD93a88",
+      "function_signature": "approve(address:uint256)",
+      "categories": {
+        "unknown_failure": 2
+      },
+      "targets": [
+        "exploit"
+      ],
+      "recommendations": [
+        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x2)"
+      ]
+    },
+    {
+      "hypothesis_id": "hyp-6913ecdf",
+      "contract_address": "0x65Fbae61ad2C8836fFbFB502A0dA41b0789D9Fc6",
+      "function_signature": "approveBalanceAndCall()",
+      "categories": {
+        "unknown_failure": 1
+      },
+      "targets": [
+        "exploit"
+      ],
+      "recommendations": [
+        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x1)"
+      ]
+    },
+    {
+      "hypothesis_id": "hyp-25613259",
+      "contract_address": "0xd101f2B25bCBF992BdF55dB67c104FE7646F5447",
+      "function_signature": "cancel(address[],uint256[],bytes[])",
+      "categories": {
+        "unknown_failure": 3
+      },
+      "targets": [
+        "exploit"
+      ],
+      "recommendations": [
+        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x3)"
+      ]
+    },
+    {
+      "hypothesis_id": "hyp-81c26a9a",
+      "contract_address": "0xeA7CA290c7811d1cC2e79f8d706bD05d8280BD37",
+      "function_signature": "claim(address,address,uint256,bytes32,bytes32[])",
+      "categories": {
+        "unknown_failure": 3
+      },
+      "targets": [
+        "exploit"
+      ],
+      "recommendations": [
+        "unknown_failure: Investigate failure category 'unknown_failure' for richer instrumentation. (x3)"
+      ]
+    }
+  ],
+  "aggregate": {
+    "unknown_failure": 12
+  }
+}

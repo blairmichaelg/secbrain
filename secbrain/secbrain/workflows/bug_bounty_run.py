@@ -25,6 +25,9 @@ from secbrain.agents.supervisor import SupervisorAgent
 from secbrain.agents.triage_agent import TriageAgent
 from secbrain.agents.vuln_hypothesis_agent import VulnHypothesisAgent
 from secbrain.core.logging import log_event, log_phase_transition
+from secbrain.workflows.checkpoint_manager import CheckpointManager
+from secbrain.workflows.hypothesis_quality_filter import HypothesisQualityFilter
+from secbrain.workflows.performance_metrics import PerformanceMetricsCollector
 
 
 class Phase(str, Enum):
@@ -96,10 +99,28 @@ class BugBountyWorkflow:
         self,
         run_context: RunContext,
         logger: structlog.stdlib.BoundLogger | None = None,
+        enable_checkpoints: bool = True,
+        enable_quality_filter: bool = True,
     ):
         self.run_context = run_context
         self.logger = logger
         self.phase_data: dict[str, dict[str, Any]] = {}
+
+        # Initialize optimization features
+        self.enable_checkpoints = enable_checkpoints
+        self.enable_quality_filter = enable_quality_filter
+        
+        # Initialize checkpoint manager
+        self.checkpoint_manager = CheckpointManager(run_context.workspace_path) if enable_checkpoints else None
+        
+        # Initialize performance metrics collector
+        self.metrics_collector = PerformanceMetricsCollector(run_context.run_id)
+        
+        # Initialize hypothesis quality filter
+        self.quality_filter = HypothesisQualityFilter(
+            min_confidence=0.45,
+            min_overall_score=0.5,
+        ) if enable_quality_filter else None
 
         # Initialize agents
         self._init_agents()
@@ -159,8 +180,29 @@ class BugBountyWorkflow:
         start_time = datetime.now()
         result = WorkflowResult(run_id=self.run_context.run_id, success=True)
 
+        # Check for existing checkpoint
+        checkpoint_loaded = False
+        if self.checkpoint_manager and self.checkpoint_manager.has_checkpoint(self.run_context.run_id):
+            checkpoint = self.checkpoint_manager.load_checkpoint(self.run_context.run_id)
+            if checkpoint:
+                log_event(
+                    self.logger,
+                    "checkpoint_loaded",
+                    run_id=self.run_context.run_id,
+                    current_phase=checkpoint.current_phase,
+                    completed_phases=checkpoint.completed_phases,
+                )
+                # Restore phase data
+                self.phase_data = checkpoint.phase_data
+                result.phases_completed = [Phase(p) for p in checkpoint.completed_phases]
+                checkpoint_loaded = True
+
         # Determine phases to run
         phases_to_run = self._determine_phases(phases)
+        
+        # Skip completed phases if resuming from checkpoint
+        if checkpoint_loaded and checkpoint:
+            phases_to_run = [p for p in phases_to_run if p not in checkpoint.completed_phases]
 
         log_event(
             self.logger,
@@ -168,6 +210,7 @@ class BugBountyWorkflow:
             run_id=self.run_context.run_id,
             phases=phases_to_run,
             dry_run=self.run_context.dry_run,
+            checkpoint_loaded=checkpoint_loaded,
         )
 
         try:
@@ -175,10 +218,14 @@ class BugBountyWorkflow:
             current_phase = phases_to_run[0] if phases_to_run else None
 
             while current_phase:
+                # Start phase metrics tracking
+                self.metrics_collector.start_phase(current_phase)
+                
                 if self.run_context.is_killed():
                     log_event(self.logger, "workflow_killed", phase=current_phase)
                     result.errors.append(f"Kill-switch activated during {current_phase}")
                     result.success = False
+                    self.metrics_collector.complete_phase(success=False)
                     break
 
                 # Run supervisor pre-check
@@ -190,6 +237,7 @@ class BugBountyWorkflow:
                 if not pre_check.success:
                     result.phases_failed.append(Phase(current_phase))
                     result.errors.extend(pre_check.errors)
+                    self.metrics_collector.complete_phase(success=False)
                     break
 
                 # Execute phase
@@ -208,9 +256,22 @@ class BugBountyWorkflow:
                 if phase_result.success:
                     result.phases_completed.append(Phase(current_phase))
                     self.phase_data[current_phase] = phase_result.data
+                    self.metrics_collector.complete_phase(success=True, metadata=phase_result.data)
+                    
+                    # Save checkpoint after successful phase
+                    if self.checkpoint_manager:
+                        self.checkpoint_manager.save_checkpoint(
+                            run_id=self.run_context.run_id,
+                            current_phase=current_phase,
+                            completed_phases=[p.value for p in result.phases_completed],
+                            phase_data=self.phase_data,
+                            metadata={"timestamp": datetime.now().isoformat()},
+                        )
                 else:
                     result.phases_failed.append(Phase(current_phase))
                     result.errors.extend(phase_result.errors)
+                    self.metrics_collector.complete_phase(success=False)
+                    self.metrics_collector.record_error()
                     # Don't necessarily stop on failure - let supervisor decide
                     if current_phase in ["ingest", "plan"]:
                         # Critical phases - must stop
@@ -231,6 +292,10 @@ class BugBountyWorkflow:
             log_event(self.logger, "workflow_error", error=str(e))
             result.errors.append(str(e))
             result.success = False
+            self.metrics_collector.record_error()
+
+        # Complete performance metrics tracking
+        workflow_metrics = self.metrics_collector.complete_workflow()
 
         # Calculate totals
         end_time = datetime.now()
@@ -253,6 +318,18 @@ class BugBountyWorkflow:
         hypotheses_with_concrete_target = len(
             [h for h in hypotheses if h.get("contract_address") and h.get("function_signature")]
         )
+        
+        # Add hypothesis quality metrics if filtering was enabled
+        quality_metrics = {}
+        if self.quality_filter and hypotheses:
+            high_quality, low_quality = self.quality_filter.filter_hypotheses(hypotheses)
+            quality_metrics = {
+                "total_hypotheses": len(hypotheses),
+                "high_quality_hypotheses": len(high_quality),
+                "low_quality_hypotheses": len(low_quality),
+                "quality_filter_enabled": True,
+            }
+        
         meta_metrics.update({
             "hypotheses_count": len(hypotheses),
             "hypotheses_with_concrete_target": hypotheses_with_concrete_target,
@@ -261,6 +338,8 @@ class BugBountyWorkflow:
             "attempts_with_profit": len([a for a in exploit_data.get("attempts", []) if a.get("profit_eth")]),
             "economic_decision": economic.get("decision"),
             "total_duration_seconds": result.total_duration_seconds,
+            "performance": workflow_metrics.to_dict(),
+            "quality_metrics": quality_metrics,
         })
 
         log_event(
@@ -271,6 +350,7 @@ class BugBountyWorkflow:
             phases_completed=[p.value for p in result.phases_completed],
             findings=result.findings_count,
             duration=result.total_duration_seconds,
+            performance_summary=workflow_metrics.to_dict(),
         )
 
         # Persist run summary artifact
@@ -317,6 +397,14 @@ class BugBountyWorkflow:
         meta_log_path = self.run_context.workspace_path / "meta_metrics.jsonl"
         with meta_log_path.open("a") as f:
             f.write(json.dumps(meta_metrics) + "\n")
+
+        # Save performance metrics
+        perf_metrics_path = self.run_context.workspace_path / "performance_metrics.json"
+        perf_metrics_path.write_text(json.dumps(workflow_metrics.to_dict(), indent=2))
+
+        # Clean up checkpoint if workflow completed successfully
+        if result.success and self.checkpoint_manager:
+            self.checkpoint_manager.delete_checkpoint(self.run_context.run_id)
 
         return result
 
@@ -389,6 +477,30 @@ class BugBountyWorkflow:
 
             # Execute agent
             agent_result = await agent.run(**kwargs)
+
+            # Post-process hypothesis results with quality filtering
+            if phase == Phase.HYPOTHESIS and self.quality_filter and agent_result.success:
+                hypotheses = agent_result.data.get("hypotheses", [])
+                if hypotheses:
+                    # Apply quality filtering
+                    high_quality, low_quality = self.quality_filter.filter_hypotheses(hypotheses)
+                    
+                    # Log filtering results
+                    log_event(
+                        self.logger,
+                        "hypothesis_quality_filtering",
+                        total=len(hypotheses),
+                        high_quality=len(high_quality),
+                        low_quality=len(low_quality),
+                        filter_rate=len(low_quality) / len(hypotheses) if hypotheses else 0,
+                    )
+                    
+                    # Update agent result with filtered hypotheses
+                    # Keep all hypotheses but mark quality for downstream use
+                    agent_result.data["hypotheses_all"] = hypotheses
+                    agent_result.data["hypotheses"] = high_quality
+                    agent_result.data["hypotheses_filtered_out"] = low_quality
+                    agent_result.data["quality_filtering_applied"] = True
 
             duration = (datetime.now() - start_time).total_seconds()
 

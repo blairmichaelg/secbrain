@@ -1,0 +1,148 @@
+{
+  "run_id": "ed4ef286",
+  "phase": "plan",
+  "success": true,
+  "duration_seconds": 9.791459,
+  "errors": [],
+  "data": {
+    "plan": {
+      "phases": [
+        {
+          "phase": "recon",
+          "objectives": [
+            "Identify target domains",
+            "Map domains to focus areas",
+            "Identify Threshold Network team responsible for payouts"
+          ],
+          "tools": [
+            "Domain enumeration tools (e.g. Masscan, Nmap)",
+            "Web scraping tools (e.g. BeautifulSoup, Scrapy)",
+            "Information disclosure tools (e.g. Burp Suite, ZAP)"
+          ],
+          "time_estimate": "2 weeks",
+          "success_criteria": [
+            "All target domains have been successfully identified",
+            "All focus areas have been mapped to target domains",
+            "Threshold Network team responsible for payouts has been identified"
+          ]
+        },
+        {
+          "phase": "hypothesis",
+          "objectives": [
+            "Identify potential vulnerability classes",
+            "Analyze focus areas for vulnerability patterns",
+            "Develop a list of test hypotheses"
+          ],
+          "tools": [
+            "Threat intelligence platforms (e.g. ThreatConnect, MISP)",
+            "Vulnerability scanning tools (e.g. Nessus, OpenVAS)",
+            "Security frameworks and guidelines (e.g. OWASP, NIST)"
+          ],
+          "time_estimate": "4 weeks",
+          "success_criteria": [
+            "A comprehensive list of potential vulnerability classes has been developed",
+            "Focus areas have been thoroughly analyzed for vulnerability patterns",
+            "A list of test hypotheses has been created"
+          ]
+        },
+        {
+          "phase": "exploit",
+          "objectives": [
+            "Test hypotheses with payloads",
+            "Identify successful exploits",
+            "Document exploit results"
+          ],
+          "tools": [
+            "Exploitation frameworks (e.g. Metasploit, CoreImpact)",
+            "Smart contract testing frameworks (e.g. Truffle, Etherscan)",
+            "Web application testing frameworks (e.g. Selenium, Cypress)"
+          ],
+          "time_estimate": "6 weeks",
+          "success_criteria": [
+            "All test hypotheses have been successfully tested",
+            "All successful exploits have been documented",
+            "All exploit results have been validated"
+          ]
+        },
+        {
+          "phase": "triage",
+          "objectives": [
+            "Validate and prioritize findings",
+            "Classify vulnerabilities according to Immunefi Vulnerability Severity Classification System V2.3",
+            "Identify critical vulnerabilities"
+          ],
+          "tools": [
+            "Vulnerability management tools (e.g. Tenable, Qualys)",
+            "Classification frameworks (e.g. CWE, CVSS)",
+            "Prioritization tools (e.g. RiskLens, CVSS Calculator)"
+          ],
+          "time_estimate": "4 weeks",
+          "success_criteria": [
+            "All findings have been thoroughly validated",
+            "All vulnerabilities have been classified according to Immunefi Vulnerability Severity Classification System V2.3",
+            "Critical vulnerabilities have been identified"
+          ]
+        },
+        {
+          "phase": "report",
+          "objectives": [
+            "Document and prepare submissions",
+            "Create a detailed report of findings",
+            "Prepare submission for Threshold Network team"
+          ],
+          "tools": [
+            "Reporting frameworks (e.g. Burp Suite, ZAP)",
+            "Documentation tools (e.g. Markdown, Confluence)",
+            "Submission tools (e.g. Immunefi, Threshold Network)"
+          ],
+          "time_estimate": "2 weeks",
+          "success_criteria": [
+            "A comprehensive report of findings has been created",
+            "Submission is prepared according to Threshold Network requirements",
+            "All necessary documentation has been completed"
+          ]
+        }
+      ],
+      "priority_targets": [
+        {
+          "domain": "example.com",
+          "focus_area": "Smart contract vulnerabilities"
+        },
+        {
+          "domain": "example.org",
+          "focus_area": "Loss of user funds"
+        },
+        {
+          "domain": "example.net",
+          "focus_area": "Bitcoin bridge security (tBTC)"
+        }
+      ],
+      "risk_considerations": [
+        {
+          "risk": "Smart contract vulnerabilities",
+          "description": "Exploitation of smart contract vulnerabilities could result in significant financial losses",
+          "mitigation": "Implement robust smart contract auditing and testing protocols"
+        },
+        {
+          "risk": "Loss of user funds",
+          "description": "Loss of user funds could result in significant reputational damage and financial losses",
+          "mitigation": "Implement robust user protection and risk management protocols"
+        }
+      ]
+    },
+    "review": {
+      "approved": true,
+      "concerns": [],
+      "suggestions": [],
+      "risk_level": "medium"
+    },
+    "phases": [
+      "recon",
+      "hypothesis",
+      "exploit",
+      "triage",
+      "report"
+    ]
+  },
+  "timestamp": "2025-12-25T02:23:20.911852"
+}
