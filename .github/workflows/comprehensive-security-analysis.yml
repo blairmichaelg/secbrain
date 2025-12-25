@@ -70,14 +70,37 @@ jobs:
       python_version: ${{ steps.detect.outputs.python_version }}
       complexity_score: ${{ steps.detect.outputs.complexity_score }}
     steps:
+      - name: Validate target repository URL
+        run: |
+          # Basic URL validation to prevent command injection
+          if ! echo "${{ inputs.target_repo }}" | grep -qE '^https://github\.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9._-]+/?$'; then
+            echo "❌ Invalid repository URL format"
+            echo "Expected: https://github.com/owner/repo"
+            exit 1
+          fi
+          echo "✅ Repository URL validated"
+
       - name: Checkout target repository
+        id: clone
         run: |
           mkdir -p ${{ env.TARGET_DIR }}
-          git clone --depth 1 ${{ inputs.target_repo }} ${{ env.TARGET_DIR }}
-        continue-on-error: true
+          
+          # Clone with timeout and better error handling
+          if ! timeout 300 git clone --depth 1 --single-branch "${{ inputs.target_repo }}" "${{ env.TARGET_DIR }}"; then
+            echo "❌ Failed to clone repository"
+            echo "This could be due to:"
+            echo "  - Invalid repository URL"
+            echo "  - Network issues"
+            echo "  - Private repository (requires authentication)"
+            exit 1
+          fi
+          
+          echo "✅ Repository cloned successfully"
+          echo "clone_success=true" >> $GITHUB_OUTPUT
 
       - name: Detect project characteristics
         id: detect
+        if: steps.clone.outputs.clone_success == 'true'
         run: |
           cd ${{ env.TARGET_DIR }}
           
@@ -225,8 +248,11 @@ jobs:
         if: always()
         with:
           name: static-analysis-solidity
-          path: ${{ env.RESULTS_DIR }}/slither/**/*
+          path: |
+            ${{ env.RESULTS_DIR }}/slither/
+            ${{ env.RESULTS_DIR }}/solhint/
           retention-days: 90
+          if-no-files-found: warn
 
   static-analysis-python:
     name: 🐍 Python Static Analysis
@@ -294,8 +320,13 @@ jobs:
         if: always()
         with:
           name: static-analysis-python
-          path: ${{ env.RESULTS_DIR }}/**/*
+          path: |
+            ${{ env.RESULTS_DIR }}/bandit/
+            ${{ env.RESULTS_DIR }}/safety/
+            ${{ env.RESULTS_DIR }}/pip-audit/
+            ${{ env.RESULTS_DIR }}/semgrep/
           retention-days: 90
+          if-no-files-found: warn
 
   # ============================================================================
   # Phase 3: Dynamic Analysis & Fuzzing
@@ -350,8 +381,9 @@ jobs:
         if: always()
         with:
           name: dynamic-analysis-foundry
-          path: ${{ env.RESULTS_DIR }}/foundry/**/*
+          path: ${{ env.RESULTS_DIR }}/foundry/
           retention-days: 90
+          if-no-files-found: warn
 
   dynamic-analysis-echidna:
     name: 🦇 Echidna Property Testing
@@ -392,8 +424,9 @@ jobs:
         if: always()
         with:
           name: dynamic-analysis-echidna
-          path: ${{ env.RESULTS_DIR }}/echidna/**/*
+          path: ${{ env.RESULTS_DIR }}/echidna/
           retention-days: 90
+          if-no-files-found: warn
 
   # ============================================================================
   # Phase 4: Symbolic Execution
@@ -435,8 +468,9 @@ jobs:
         if: always()
         with:
           name: symbolic-execution-mythril
-          path: ${{ env.RESULTS_DIR }}/mythril/**/*
+          path: ${{ env.RESULTS_DIR }}/mythril/
           retention-days: 90
+          if-no-files-found: warn
 
   # ============================================================================
   # Phase 5: AI-Powered Analysis
@@ -511,8 +545,9 @@ jobs:
         if: always()
         with:
           name: ai-analysis-secbrain
-          path: ${{ env.RESULTS_DIR }}/ai-analysis/**/*
+          path: ${{ env.RESULTS_DIR }}/ai-analysis/
           retention-days: 90
+          if-no-files-found: warn
 
   # ============================================================================
   # Phase 6: Results Aggregation and Reporting
@@ -528,16 +563,60 @@ jobs:
       - name: Checkout SecBrain
         uses: actions/checkout@v6
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
       - name: Download all artifacts
         uses: actions/download-artifact@v6
         with:
           path: ${{ env.RESULTS_DIR }}/artifacts
 
       - name: Aggregate results into unified JSON
+        continue-on-error: true
         run: |
           mkdir -p ${{ env.RESULTS_DIR }}/final
           
-          cat > ${{ env.RESULTS_DIR }}/final/aggregated-results.json << 'EOJSON'
+          # Initialize counters
+          TOTAL_ISSUES=0
+          CRITICAL_ISSUES=0
+          HIGH_ISSUES=0
+          MEDIUM_ISSUES=0
+          LOW_ISSUES=0
+          
+          # Count issues from Bandit
+          if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" ]; then
+            BANDIT_HIGH=$(jq '[.results[] | select(.issue_severity == "HIGH")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" 2>/dev/null || echo "0")
+            BANDIT_MEDIUM=$(jq '[.results[] | select(.issue_severity == "MEDIUM")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" 2>/dev/null || echo "0")
+            HIGH_ISSUES=$((HIGH_ISSUES + BANDIT_HIGH))
+            MEDIUM_ISSUES=$((MEDIUM_ISSUES + BANDIT_MEDIUM))
+            echo "📊 Bandit: $BANDIT_HIGH high, $BANDIT_MEDIUM medium"
+          fi
+          
+          # Count issues from Slither
+          if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" ]; then
+            SLITHER_HIGH=$(jq '[.results.detectors[] | select(.impact == "High")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" 2>/dev/null || echo "0")
+            SLITHER_MEDIUM=$(jq '[.results.detectors[] | select(.impact == "Medium")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" 2>/dev/null || echo "0")
+            HIGH_ISSUES=$((HIGH_ISSUES + SLITHER_HIGH))
+            MEDIUM_ISSUES=$((MEDIUM_ISSUES + SLITHER_MEDIUM))
+            echo "📊 Slither: $SLITHER_HIGH high, $SLITHER_MEDIUM medium"
+          fi
+          
+          # Count issues from Safety
+          if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/safety/results.json" ]; then
+            SAFETY_VULNS=$(jq '.vulnerabilities | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/safety/results.json" 2>/dev/null || echo "0")
+            CRITICAL_ISSUES=$((CRITICAL_ISSUES + SAFETY_VULNS))
+            echo "📊 Safety: $SAFETY_VULNS vulnerabilities"
+          fi
+          
+          # Calculate total
+          TOTAL_ISSUES=$((CRITICAL_ISSUES + HIGH_ISSUES + MEDIUM_ISSUES + LOW_ISSUES))
+          
+          echo "📊 Total issues: $TOTAL_ISSUES (Critical: $CRITICAL_ISSUES, High: $HIGH_ISSUES, Medium: $MEDIUM_ISSUES, Low: $LOW_ISSUES)"
+          
+          # Create aggregated JSON with actual counts
+          cat > ${{ env.RESULTS_DIR }}/final/aggregated-results.json << EOJSON
           {
             "analysis_metadata": {
               "target_repo": "${{ inputs.target_repo }}",
@@ -545,37 +624,50 @@ jobs:
               "analysis_depth": "${{ inputs.analysis_depth }}",
               "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
               "workflow_run": "${{ github.run_id }}",
+              "workflow_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
               "project_characteristics": {
                 "has_solidity": "${{ needs.setup-and-recon.outputs.has_solidity }}",
                 "has_python": "${{ needs.setup-and-recon.outputs.has_python }}",
+                "has_foundry": "${{ needs.setup-and-recon.outputs.has_foundry }}",
                 "complexity_score": "${{ needs.setup-and-recon.outputs.complexity_score }}"
               }
             },
             "findings": {
-              "static_analysis": {},
-              "dynamic_analysis": {},
-              "symbolic_execution": {},
-              "ai_insights": {}
+              "static_analysis": {
+                "bandit_available": $([ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" ] && echo "true" || echo "false"),
+                "slither_available": $([ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" ] && echo "true" || echo "false"),
+                "safety_available": $([ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/safety/results.json" ] && echo "true" || echo "false")
+              },
+              "dynamic_analysis": {
+                "foundry_available": $([ -d "${{ env.RESULTS_DIR }}/artifacts/dynamic-analysis-foundry" ] && echo "true" || echo "false"),
+                "echidna_available": $([ -d "${{ env.RESULTS_DIR }}/artifacts/dynamic-analysis-echidna" ] && echo "true" || echo "false")
+              },
+              "symbolic_execution": {
+                "mythril_available": $([ -d "${{ env.RESULTS_DIR }}/artifacts/symbolic-execution-mythril" ] && echo "true" || echo "false")
+              },
+              "ai_insights": {
+                "secbrain_available": $([ -d "${{ env.RESULTS_DIR }}/artifacts/ai-analysis-secbrain" ] && echo "true" || echo "false")
+              }
             },
             "summary": {
-              "total_issues": 0,
-              "critical_issues": 0,
-              "high_issues": 0,
-              "medium_issues": 0,
-              "low_issues": 0
-            }
+              "total_issues": $TOTAL_ISSUES,
+              "critical_issues": $CRITICAL_ISSUES,
+              "high_issues": $HIGH_ISSUES,
+              "medium_issues": $MEDIUM_ISSUES,
+              "low_issues": $LOW_ISSUES
+            },
+            "artifacts_location": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           }
           EOJSON
           
-          # Merge available JSON results
-          for artifact_dir in ${{ env.RESULTS_DIR }}/artifacts/*/; do
-            if [ -d "$artifact_dir" ]; then
-              find "$artifact_dir" -name "*.json" -type f | while read json_file; do
-                echo "Processing $json_file"
-                # Simple append to findings (production would do smart merging)
-              done
-            fi
-          done
+          echo "✅ Aggregated results created"
+          
+          # Save counts for use in report
+          echo "TOTAL_ISSUES=$TOTAL_ISSUES" >> $GITHUB_ENV
+          echo "CRITICAL_ISSUES=$CRITICAL_ISSUES" >> $GITHUB_ENV
+          echo "HIGH_ISSUES=$HIGH_ISSUES" >> $GITHUB_ENV
+          echo "MEDIUM_ISSUES=$MEDIUM_ISSUES" >> $GITHUB_ENV
+          echo "LOW_ISSUES=$LOW_ISSUES" >> $GITHUB_ENV
 
       - name: Generate Markdown Report
         run: |
@@ -633,11 +725,11 @@ jobs:
           
           | Severity | Count | Status |
           |----------|-------|--------|
-          | 🔴 Critical | TBD | Requires immediate action |
-          | 🟠 High | TBD | Should be addressed soon |
-          | 🟡 Medium | TBD | Plan for remediation |
-          | 🟢 Low | TBD | Consider addressing |
-          | ℹ️ Info | TBD | For awareness |
+          | 🔴 Critical | ${CRITICAL_ISSUES:-0} | Requires immediate action |
+          | 🟠 High | ${HIGH_ISSUES:-0} | Should be addressed soon |
+          | 🟡 Medium | ${MEDIUM_ISSUES:-0} | Plan for remediation |
+          | 🟢 Low | ${LOW_ISSUES:-0} | Consider addressing |
+          | 📊 **Total** | **${TOTAL_ISSUES:-0}** | **All findings** |
           
           *Detailed findings are available in the artifacts and aggregated JSON report.*
           
