@@ -1,4 +1,8 @@
-"""Custom exceptions for SecBrain."""
+"""Custom exceptions for SecBrain.
+
+This module provides lightweight exception classes for common error scenarios.
+For more comprehensive error handling, see core.errors module.
+"""
 
 
 class SecBrainError(Exception):

@@ -1,4 +1,9 @@
-"""Utilities for LLM interaction."""
+"""Utilities for LLM interaction.
+
+This module provides helper functions for parsing and extracting
+structured data from LLM responses, including JSON extraction
+and common response processing patterns.
+"""
 
 import json
 from typing import Any, TypeVar

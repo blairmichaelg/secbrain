@@ -1,4 +1,8 @@
-"""Exploit verifiers: confirm vulnerability existence through evidence."""
+"""Exploit verifiers: confirm vulnerability existence through evidence.
+
+This module provides verification mechanisms to validate security vulnerabilities
+through concrete evidence collection and analysis.
+"""
 
 from __future__ import annotations
 

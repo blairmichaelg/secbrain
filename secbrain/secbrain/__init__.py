@@ -10,3 +10,4 @@ A CLI-first Python project with:
 """
 
 __version__ = "0.1.0"
+

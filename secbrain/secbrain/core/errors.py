@@ -1,4 +1,10 @@
-"""Structured error taxonomy for SecBrain."""
+"""Structured error taxonomy for SecBrain.
+
+This module provides a comprehensive error handling system with:
+- Categorized exceptions for different error types
+- Severity levels for error prioritization
+- Structured error details for debugging and logging
+"""
 
 from __future__ import annotations
 

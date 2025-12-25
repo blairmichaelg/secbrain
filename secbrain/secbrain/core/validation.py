@@ -1,3 +1,9 @@
+"""Configuration validation utilities for SecBrain.
+
+This module provides functions to validate and load configuration files
+including scope files and program configurations.
+"""
+
 from __future__ import annotations
 
 import json

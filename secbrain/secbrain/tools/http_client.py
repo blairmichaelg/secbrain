@@ -1,4 +1,12 @@
-"""HTTP client with scope enforcement, rate limiting, and kill-switch for SecBrain."""
+"""HTTP client with scope enforcement, rate limiting, and kill-switch for SecBrain.
+
+This module provides a robust HTTP client that integrates with SecBrain's security
+features including:
+- Request approval workflow for out-of-scope domains
+- Rate limiting to prevent API abuse
+- Circuit breaker pattern for fault tolerance
+- Structured response handling
+"""
 
 from __future__ import annotations
 

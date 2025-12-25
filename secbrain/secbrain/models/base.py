@@ -1,4 +1,8 @@
-"""Base model interfaces for SecBrain."""
+"""Base model interfaces for SecBrain.
+
+This module defines the abstract interfaces for LLM model clients,
+including request/response structures and common model operations.
+"""
 
 from __future__ import annotations
 

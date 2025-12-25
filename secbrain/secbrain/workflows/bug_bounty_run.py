@@ -1,4 +1,9 @@
-"""Bug bounty workflow orchestration."""
+"""Bug bounty workflow orchestration.
+
+This module provides the main workflow orchestration for bug bounty hunting,
+coordinating multiple agents through various phases of vulnerability discovery
+and exploitation.
+"""
 
 from __future__ import annotations
 

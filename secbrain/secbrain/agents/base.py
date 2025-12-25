@@ -1,4 +1,10 @@
-"""Base agent class for SecBrain."""
+"""Base agent class for SecBrain.
+
+This module provides the foundational agent architecture including:
+- BaseAgent abstract class for all SecBrain agents
+- AgentResult dataclass for agent execution results
+- Common agent utilities and patterns
+"""
 
 from __future__ import annotations
 
