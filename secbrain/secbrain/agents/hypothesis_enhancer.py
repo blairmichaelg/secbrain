@@ -180,7 +180,7 @@ class HypothesisEnhancer:
                 hyp["typical_bounty_range"] = matched_pattern.typical_bounty_range
                 hyp["detection_techniques"] = matched_pattern.detection_techniques
                 hyp["recent_examples"] = matched_pattern.recent_examples[:2]
-                
+
                 # Weighted boost based on severity and recent examples
                 severity_multiplier = {
                     "critical": 1.25,
@@ -188,10 +188,10 @@ class HypothesisEnhancer:
                     "medium": 1.08,
                     "low": 1.02,
                 }.get(matched_pattern.severity, 1.1)
-                
+
                 confidence_multiplier *= severity_multiplier
                 confidence_reasons.append(f"Immunefi {matched_pattern.severity} pattern (+{(severity_multiplier-1)*100:.0f}%)")
-                
+
                 # Additional boost for patterns with many recent examples
                 if len(matched_pattern.recent_examples) >= 3:
                     confidence_multiplier *= 1.1
@@ -200,7 +200,7 @@ class HypothesisEnhancer:
             # Add detection priority based on contract and function
             priority = ImmunefiIntelligence.get_detection_priority(contract_name, function_name)
             hyp["detection_priority"] = priority
-            
+
             # Weighted boost for high-priority targets
             if priority >= 9:
                 confidence_multiplier *= 1.20
