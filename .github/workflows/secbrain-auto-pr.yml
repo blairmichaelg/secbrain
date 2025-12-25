@@ -4,9 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 'Target name (e.g., thresholdnetwork)'
+        description: 'Target name (e.g., thresholdnetwork, originprotocol)'
         required: true
-        type: string
+        default: 'thresholdnetwork'
+        type: choice
+        options:
+          - thresholdnetwork
+          - originprotocol
       run_mode:
         description: 'Run mode (dry-run or full)'
         required: false

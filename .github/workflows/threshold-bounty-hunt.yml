@@ -1,0 +1,361 @@
+name: Threshold Network Bounty Hunt
+
+on:
+  schedule:
+    # Run weekly on Monday at 6 AM UTC to find new bounties
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      run_mode:
+        description: 'Run mode (dry-run or full)'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - dry-run
+          - full
+      scope_type:
+        description: 'Scope type (full or critical)'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - critical
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  security-events: write
+
+jobs:
+  threshold-bounty-analysis:
+    name: Run Threshold Network Bounty Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install SecBrain
+        run: |
+          cd secbrain
+          pip install --require-hashes -r requirements.lock || pip install -r requirements.txt
+          pip install -e ".[dev]"
+          
+          # Ensure eth-hash backend is installed
+          pip install "eth-hash[pycryptodome]"
+
+      - name: Validate Threshold Network configuration
+        run: |
+          TARGET_DIR="targets/thresholdnetwork"
+          
+          echo "Validating configuration for Threshold Network..."
+          
+          if [ ! -d "$TARGET_DIR" ]; then
+            echo "::error::Target directory not found: $TARGET_DIR"
+            exit 1
+          fi
+          
+          # Determine scope file based on scope_type
+          SCOPE_FILE="$TARGET_DIR/scope.yaml"
+          if [ "${{ inputs.scope_type }}" = "critical" ]; then
+            SCOPE_FILE="$TARGET_DIR/scope-critical.yaml"
+            if [ ! -f "$SCOPE_FILE" ]; then
+              echo "::warning::Critical scope file not found, using full scope"
+              SCOPE_FILE="$TARGET_DIR/scope.yaml"
+            fi
+          fi
+          
+          echo "SCOPE_FILE=${SCOPE_FILE}" >> $GITHUB_ENV
+          
+          # Validate configuration
+          secbrain validate \
+            --scope "$SCOPE_FILE" \
+            --program "$TARGET_DIR/program.json"
+
+      - name: Create workspace with timestamp
+        id: workspace
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          WORKSPACE="targets/thresholdnetwork/workspace-${TIMESTAMP}"
+          mkdir -p "$WORKSPACE"
+          echo "workspace_path=${WORKSPACE}" >> $GITHUB_OUTPUT
+          echo "timestamp=${TIMESTAMP}" >> $GITHUB_OUTPUT
+
+      - name: Build Foundry contracts
+        continue-on-error: true
+        run: |
+          echo "Building Threshold Network contracts with Foundry..."
+          cd targets/thresholdnetwork/instascope
+          
+          # Try to build contracts
+          if [ -f "build.sh" ]; then
+            chmod +x build.sh
+            ./build.sh || echo "Some contracts failed to build, continuing..."
+          else
+            forge build || echo "Forge build failed, continuing with available contracts..."
+          fi
+
+      - name: Run SecBrain Bounty Workflow
+        id: run_secbrain
+        run: |
+          TARGET_DIR="targets/thresholdnetwork"
+          WORKSPACE="${{ steps.workspace.outputs.workspace_path }}"
+          
+          echo "Starting SecBrain bounty analysis..."
+          echo "Target: Threshold Network"
+          echo "Workspace: $WORKSPACE"
+          echo "Mode: ${{ inputs.run_mode || 'full' }}"
+          
+          # Build command arguments
+          CMD_ARGS=(
+            "run"
+            "--scope" "${SCOPE_FILE}"
+            "--program" "$TARGET_DIR/program.json"
+            "--workspace" "$WORKSPACE"
+            "--source" "$TARGET_DIR/instascope/src"
+          )
+          
+          # Add dry-run flag if needed
+          if [ "${{ inputs.run_mode }}" = "dry-run" ]; then
+            CMD_ARGS+=("--dry-run")
+          else
+            CMD_ARGS+=("--no-dry-run")
+          fi
+          
+          # Run SecBrain
+          secbrain "${CMD_ARGS[@]}" || {
+            echo "::warning::SecBrain run encountered errors but may have partial results"
+            echo "run_had_errors=true" >> $GITHUB_OUTPUT
+          }
+          
+          # Check if run completed
+          if [ -f "$WORKSPACE/run_summary.json" ]; then
+            echo "run_completed=true" >> $GITHUB_OUTPUT
+            
+            # Extract metrics
+            RUN_ID=$(jq -r '.run_id // "unknown"' "$WORKSPACE/run_summary.json")
+            FINDINGS=$(jq -r '.findings_count // 0' "$WORKSPACE/run_summary.json")
+            REPORTS=$(jq -r '.reports_generated // 0' "$WORKSPACE/run_summary.json")
+            DURATION=$(jq -r '.total_duration_seconds // 0' "$WORKSPACE/run_summary.json")
+            
+            echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
+            echo "findings_count=${FINDINGS}" >> $GITHUB_OUTPUT
+            echo "reports_generated=${REPORTS}" >> $GITHUB_OUTPUT
+            echo "duration=${DURATION}" >> $GITHUB_OUTPUT
+            
+            echo "✅ Run completed successfully"
+            echo "Findings: ${FINDINGS}"
+            echo "Reports: ${REPORTS}"
+          else
+            echo "run_completed=false" >> $GITHUB_OUTPUT
+            echo "::error::Run summary not generated"
+          fi
+
+      - name: Generate insights report
+        if: steps.run_secbrain.outputs.run_completed == 'true'
+        continue-on-error: true
+        run: |
+          WORKSPACE="${{ steps.workspace.outputs.workspace_path }}"
+          
+          echo "Generating insights report..."
+          secbrain insights \
+            --workspace "$WORKSPACE" \
+            --format all \
+            --output "$WORKSPACE/insights"
+
+      - name: Archive workspace to permanent location
+        if: steps.run_secbrain.outputs.run_completed == 'true'
+        run: |
+          WORKSPACE="${{ steps.workspace.outputs.workspace_path }}"
+          ARCHIVE_DIR="targets/thresholdnetwork/workspace-archive"
+          
+          mkdir -p "$ARCHIVE_DIR"
+          
+          # Create a permanent copy
+          cp -r "$WORKSPACE" "$ARCHIVE_DIR/bounty-hunt-${{ steps.workspace.outputs.timestamp }}"
+          
+          # Also update the main workspace symlink/copy for latest results
+          rm -rf targets/thresholdnetwork/workspace
+          cp -r "$WORKSPACE" targets/thresholdnetwork/workspace
+
+      - name: Create GitHub issue for high-value findings
+        if: steps.run_secbrain.outputs.run_completed == 'true' && steps.run_secbrain.outputs.findings_count > 0
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const workspace = '${{ steps.workspace.outputs.workspace_path }}';
+            const findingsDir = path.join(workspace, 'findings');
+            
+            // Check if findings directory exists
+            if (!fs.existsSync(findingsDir)) {
+              core.info('No findings directory found');
+              return;
+            }
+            
+            // Read findings
+            const findings = fs.readdirSync(findingsDir)
+              .filter(f => f.endsWith('.json'))
+              .map(f => {
+                const content = fs.readFileSync(path.join(findingsDir, f), 'utf8');
+                return JSON.parse(content);
+              });
+            
+            // Filter high-value findings (Critical or High severity)
+            const highValueFindings = findings.filter(f => 
+              f.severity === 'CRITICAL' || f.severity === 'HIGH'
+            );
+            
+            if (highValueFindings.length === 0) {
+              core.info('No high-value findings to report');
+              return;
+            }
+            
+            // Create issue for high-value findings
+            let issueBody = `## 🎯 Threshold Network Bounty Findings\n\n`;
+            issueBody += `**Run Date:** ${new Date().toISOString().split('T')[0]}\n`;
+            issueBody += `**Run ID:** ${{ steps.run_secbrain.outputs.run_id }}\n`;
+            issueBody += `**Total Findings:** ${{ steps.run_secbrain.outputs.findings_count }}\n`;
+            issueBody += `**High-Value Findings:** ${highValueFindings.length}\n\n`;
+            
+            issueBody += `### High-Value Findings\n\n`;
+            
+            highValueFindings.forEach((finding, idx) => {
+              issueBody += `#### ${idx + 1}. ${finding.title || 'Finding'}\n\n`;
+              issueBody += `- **Severity:** ${finding.severity}\n`;
+              issueBody += `- **Contract:** ${finding.contract || 'N/A'}\n`;
+              issueBody += `- **Function:** ${finding.function || 'N/A'}\n`;
+              issueBody += `- **Impact:** ${finding.impact || 'N/A'}\n\n`;
+              
+              if (finding.description) {
+                issueBody += `**Description:** ${finding.description}\n\n`;
+              }
+              
+              issueBody += `---\n\n`;
+            });
+            
+            issueBody += `### Next Steps\n\n`;
+            issueBody += `1. Review findings in detail: \`${{ steps.workspace.outputs.workspace_path }}/findings/\`\n`;
+            issueBody += `2. Validate exploitability with PoC\n`;
+            issueBody += `3. Prepare Immunefi submission if validated\n`;
+            issueBody += `4. Follow responsible disclosure guidelines\n\n`;
+            
+            issueBody += `### Resources\n\n`;
+            issueBody += `- [Threshold Network Program](https://immunefi.com/bug-bounty/thresholdnetwork/)\n`;
+            issueBody += `- [Workspace](${{ steps.workspace.outputs.workspace_path }})\n`;
+            issueBody += `- [Run Summary](${{ steps.workspace.outputs.workspace_path }}/run_summary.json)\n\n`;
+            
+            issueBody += `---\n`;
+            issueBody += `*This issue was automatically generated by the Threshold Bounty Hunt workflow.*\n`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Bounty] Threshold Network - ${highValueFindings.length} High-Value Finding(s)`,
+              body: issueBody,
+              labels: ['bounty', 'threshold-network', 'high-priority', 'automated']
+            });
+
+      - name: Commit and push results
+        if: steps.run_secbrain.outputs.run_completed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Add workspace results
+          git add targets/thresholdnetwork/workspace/
+          git add targets/thresholdnetwork/workspace-archive/
+          
+          # Check if there are changes to commit
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Threshold Network bounty hunt results - ${{ steps.workspace.outputs.timestamp }}
+
+Run ID: ${{ steps.run_secbrain.outputs.run_id }}
+Findings: ${{ steps.run_secbrain.outputs.findings_count }}
+Reports: ${{ steps.run_secbrain.outputs.reports_generated }}
+Duration: ${{ steps.run_secbrain.outputs.duration }}s
+Mode: ${{ inputs.run_mode || 'full' }}"
+            
+            git push origin HEAD:main || echo "::warning::Failed to push to main branch"
+          fi
+
+      - name: Upload workspace artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: threshold-bounty-workspace-${{ steps.workspace.outputs.timestamp }}
+          path: ${{ steps.workspace.outputs.workspace_path }}
+          retention-days: 90
+
+      - name: Generate workflow summary
+        if: always()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## 🎯 Threshold Network Bounty Hunt Results
+          
+          ### Configuration
+          - **Target:** Threshold Network
+          - **Mode:** ${{ inputs.run_mode || 'full' }}
+          - **Scope:** ${{ inputs.scope_type || 'full' }}
+          - **Timestamp:** ${{ steps.workspace.outputs.timestamp }}
+          
+          ### Results
+          - **Run Completed:** ${{ steps.run_secbrain.outputs.run_completed || 'false' }}
+          - **Run ID:** ${{ steps.run_secbrain.outputs.run_id || 'N/A' }}
+          - **Findings:** ${{ steps.run_secbrain.outputs.findings_count || 0 }}
+          - **Reports Generated:** ${{ steps.run_secbrain.outputs.reports_generated || 0 }}
+          - **Duration:** ${{ steps.run_secbrain.outputs.duration || 0 }}s
+          
+          ### Workspace
+          - **Path:** `${{ steps.workspace.outputs.workspace_path }}`
+          - **Archive:** `targets/thresholdnetwork/workspace-archive/bounty-hunt-${{ steps.workspace.outputs.timestamp }}`
+          
+          ### Next Steps
+          1. Review findings in workspace: `${{ steps.workspace.outputs.workspace_path }}/findings/`
+          2. Check insights report: `${{ steps.workspace.outputs.workspace_path }}/insights/`
+          3. Validate high-priority findings
+          4. Prepare Immunefi submissions for validated findings
+          
+          ### Bug Bounty Program Details
+          - **Platform:** Immunefi
+          - **Max Bounty:** Up to $1,000,000
+          - **Program URL:** https://immunefi.com/bug-bounty/thresholdnetwork/
+          
+          ### Focus Areas
+          - Direct theft of user funds (Critical - up to $1M)
+          - Permanent freezing of funds (Critical)
+          - Protocol insolvency (Critical)
+          - tBTC bridge vulnerabilities
+          - Threshold cryptography issues
+          - Staking and governance exploits
+          
+          ---
+          *Automated bounty hunting with SecBrain* 🧠
+          EOF

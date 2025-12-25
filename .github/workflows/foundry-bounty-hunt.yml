@@ -1,0 +1,426 @@
+name: Foundry Bounty Hunt
+
+on:
+  schedule:
+    # Run weekly on Wednesday at 3 AM UTC for intensive fuzzing
+    - cron: '0 3 * * 3'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target name (e.g., thresholdnetwork)'
+        required: true
+        default: 'thresholdnetwork'
+        type: string
+      fuzz_runs:
+        description: 'Number of fuzz runs'
+        required: false
+        default: '50000'
+        type: string
+      invariant_runs:
+        description: 'Number of invariant test runs'
+        required: false
+        default: '5000'
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  security-events: write
+
+jobs:
+  foundry-intensive-fuzzing:
+    name: Intensive Foundry Fuzzing for Bounties
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Validate target
+        id: validate
+        run: |
+          TARGET="${{ inputs.target || 'thresholdnetwork' }}"
+          TARGET_DIR="targets/${TARGET}"
+          
+          if [ ! -d "$TARGET_DIR" ]; then
+            echo "::error::Target directory not found: $TARGET_DIR"
+            exit 1
+          fi
+          
+          if [ ! -d "$TARGET_DIR/instascope" ]; then
+            echo "::error::Instascope directory not found: $TARGET_DIR/instascope"
+            exit 1
+          fi
+          
+          echo "target_dir=${TARGET_DIR}" >> $GITHUB_OUTPUT
+          echo "target_name=${TARGET}" >> $GITHUB_OUTPUT
+
+      - name: Build all contracts
+        working-directory: ${{ steps.validate.outputs.target_dir }}/instascope
+        run: |
+          echo "Building all contracts..."
+          
+          if [ -f "build.sh" ]; then
+            chmod +x build.sh
+            ./build.sh || echo "::warning::Some contracts failed to build"
+          else
+            forge build || echo "::warning::Forge build encountered issues"
+          fi
+
+      - name: Create test results directory
+        id: results
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          RESULTS_DIR="${{ steps.validate.outputs.target_dir }}/foundry-results-${TIMESTAMP}"
+          mkdir -p "$RESULTS_DIR"
+          echo "results_dir=${RESULTS_DIR}" >> $GITHUB_OUTPUT
+          echo "timestamp=${TIMESTAMP}" >> $GITHUB_OUTPUT
+
+      - name: Run intensive fuzz tests
+        working-directory: ${{ steps.validate.outputs.target_dir }}/instascope
+        continue-on-error: true
+        run: |
+          echo "Running intensive fuzz tests with ${{ inputs.fuzz_runs || '50000' }} runs..."
+          
+          # Create custom profile for intensive fuzzing
+          export FOUNDRY_FUZZ_RUNS="${{ inputs.fuzz_runs || '50000' }}"
+          export FOUNDRY_FUZZ_MAX_TEST_REJECTS="1000000"
+          
+          # Run fuzz tests and save results
+          forge test --fuzz-runs ${{ inputs.fuzz_runs || '50000' }} -vvv 2>&1 | tee "${{ steps.results.outputs.results_dir }}/fuzz-results.log" || {
+            echo "::warning::Some fuzz tests failed - this could indicate vulnerabilities!"
+            echo "fuzz_found_issues=true" >> $GITHUB_OUTPUT
+          }
+
+      - name: Run intensive invariant tests
+        working-directory: ${{ steps.validate.outputs.target_dir }}/instascope
+        continue-on-error: true
+        run: |
+          echo "Running intensive invariant tests with ${{ inputs.invariant_runs || '5000' }} runs..."
+          
+          # Configure invariant testing
+          export FOUNDRY_INVARIANT_RUNS="${{ inputs.invariant_runs || '5000' }}"
+          export FOUNDRY_INVARIANT_DEPTH="50"
+          
+          # Run invariant tests and save results
+          forge test --match-contract Invariant -vvv 2>&1 | tee "${{ steps.results.outputs.results_dir }}/invariant-results.log" || {
+            echo "::warning::Invariant tests failed - potential vulnerabilities detected!"
+            echo "invariant_found_issues=true" >> $GITHUB_OUTPUT
+          }
+
+      - name: Run symbolic execution with Mythril
+        working-directory: ${{ steps.validate.outputs.target_dir }}/instascope
+        continue-on-error: true
+        run: |
+          echo "Installing Mythril for symbolic execution..."
+          pip install mythril
+          
+          echo "Running Mythril analysis on critical contracts..."
+          
+          # Find all Solidity files
+          find src -name "*.sol" -type f | head -10 | while read contract; do
+            echo "Analyzing $contract with Mythril..."
+            myth analyze "$contract" -o json 2>&1 | tee -a "${{ steps.results.outputs.results_dir }}/mythril-results.log" || true
+          done
+
+      - name: Run Slither static analysis
+        working-directory: ${{ steps.validate.outputs.target_dir }}/instascope
+        continue-on-error: true
+        run: |
+          echo "Installing Slither..."
+          pip install slither-analyzer
+          
+          echo "Running Slither analysis..."
+          slither . \
+            --json "${{ steps.results.outputs.results_dir }}/slither-results.json" \
+            --exclude-low \
+            --exclude-informational 2>&1 | tee "${{ steps.results.outputs.results_dir }}/slither-results.log" || {
+            echo "::warning::Slither found potential issues"
+            echo "slither_found_issues=true" >> $GITHUB_OUTPUT
+          }
+
+      - name: Run Echidna fuzzing
+        working-directory: ${{ steps.validate.outputs.target_dir }}/instascope
+        continue-on-error: true
+        run: |
+          echo "Installing Echidna..."
+          
+          # Download and install Echidna
+          wget https://github.com/crytic/echidna/releases/download/v2.2.1/echidna-2.2.1-Linux.tar.gz
+          tar -xzf echidna-2.2.1-Linux.tar.gz
+          chmod +x echidna
+          
+          # Check if echidna config exists
+          if [ -f "../../echidna.yaml" ]; then
+            ECHIDNA_CONFIG="../../echidna.yaml"
+          else
+            # Create basic echidna config
+            cat > echidna-config.yaml << 'ECHIDNA_EOF'
+testLimit: 50000
+testMode: assertion
+coverage: true
+corpusDir: corpus
+timeout: 600
+shrinkLimit: 5000
+ECHIDNA_EOF
+            ECHIDNA_CONFIG="echidna-config.yaml"
+          fi
+          
+          # Run Echidna on test contracts
+          find . -name "*Test*.sol" -type f | head -5 | while read testfile; do
+            echo "Running Echidna on $testfile..."
+            ./echidna "$testfile" --config "$ECHIDNA_CONFIG" 2>&1 | tee -a "${{ steps.results.outputs.results_dir }}/echidna-results.log" || true
+          done
+
+      - name: Generate gas snapshots
+        working-directory: ${{ steps.validate.outputs.target_dir }}/instascope
+        continue-on-error: true
+        run: |
+          echo "Generating gas snapshots..."
+          forge snapshot --snap "${{ steps.results.outputs.results_dir }}/gas-snapshot.txt" || true
+          
+          echo "Generating detailed gas report..."
+          forge test --gas-report > "${{ steps.results.outputs.results_dir }}/gas-report.txt" || true
+
+      - name: Analyze results for vulnerabilities
+        id: analyze
+        run: |
+          RESULTS_DIR="${{ steps.results.outputs.results_dir }}"
+          
+          echo "Analyzing test results for potential vulnerabilities..."
+          
+          # Count test failures
+          FUZZ_FAILURES=0
+          INVARIANT_FAILURES=0
+          SLITHER_ISSUES=0
+          
+          if [ -f "$RESULTS_DIR/fuzz-results.log" ]; then
+            FUZZ_FAILURES=$(grep -c "FAILED" "$RESULTS_DIR/fuzz-results.log" || echo "0")
+          fi
+          
+          if [ -f "$RESULTS_DIR/invariant-results.log" ]; then
+            INVARIANT_FAILURES=$(grep -c "FAILED" "$RESULTS_DIR/invariant-results.log" || echo "0")
+          fi
+          
+          if [ -f "$RESULTS_DIR/slither-results.json" ]; then
+            SLITHER_ISSUES=$(jq '[.results.detectors[] | select(.impact == "High" or .impact == "Critical")] | length' "$RESULTS_DIR/slither-results.json" || echo "0")
+          fi
+          
+          echo "fuzz_failures=${FUZZ_FAILURES}" >> $GITHUB_OUTPUT
+          echo "invariant_failures=${INVARIANT_FAILURES}" >> $GITHUB_OUTPUT
+          echo "slither_issues=${SLITHER_ISSUES}" >> $GITHUB_OUTPUT
+          
+          TOTAL_ISSUES=$((FUZZ_FAILURES + INVARIANT_FAILURES + SLITHER_ISSUES))
+          echo "total_issues=${TOTAL_ISSUES}" >> $GITHUB_OUTPUT
+          
+          if [ $TOTAL_ISSUES -gt 0 ]; then
+            echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
+            echo "::warning::Found ${TOTAL_ISSUES} potential vulnerabilities!"
+          else
+            echo "has_vulnerabilities=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create vulnerability report
+        if: steps.analyze.outputs.has_vulnerabilities == 'true'
+        id: report
+        run: |
+          RESULTS_DIR="${{ steps.results.outputs.results_dir }}"
+          REPORT_FILE="$RESULTS_DIR/vulnerability-report.md"
+          
+          cat > "$REPORT_FILE" << 'EOF'
+          # Foundry Bounty Hunt - Vulnerability Report
+          
+          **Date:** $(date +%Y-%m-%d)
+          **Target:** ${{ steps.validate.outputs.target_name }}
+          **Timestamp:** ${{ steps.results.outputs.timestamp }}
+          
+          ## Summary
+          
+          - **Fuzz Test Failures:** ${{ steps.analyze.outputs.fuzz_failures }}
+          - **Invariant Test Failures:** ${{ steps.analyze.outputs.invariant_failures }}
+          - **Slither High/Critical Issues:** ${{ steps.analyze.outputs.slither_issues }}
+          - **Total Potential Issues:** ${{ steps.analyze.outputs.total_issues }}
+          
+          ## Fuzz Testing Results
+          
+          Ran ${{ inputs.fuzz_runs || '50000' }} fuzz iterations per test.
+          
+          EOF
+          
+          if [ -f "$RESULTS_DIR/fuzz-results.log" ]; then
+            echo "### Failed Fuzz Tests" >> "$REPORT_FILE"
+            echo "\`\`\`" >> "$REPORT_FILE"
+            grep -A 5 "FAILED" "$RESULTS_DIR/fuzz-results.log" >> "$REPORT_FILE" || true
+            echo "\`\`\`" >> "$REPORT_FILE"
+          fi
+          
+          cat >> "$REPORT_FILE" << 'EOF'
+          
+          ## Invariant Testing Results
+          
+          Ran ${{ inputs.invariant_runs || '5000' }} invariant test runs with depth 50.
+          
+          EOF
+          
+          if [ -f "$RESULTS_DIR/invariant-results.log" ]; then
+            echo "### Failed Invariant Tests" >> "$REPORT_FILE"
+            echo "\`\`\`" >> "$REPORT_FILE"
+            grep -A 5 "FAILED" "$RESULTS_DIR/invariant-results.log" >> "$REPORT_FILE" || true
+            echo "\`\`\`" >> "$REPORT_FILE"
+          fi
+          
+          cat >> "$REPORT_FILE" << 'EOF'
+          
+          ## Static Analysis Results
+          
+          ### Slither
+          
+          EOF
+          
+          if [ -f "$RESULTS_DIR/slither-results.json" ]; then
+            echo "High and Critical severity issues found by Slither:" >> "$REPORT_FILE"
+            echo "\`\`\`json" >> "$REPORT_FILE"
+            jq '[.results.detectors[] | select(.impact == "High" or .impact == "Critical")]' "$RESULTS_DIR/slither-results.json" >> "$REPORT_FILE" || true
+            echo "\`\`\`" >> "$REPORT_FILE"
+          fi
+          
+          cat >> "$REPORT_FILE" << 'EOF'
+          
+          ## Next Steps
+          
+          1. **Review Failed Tests:** Examine each failure to understand the vulnerability
+          2. **Reproduce Manually:** Create minimal PoC for each issue
+          3. **Assess Impact:** Determine severity and exploitability
+          4. **Validate Findings:** Ensure issues are real vulnerabilities, not false positives
+          5. **Prepare Submissions:** Create detailed Immunefi submissions for validated findings
+          
+          ## Resources
+          
+          - Full results: `${{ steps.results.outputs.results_dir }}/`
+          - Fuzz logs: `${{ steps.results.outputs.results_dir }}/fuzz-results.log`
+          - Invariant logs: `${{ steps.results.outputs.results_dir }}/invariant-results.log`
+          - Slither results: `${{ steps.results.outputs.results_dir }}/slither-results.json`
+          
+          ---
+          *Generated by Foundry Bounty Hunt workflow*
+          EOF
+          
+          cat "$REPORT_FILE"
+
+      - name: Create GitHub issue for vulnerabilities
+        if: steps.analyze.outputs.has_vulnerabilities == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = '${{ steps.results.outputs.results_dir }}/vulnerability-report.md';
+            
+            let reportContent = '';
+            if (fs.existsSync(reportPath)) {
+              reportContent = fs.readFileSync(reportPath, 'utf8');
+            }
+            
+            const issueBody = `## 🚨 Foundry Bounty Hunt - Vulnerabilities Detected\n\n` +
+              `**Target:** ${{ steps.validate.outputs.target_name }}\n` +
+              `**Date:** ${new Date().toISOString().split('T')[0]}\n` +
+              `**Workflow Run:** #${context.runNumber}\n\n` +
+              `### Summary\n\n` +
+              `- **Fuzz Test Failures:** ${{ steps.analyze.outputs.fuzz_failures }}\n` +
+              `- **Invariant Test Failures:** ${{ steps.analyze.outputs.invariant_failures }}\n` +
+              `- **Slither High/Critical Issues:** ${{ steps.analyze.outputs.slither_issues }}\n` +
+              `- **Total Potential Issues:** ${{ steps.analyze.outputs.total_issues }}\n\n` +
+              `### Test Configuration\n\n` +
+              `- **Fuzz Runs:** ${{ inputs.fuzz_runs || '50000' }}\n` +
+              `- **Invariant Runs:** ${{ inputs.invariant_runs || '5000' }}\n` +
+              `- **Invariant Depth:** 50\n\n` +
+              `### Action Required\n\n` +
+              `1. Download and review the full results from workflow artifacts\n` +
+              `2. Validate each potential vulnerability\n` +
+              `3. Create PoC exploits for confirmed issues\n` +
+              `4. Prepare Immunefi submissions\n\n` +
+              `### Full Report\n\n` +
+              reportContent +
+              `\n\n---\n*Automated vulnerability detection via intensive Foundry testing*`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Bounty] ${{ steps.validate.outputs.target_name }} - ${context.payload.total_issues || 'Multiple'} Potential Vulnerabilities`,
+              body: issueBody,
+              labels: ['bounty', 'vulnerability', 'foundry', 'high-priority', 'automated']
+            });
+
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add ${{ steps.results.outputs.results_dir }}
+          
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Foundry bounty hunt results - ${{ steps.validate.outputs.target_name }} - ${{ steps.results.outputs.timestamp }}
+
+Fuzz failures: ${{ steps.analyze.outputs.fuzz_failures }}
+Invariant failures: ${{ steps.analyze.outputs.invariant_failures }}
+Slither issues: ${{ steps.analyze.outputs.slither_issues }}
+Total issues: ${{ steps.analyze.outputs.total_issues }}"
+            
+            git push origin HEAD:main || echo "::warning::Failed to push to main"
+          fi
+
+      - name: Upload results as artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: foundry-bounty-results-${{ steps.validate.outputs.target_name }}-${{ steps.results.outputs.timestamp }}
+          path: ${{ steps.results.outputs.results_dir }}
+          retention-days: 90
+
+      - name: Generate workflow summary
+        if: always()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## 🔍 Foundry Bounty Hunt Results
+          
+          ### Configuration
+          - **Target:** ${{ steps.validate.outputs.target_name }}
+          - **Fuzz Runs:** ${{ inputs.fuzz_runs || '50000' }}
+          - **Invariant Runs:** ${{ inputs.invariant_runs || '5000' }}
+          - **Timestamp:** ${{ steps.results.outputs.timestamp }}
+          
+          ### Results
+          - **Fuzz Test Failures:** ${{ steps.analyze.outputs.fuzz_failures || 'N/A' }}
+          - **Invariant Test Failures:** ${{ steps.analyze.outputs.invariant_failures || 'N/A' }}
+          - **Slither High/Critical Issues:** ${{ steps.analyze.outputs.slither_issues || 'N/A' }}
+          - **Total Potential Issues:** ${{ steps.analyze.outputs.total_issues || 'N/A' }}
+          
+          ### Tools Used
+          - ✅ Foundry (Fuzz + Invariant Testing)
+          - ✅ Slither (Static Analysis)
+          - ✅ Mythril (Symbolic Execution)
+          - ✅ Echidna (Advanced Fuzzing)
+          
+          ### Results Location
+          - **Directory:** `${{ steps.results.outputs.results_dir }}`
+          - **Artifacts:** Available in workflow artifacts
+          
+          ### Next Steps
+          1. Download and review artifacts
+          2. Validate potential vulnerabilities
+          3. Create PoC exploits for confirmed issues
+          4. Submit to bug bounty program
+          
+          ---
+          *Intensive Foundry-based vulnerability hunting* 🎯
+          EOF
