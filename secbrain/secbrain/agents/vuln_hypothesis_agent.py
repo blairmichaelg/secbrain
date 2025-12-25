@@ -43,6 +43,7 @@ class ProtocolProfile:
             "oracle_manipulation",
             "fee_extraction",
             "restaking_share_inflation",
+            "avs_integration_flaw",
         ],
         "amm": [
             "sandwich_attack",
@@ -1522,7 +1523,7 @@ Respond with JSON:
         by creating basic hypotheses from contract metadata.
         """
         fallback_hypotheses: list[dict[str, Any]] = []
-        
+
         for asset in contract_assets:
             metadata = asset.get("metadata", {}) or {}
             address = metadata.get("address") or asset.get("value", "")
@@ -1531,10 +1532,10 @@ Respond with JSON:
             functions = metadata.get("functions", [])
             classification = metadata.get("classification", {})
             protocol_type = classification.get("protocol_type", "generic")
-            
+
             # Get appropriate vulnerability patterns based on protocol type
             profile = ProtocolProfile.from_type(protocol_type)
-            
+
             # Create a few generic hypotheses per contract
             for pattern in profile.patterns[:2]:  # Top 2 patterns for this protocol type
                 hypothesis = {
@@ -1558,13 +1559,13 @@ Respond with JSON:
                     "is_fallback": True,
                 }
                 fallback_hypotheses.append(hypothesis)
-        
+
         self._log(
             "fallback_hypotheses_generated",
             count=len(fallback_hypotheses),
             contracts=len(contract_assets),
         )
-        
+
         return fallback_hypotheses
 
     def _rank_hypotheses(
