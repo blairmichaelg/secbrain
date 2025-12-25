@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -189,7 +189,7 @@ class BugBountyWorkflow:
         Returns:
             WorkflowResult with all phase outcomes
         """
-        start_time = datetime.now()
+        start_time = datetime.now(UTC)
         result = WorkflowResult(run_id=self.run_context.run_id, success=True)
 
         # Check for existing checkpoint
@@ -298,7 +298,7 @@ class BugBountyWorkflow:
                             current_phase=current_phase,
                             completed_phases=[p.value for p in result.phases_completed],
                             phase_data=self.phase_data,
-                            metadata={"timestamp": datetime.now().isoformat()},
+                            metadata={"timestamp": datetime.now(UTC).isoformat()},
                         )
                 else:
                     result.phases_failed.append(Phase(current_phase))
@@ -331,7 +331,7 @@ class BugBountyWorkflow:
         workflow_metrics = self.metrics_collector.complete_workflow()
 
         # Calculate totals
-        end_time = datetime.now()
+        end_time = datetime.now(UTC)
         result.total_duration_seconds = (end_time - start_time).total_seconds()
 
         # Extract summary metrics
@@ -420,7 +420,7 @@ class BugBountyWorkflow:
                         "duration_seconds": pr.duration_seconds,
                         "errors": pr.errors,
                         "data": pr.data,
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     },
                     indent=2,
                 )
@@ -509,7 +509,7 @@ class BugBountyWorkflow:
         profit_threshold: float | None = None,
     ) -> PhaseResult:
         """Execute a single phase."""
-        start_time = datetime.now()
+        start_time = datetime.now(UTC)
 
         log_phase_transition(
             self.logger,
@@ -564,7 +564,7 @@ class BugBountyWorkflow:
                     agent_result.data["hypotheses_filtered_out"] = low_quality
                     agent_result.data["quality_filtering_applied"] = True
 
-            duration = (datetime.now() - start_time).total_seconds()
+            duration = (datetime.now(UTC) - start_time).total_seconds()
 
             return PhaseResult(
                 phase=phase,
@@ -575,7 +575,7 @@ class BugBountyWorkflow:
             )
 
         except Exception as e:
-            duration = (datetime.now() - start_time).total_seconds()
+            duration = (datetime.now(UTC) - start_time).total_seconds()
             return PhaseResult(
                 phase=phase,
                 success=False,

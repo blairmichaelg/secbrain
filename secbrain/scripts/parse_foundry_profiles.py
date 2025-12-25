@@ -24,7 +24,7 @@ def parse_foundry_profiles(toml_path: Path) -> list[dict[str, str]]:
     """Parse foundry.toml and extract contract profiles with addresses."""
     contracts = []
 
-    with open(toml_path) as f:
+    with toml_path.open() as f:
         data = toml.load(f)
 
     profiles = data.get('profile', {})
@@ -75,7 +75,7 @@ def generate_scope_yaml(contracts: list[dict[str, str]], output_path: Path) -> N
     }
 
     import yaml
-    with open(output_path, 'w') as f:
+    with output_path.open('w') as f:
         yaml.dump(scope_data, f, default_flow_style=False, sort_keys=False)
 
 
@@ -93,7 +93,7 @@ def main():
     # Save contracts list for reference
     contracts_path = root_dir / 'secbrain' / 'examples' / 'enzyme_contracts.json'
     import json
-    with open(contracts_path, 'w') as f:
+    with contracts_path.open('w') as f:
         json.dump(contracts, f, indent=2)
 
     generate_scope_yaml(contracts, output_path)

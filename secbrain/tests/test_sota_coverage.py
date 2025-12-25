@@ -19,7 +19,7 @@ def test_sota_scope_loading():
     assert scope_path.exists(), f"Scope file not found at {scope_path}"
 
     # Load and parse the scope file
-    with open(scope_path, encoding='utf-8') as f:
+    with scope_path.open(encoding='utf-8') as f:
         scope_data = yaml.safe_load(f)
 
     # Basic validation of required fields
@@ -50,7 +50,7 @@ def test_sota_program_loading():
     assert program_path.exists(), f"Program file not found at {program_path}"
 
     # Load and parse the program file
-    with open(program_path, encoding='utf-8') as f:
+    with program_path.open(encoding='utf-8') as f:
         program_data = json.load(f)
 
     # Basic validation of required fields

@@ -137,7 +137,7 @@ def main():
     }
 
     dashboard_path = Path("insights-dashboard.json")
-    with open(dashboard_path, "w") as f:
+    with dashboard_path.open("w") as f:
         json.dump(dashboard_data, f, indent=2)
 
     print(f"\n✓ Consolidated dashboard saved to {dashboard_path}")

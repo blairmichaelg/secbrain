@@ -14,7 +14,7 @@ import hashlib
 import os
 import time
 import warnings
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 import httpx
@@ -129,7 +129,7 @@ class PerplexityResearch:
             return False
 
         cached_time = self._cache_ttl[cache_key]
-        age = datetime.now() - cached_time
+        age = datetime.now(UTC) - cached_time
         return age < timedelta(hours=ttl_hours)
 
     async def ask_research(
@@ -162,7 +162,7 @@ class PerplexityResearch:
         # Check cache with TTL
         cached = run_context.get_cached_research(cache_key)
         if cached and self._is_cache_valid(cache_key, ttl_hours, run_context):
-            cache_age = (datetime.now() - self._cache_ttl[cache_key]).total_seconds() / 3600
+            cache_age = (datetime.now(UTC) - self._cache_ttl[cache_key]).total_seconds() / 3600
             return {
                 **cached,
                 "cached": True,
@@ -188,7 +188,7 @@ class PerplexityResearch:
 
             # Cache dry-run results for consistency
             run_context.cache_research(cache_key, result)
-            self._cache_ttl[cache_key] = datetime.now()
+            self._cache_ttl[cache_key] = datetime.now(UTC)
 
             return result
 
@@ -205,7 +205,7 @@ Question: {question}
 
 Provide a focused, technical answer relevant to security research and bug bounty hunting.
 Include specific techniques, tools, CVE references, exploit dates, and profit amounts when applicable.
-Prioritize data from within the last 6 months (from {datetime.now().strftime('%B %Y')})."""
+Prioritize data from within the last 6 months (from {datetime.now(UTC).strftime('%B %Y')})."""
 
             payload = {
                 "model": self.model,
@@ -233,7 +233,7 @@ Prioritize data from within the last 6 months (from {datetime.now().strftime('%B
 
             # Cache the result with timestamp
             run_context.cache_research(cache_key, result)
-            self._cache_ttl[cache_key] = datetime.now()
+            self._cache_ttl[cache_key] = datetime.now(UTC)
 
             return result
 
@@ -271,7 +271,7 @@ Prioritize data from within the last 6 months (from {datetime.now().strftime('%B
         from datetime import datetime, timedelta
 
         # Calculate date range for recent data (last 6 months)
-        current_date = datetime.now()
+        current_date = datetime.now(UTC)
         six_months_ago = current_date - timedelta(days=180)
 
         question = f"""
@@ -320,7 +320,7 @@ Provide concrete, data-driven assessment with specific examples and amounts.
         from datetime import datetime, timedelta
 
         # Calculate date range for recent data (last 6 months)
-        current_date = datetime.now()
+        current_date = datetime.now(UTC)
         six_months_ago = current_date - timedelta(days=180)
 
         question = f"""

@@ -7,7 +7,7 @@ import random
 import time
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 import httpx
@@ -158,7 +158,7 @@ class SecBrainHTTPClient:
                     tool_name="http_client",
                     operation=f"{method.upper()} {url}",
                     risk_level="high",
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(UTC),
                 )
             )
             if not approval.approved:

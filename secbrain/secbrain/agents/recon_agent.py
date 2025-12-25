@@ -10,7 +10,7 @@ import shutil
 import tomllib
 import uuid
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -597,7 +597,7 @@ class ReconAgent(BaseAgent):
                         "status": "compilation_timeout",
                         "metadata": {
                             "error": "Forge build timeout after 300s",
-                            "timestamp": datetime.now().isoformat(),
+                            "timestamp": datetime.now(UTC).isoformat(),
                         },
                     }
                     if self.storage:
@@ -621,7 +621,7 @@ class ReconAgent(BaseAgent):
                         "metadata": {
                             "error": str(exc),
                             "error_type": type(exc).__name__,
-                            "timestamp": datetime.now().isoformat(),
+                            "timestamp": datetime.now(UTC).isoformat(),
                         },
                     }
                     if self.storage:

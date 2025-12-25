@@ -174,21 +174,21 @@ class BountyMetricsTracker:
         """Load existing metrics from disk."""
         # Load submissions
         if self.submissions_file.exists():
-            with open(self.submissions_file) as f:
+            with self.submissions_file.open() as f:
                 for line in f:
                     data = json.loads(line)
                     self.submissions.append(BountySubmission(**data))
 
         # Load program metrics
         if self.program_metrics_file.exists():
-            with open(self.program_metrics_file) as f:
+            with self.program_metrics_file.open() as f:
                 data = json.load(f)
                 for key, value in data.items():
                     self.program_metrics[key] = ProgramMetrics(**value)
 
         # Load pattern learning
         if self.pattern_learning_file.exists():
-            with open(self.pattern_learning_file) as f:
+            with self.pattern_learning_file.open() as f:
                 data = json.load(f)
                 for key, value in data.items():
                     self.pattern_learning[key] = VulnerabilityPatternLearning(**value)
@@ -203,12 +203,12 @@ class BountyMetricsTracker:
         # We only append new submissions, so this is called with new data
 
         # Save program metrics
-        with open(self.program_metrics_file, 'w') as f:
+        with self.program_metrics_file.open('w') as f:
             data = {k: asdict(v) for k, v in self.program_metrics.items()}
             json.dump(data, f, indent=2)
 
         # Save pattern learning
-        with open(self.pattern_learning_file, 'w') as f:
+        with self.pattern_learning_file.open('w') as f:
             data = {k: asdict(v) for k, v in self.pattern_learning.items()}
             json.dump(data, f, indent=2)
 
@@ -218,7 +218,7 @@ class BountyMetricsTracker:
         self.submissions.append(submission)
 
         # Append to JSONL file
-        with open(self.submissions_file, 'a') as f:
+        with self.submissions_file.open('a') as f:
             f.write(json.dumps(asdict(submission)) + '\n')
 
         # Update program metrics

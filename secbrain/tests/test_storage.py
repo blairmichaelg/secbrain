@@ -458,7 +458,7 @@ class TestWorkspaceStorageExport:
         assert exports["findings"].exists()
 
         # Verify content
-        with open(exports["assets"]) as f:
+        with exports["assets"].open() as f:
             assets = json.load(f)
             assert len(assets) == 1
             assert assets[0]["id"] == "asset-1"

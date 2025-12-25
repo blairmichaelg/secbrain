@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -96,7 +96,7 @@ class ReportingAgent(BaseAgent):
             "cvss": cwe_info.get("cvss", ""),
             "content": content,
             "poc": poc,
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }
 
     def _format_title(self, finding: dict[str, Any]) -> str:
@@ -245,5 +245,5 @@ Output code only, with comments."""
             "total_reports": len(reports),
             "by_severity": by_severity,
             "by_type": by_type,
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }

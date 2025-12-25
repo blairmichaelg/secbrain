@@ -19,9 +19,9 @@ def _load_yaml_or_json(path: Path) -> dict:
     if not path.exists():
         raise ValidationError(f"File not found: {path}")
     if path.suffix.lower() == ".json":
-        with open(path, encoding="utf-8") as f:
+        with path.open(encoding="utf-8") as f:
             return json.load(f)
-    with open(path, encoding="utf-8") as f:
+    with path.open(encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -74,7 +74,7 @@ class ImmunefiProgram:
         # Recent/active programs (0-15 points)
         try:
             launch_date = datetime.fromisoformat(self.launched_at.replace('Z', '+00:00'))
-            days_ago = (datetime.now().astimezone() - launch_date).days
+            days_ago = (datetime.now(UTC).astimezone() - launch_date).days
             if days_ago <= 30:
                 score += 15
             elif days_ago <= 90:
@@ -153,7 +153,7 @@ class ImmunefiClient:
         """Check if the cache is still valid."""
         if self._cache_timestamp is None:
             return False
-        age = datetime.now() - self._cache_timestamp
+        age = datetime.now(UTC) - self._cache_timestamp
         return age < self.cache_ttl
 
     async def get_all_programs(
@@ -186,7 +186,7 @@ class ImmunefiClient:
 
         # Update cache
         self._programs_cache = {p.id: p for p in programs}
-        self._cache_timestamp = datetime.now()
+        self._cache_timestamp = datetime.now(UTC)
 
         logger.info(f"Cached {len(programs)} Immunefi programs")
         return programs

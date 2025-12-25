@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 
@@ -103,7 +103,7 @@ class ReflectedXSSVerifier:
             verifier=self.name,
             target=target,
             vuln_type=vuln_type,
-            created_at=datetime.now().isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
             observations=observations,
         )
 
@@ -179,7 +179,7 @@ class BasicSQLiVerifier:
             verifier=self.name,
             target=target,
             vuln_type=vuln_type,
-            created_at=datetime.now().isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
             observations=observations[:5],
         )
 

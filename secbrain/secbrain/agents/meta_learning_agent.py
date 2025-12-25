@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from secbrain.agents.base import AgentResult, BaseAgent
@@ -69,7 +69,7 @@ class MetaLearningAgent(BaseAgent):
         learnings = {
             "run_id": self.run_context.run_id,
             "program": ingest_data.get("program_name", ""),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "metrics": metrics,
             "analysis": analysis,
             "recommendations": recommendations,

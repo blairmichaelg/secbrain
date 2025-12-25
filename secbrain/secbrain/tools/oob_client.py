@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 import httpx
@@ -46,7 +46,7 @@ class OOBClient:
                     "probe_id": probe_id,
                     "type": "dns",
                     "host": f"dry-run-{probe_id}.oob.secbrain",
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 }
             ]
 

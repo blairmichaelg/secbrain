@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any, TypeVar
 
@@ -65,13 +65,13 @@ class CircuitBreaker:
         """Check if enough time has passed to attempt reset."""
         if self._last_failure_time is None:
             return True
-        return datetime.now() - self._last_failure_time > self.timeout_duration
+        return datetime.now(UTC) - self._last_failure_time > self.timeout_duration
 
     def _get_retry_after(self) -> float:
         """Get seconds until retry is allowed."""
         if self._last_failure_time is None:
             return 0.0
-        elapsed = datetime.now() - self._last_failure_time
+        elapsed = datetime.now(UTC) - self._last_failure_time
         remaining = self.timeout_duration - elapsed
         return max(0.0, remaining.total_seconds())
 
@@ -90,7 +90,7 @@ class CircuitBreaker:
         """Handle failed call."""
         async with self._lock:
             self._failure_count += 1
-            self._last_failure_time = datetime.now()
+            self._last_failure_time = datetime.now(UTC)
 
             if self._failure_count >= self.failure_threshold:
                 self._state = CircuitState.OPEN

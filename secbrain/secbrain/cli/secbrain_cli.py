@@ -245,13 +245,13 @@ async def _run_workflow(
     from secbrain.workflows.bug_bounty_run import run_bug_bounty
 
     # Load scope config
-    with open(scope_path) as f:
+    with scope_path.open() as f:
         scope_data = yaml.safe_load(f)
 
     scope_config = ScopeConfig(**scope_data)
 
     # Load program config
-    with open(program_path) as f:
+    with program_path.open() as f:
         program_data = json.load(f)
 
     program_config = ProgramConfig(
@@ -379,7 +379,7 @@ def _initialize_models(dry_run: bool) -> tuple[ModelClient | None, ModelClient |
         )
         return None, None
 
-    with open(config_path, encoding="utf-8") as f:
+    with config_path.open(encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
 
     profile = os.environ.get("SECBRAIN_MODELS_PROFILE")
@@ -944,7 +944,7 @@ def research(
 
         # Save to file if requested
         if output:
-            with open(output, 'w') as f:
+            with output.open('w') as f:
                 json.dump(results, f, indent=2)
             console.print(f"\nSaved results to {output}")
 

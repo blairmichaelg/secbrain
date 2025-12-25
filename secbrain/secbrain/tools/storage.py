@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, LiteralString
 
@@ -169,7 +169,7 @@ class WorkspaceStorage:
             """,
             (
                 self.run_id,
-                datetime.now().isoformat(),
+                datetime.now(UTC).isoformat(),
                 "running",
                 scope_hash,
                 json.dumps(metadata or {}),
@@ -183,7 +183,7 @@ class WorkspaceStorage:
             """
             UPDATE runs SET end_time = ?, status = ? WHERE run_id = ?
             """,
-            (datetime.now().isoformat(), status, self.run_id),
+            (datetime.now(UTC).isoformat(), status, self.run_id),
         )
         await self._commit()
 
@@ -201,7 +201,7 @@ class WorkspaceStorage:
                 asset.get("value"),
                 json.dumps(asset.get("technologies", [])),
                 json.dumps(asset.get("metadata", {})),
-                datetime.now().isoformat(),
+                datetime.now(UTC).isoformat(),
             ),
         )
         await self._commit()
@@ -257,7 +257,7 @@ class WorkspaceStorage:
                 hypothesis.get("rationale", ""),
                 hypothesis.get("status", "pending"),
                 json.dumps(hypothesis.get("result", {})),
-                datetime.now().isoformat(),
+                datetime.now(UTC).isoformat(),
             ),
         )
         await self._commit()
@@ -308,7 +308,7 @@ class WorkspaceStorage:
                 finding.get("target"),
                 finding.get("description"),
                 json.dumps(finding.get("evidence", [])),
-                datetime.now().isoformat(),
+                datetime.now(UTC).isoformat(),
             ),
         )
         await self._commit()
@@ -362,7 +362,7 @@ class WorkspaceStorage:
                 target,
                 1 if success else 0,
                 duration_ms,
-                datetime.now().isoformat(),
+                datetime.now(UTC).isoformat(),
             ),
         )
         await self._commit()
@@ -377,7 +377,7 @@ class WorkspaceStorage:
         assets = await self.get_assets()
         assets_file = output_dir / "recon" / "assets.json"
         assets_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(assets_file, "w") as f:
+        with assets_file.open("w") as f:
             json.dump(assets, f, indent=2)
         exports["assets"] = assets_file
 
@@ -385,7 +385,7 @@ class WorkspaceStorage:
         hypotheses = await self.get_hypotheses()
         hyp_file = output_dir / "hypotheses" / "hypotheses.json"
         hyp_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(hyp_file, "w") as f:
+        with hyp_file.open("w") as f:
             json.dump(hypotheses, f, indent=2)
         exports["hypotheses"] = hyp_file
 
@@ -393,7 +393,7 @@ class WorkspaceStorage:
         findings = await self.get_findings()
         findings_file = output_dir / "findings" / "findings.json"
         findings_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(findings_file, "w") as f:
+        with findings_file.open("w") as f:
             json.dump(findings, f, indent=2)
         exports["findings"] = findings_file
 

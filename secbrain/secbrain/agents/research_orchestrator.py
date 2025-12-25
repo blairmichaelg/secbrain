@@ -309,13 +309,13 @@ class ResearchOrchestrator:
                 "sources": result.sources,
             }
 
-        with open(filepath, "w") as f:
+        with filepath.open("w") as f:
             json.dump(cache_data, f, indent=2)
 
     def load_cache(self, filepath: str) -> int:
         """Load cache from a JSON file."""
         try:
-            with open(filepath) as f:
+            with filepath.open() as f:
                 cache_data = json.load(f)
 
             loaded_count = 0

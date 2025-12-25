@@ -47,7 +47,7 @@ class ApprovalManager:
     def _append_audit(self, entry: dict[str, Any]) -> None:
         """Persist an audit record as JSONL."""
         self.audit_log_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.audit_log_path, "a", encoding="utf-8") as f:
+        with self.audit_log_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
     async def request_approval(self, req: ApprovalRequest) -> ApprovalResponse:

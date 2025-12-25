@@ -337,7 +337,7 @@ class RunContext:
         """Load scope configuration from YAML."""
         if not path.exists():
             return ScopeConfig(foundry_root=None)
-        with open(path) as f:
+        with path.open() as f:
             data = yaml.safe_load(f) or {}
         data = self._expand_env(data)
         return ScopeConfig(**data)
@@ -346,7 +346,7 @@ class RunContext:
         """Load program configuration from JSON/YAML."""
         if not path.exists():
             return ProgramConfig(name="unknown")
-        with open(path) as f:
+        with path.open() as f:
             if path.suffix == ".json":
                 import json
                 data = json.load(f)
@@ -358,7 +358,7 @@ class RunContext:
         """Load tools configuration from config directory."""
         config_path = Path(__file__).parent.parent / "config" / "tools.yaml"
         if config_path.exists():
-            with open(config_path) as f:
+            with config_path.open() as f:
                 data = yaml.safe_load(f) or {}
             # Normalize numeric fields that may come through YAML as floats
             rate_limits = data.get("rate_limits") or {}
