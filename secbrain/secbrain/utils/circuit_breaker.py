@@ -48,7 +48,7 @@ class CircuitBreaker:
                 if self._should_attempt_reset():
                     self._state = CircuitState.HALF_OPEN
                 else:
-                    raise CircuitBreakerOpen(
+                    raise CircuitBreakerOpenError(
                         "Circuit breaker open, retry after "
                         f"{self._get_retry_after()} seconds"
                     )
@@ -96,6 +96,6 @@ class CircuitBreaker:
                 self._state = CircuitState.OPEN
 
 
-class CircuitBreakerOpen(Exception):
+class CircuitBreakerOpenError(Exception):
     """Raised when circuit breaker is open."""
 

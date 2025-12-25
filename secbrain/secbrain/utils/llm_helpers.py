@@ -44,7 +44,7 @@ def extract_json_from_response(
                 text = text[4:].strip()
 
     # Try to find JSON array/object boundaries
-    if expected_type == list:
+    if expected_type is list:
         start = text.find("[")
         end = text.rfind("]")
     else:  # dict
