@@ -17,6 +17,7 @@ SecBrain is a CLI-first Python project that automates bug bounty workflows using
 - **Research-first approach**: Enhanced Perplexity integration with TTL-based caching, rate limiting, and specialized research methods for severity assessment, attack vectors, and market conditions
 - **Advisor oversight**: Gemini model reviews critical decisions
 - **Guarded execution**: ACLs, rate limits, kill-switch, and human approval checkpoints
+- **Comprehensive Security Analysis**: 13+ tool orchestration with AI-powered insights
 
 ## Key Features
 
@@ -33,10 +34,35 @@ SecBrain is a CLI-first Python project that automates bug bounty workflows using
 - 📊 **Structured logging** in JSONL format
 - 📝 **Report generation** with CWE/CVE references
 - 📈 **Insights dashboard** for actionable security findings
+- 🔒 **Comprehensive Security Analysis**: Automated multi-tool security audits
 
 ## Quick Start
 
-### New: Quick Bounty Hunt Workflow
+### New: Comprehensive Security Analysis Workflow 🔒
+
+Analyze any GitHub repository with 13+ security tools in one click:
+
+```bash
+# Via GitHub CLI
+gh workflow run comprehensive-security-analysis.yml \
+  -f target_repo=https://github.com/your/target-repo \
+  -f target_type=mixed \
+  -f analysis_depth=standard \
+  -f enable_ai_analysis=true \
+  -f enable_fuzzing=true
+
+# Or use GitHub UI: Actions → Comprehensive Security Analysis → Run workflow
+```
+
+**Features:**
+- ✅ 13+ security tools (Slither, Bandit, Mythril, Semgrep, detect-secrets, etc.)
+- ✅ AI-powered insights and recommendations
+- ✅ Automated GitHub issue with results
+- ✅ Configurable depth (quick/standard/deep)
+
+See [Comprehensive Security Analysis Guide](.github/workflows/COMPREHENSIVE_SECURITY_ANALYSIS_GUIDE.md) for details.
+
+### Quick Bounty Hunt Workflow
 
 Want to start hunting bugs on Immunefi right away? Try this:
 
