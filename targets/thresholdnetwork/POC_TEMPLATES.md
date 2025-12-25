@@ -1171,7 +1171,7 @@ contract DKGThresholdRaisingExploit is Test {
             console.log("Malicious DKG result with higher polynomial degree was ACCEPTED");
             console.log("Impact: All funds deposited to this wallet will be PERMANENTLY FROZEN");
             console.log("Severity: CRITICAL - Protocol Insolvency");
-            console.log("Max Bounty: $100,000+");
+            console.log("Max Bounty: $1,000,000");
             vulnerabilityExists = true;
             
             // Document the vulnerability
