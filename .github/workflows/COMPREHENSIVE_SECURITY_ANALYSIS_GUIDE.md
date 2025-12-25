@@ -2,15 +2,16 @@
 
 ## Overview
 
-The **Comprehensive Security Analysis** workflow is SecBrain's flagship automated security testing framework that orchestrates 12+ industry-standard security tools along with AI-powered analysis to provide complete security coverage for any repository.
+The **Comprehensive Security Analysis** workflow is SecBrain's flagship automated security testing framework that orchestrates 13+ industry-standard security tools along with AI-powered analysis to provide complete security coverage for any repository.
 
 ## 🎯 Key Features
 
 ### ✅ Comprehensive Coverage
-- **12+ security tools** orchestrated in parallel
+- **13+ security tools** orchestrated in parallel
 - **Multi-phase analysis**: Static → Dynamic → Symbolic → AI
 - **Smart detection** of project type and complexity
 - **Adaptive execution** based on analysis depth
+- **Secret detection** with detect-secrets
 
 ### ⚡ Optimized Performance
 - **Parallel job execution** for faster results

@@ -276,7 +276,7 @@ jobs:
       - name: Install Python security tools
         run: |
           pip install --upgrade pip
-          pip install bandit[toml] safety pip-audit semgrep
+          pip install bandit[toml] safety pip-audit semgrep detect-secrets
 
       - name: Run Bandit
         continue-on-error: true
@@ -291,6 +291,21 @@ jobs:
           fi
           
           bandit -r . $SEVERITY_LEVEL -f json -o ${{ env.RESULTS_DIR }}/bandit/results.json || true
+
+      - name: Run detect-secrets
+        continue-on-error: true
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}/detect-secrets
+          cd ${{ env.TARGET_DIR }}
+          
+          # Scan for secrets in the codebase
+          detect-secrets scan --all-files --force-use-all-plugins > ${{ env.RESULTS_DIR }}/detect-secrets/baseline.json || true
+          
+          # Generate a summary
+          if [ -f "${{ env.RESULTS_DIR }}/detect-secrets/baseline.json" ]; then
+            SECRET_COUNT=$(jq '.results | to_entries | map(.value | length) | add // 0' ${{ env.RESULTS_DIR }}/detect-secrets/baseline.json)
+            echo "Found $SECRET_COUNT potential secrets" | tee ${{ env.RESULTS_DIR }}/detect-secrets/summary.txt
+          fi
 
       - name: Run Safety
         continue-on-error: true
@@ -325,6 +340,7 @@ jobs:
             ${{ env.RESULTS_DIR }}/safety/
             ${{ env.RESULTS_DIR }}/pip-audit/
             ${{ env.RESULTS_DIR }}/semgrep/
+            ${{ env.RESULTS_DIR }}/detect-secrets/
           retention-days: 90
           if-no-files-found: warn
 
@@ -567,51 +583,65 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y jq
+          pip install --upgrade pip
 
       - name: Download all artifacts
         uses: actions/download-artifact@v6
         with:
           path: ${{ env.RESULTS_DIR }}/artifacts
+        continue-on-error: true
 
       - name: Aggregate results into unified JSON
         continue-on-error: true
         run: |
           mkdir -p ${{ env.RESULTS_DIR }}/final
           
-          # Initialize counters
-          TOTAL_ISSUES=0
-          CRITICAL_ISSUES=0
-          HIGH_ISSUES=0
-          MEDIUM_ISSUES=0
-          LOW_ISSUES=0
+          # Use the Python aggregation script for better accuracy
+          python scripts/aggregate_results.py "${{ env.RESULTS_DIR }}/artifacts" > ${{ env.RESULTS_DIR }}/final/tool-counts.json || true
           
-          # Count issues from Bandit
-          if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" ]; then
-            BANDIT_HIGH=$(jq '[.results[] | select(.issue_severity == "HIGH")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" 2>/dev/null || echo "0")
-            BANDIT_MEDIUM=$(jq '[.results[] | select(.issue_severity == "MEDIUM")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" 2>/dev/null || echo "0")
-            HIGH_ISSUES=$((HIGH_ISSUES + BANDIT_HIGH))
-            MEDIUM_ISSUES=$((MEDIUM_ISSUES + BANDIT_MEDIUM))
-            echo "📊 Bandit: $BANDIT_HIGH high, $BANDIT_MEDIUM medium"
+          # Extract counts from the aggregation result
+          if [ -f "${{ env.RESULTS_DIR }}/final/tool-counts.json" ]; then
+            TOTAL_ISSUES=$(jq -r '.summary.total_issues // 0' ${{ env.RESULTS_DIR }}/final/tool-counts.json)
+            CRITICAL_ISSUES=$(jq -r '.summary.critical_issues // 0' ${{ env.RESULTS_DIR }}/final/tool-counts.json)
+            HIGH_ISSUES=$(jq -r '.summary.high_issues // 0' ${{ env.RESULTS_DIR }}/final/tool-counts.json)
+            MEDIUM_ISSUES=$(jq -r '.summary.medium_issues // 0' ${{ env.RESULTS_DIR }}/final/tool-counts.json)
+            LOW_ISSUES=$(jq -r '.summary.low_issues // 0' ${{ env.RESULTS_DIR }}/final/tool-counts.json)
+          else
+            # Fallback to basic counting if aggregation script fails
+            TOTAL_ISSUES=0
+            CRITICAL_ISSUES=0
+            HIGH_ISSUES=0
+            MEDIUM_ISSUES=0
+            LOW_ISSUES=0
+            
+            # Count issues from Bandit
+            if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" ]; then
+              BANDIT_HIGH=$(jq '[.results[] | select(.issue_severity == "HIGH")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" 2>/dev/null || echo "0")
+              BANDIT_MEDIUM=$(jq '[.results[] | select(.issue_severity == "MEDIUM")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" 2>/dev/null || echo "0")
+              HIGH_ISSUES=$((HIGH_ISSUES + BANDIT_HIGH))
+              MEDIUM_ISSUES=$((MEDIUM_ISSUES + BANDIT_MEDIUM))
+              echo "📊 Bandit: $BANDIT_HIGH high, $BANDIT_MEDIUM medium"
+            fi
+            
+            # Count issues from Slither
+            if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" ]; then
+              SLITHER_HIGH=$(jq '[.results.detectors[] | select(.impact == "High")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" 2>/dev/null || echo "0")
+              SLITHER_MEDIUM=$(jq '[.results.detectors[] | select(.impact == "Medium")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" 2>/dev/null || echo "0")
+              HIGH_ISSUES=$((HIGH_ISSUES + SLITHER_HIGH))
+              MEDIUM_ISSUES=$((MEDIUM_ISSUES + SLITHER_MEDIUM))
+              echo "📊 Slither: $SLITHER_HIGH high, $SLITHER_MEDIUM medium"
+            fi
+            
+            # Count issues from Safety
+            if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/safety/results.json" ]; then
+              SAFETY_VULNS=$(jq '.vulnerabilities | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/safety/results.json" 2>/dev/null || echo "0")
+              CRITICAL_ISSUES=$((CRITICAL_ISSUES + SAFETY_VULNS))
+              echo "📊 Safety: $SAFETY_VULNS vulnerabilities"
+            fi
+            
+            # Calculate total
+            TOTAL_ISSUES=$((CRITICAL_ISSUES + HIGH_ISSUES + MEDIUM_ISSUES + LOW_ISSUES))
           fi
-          
-          # Count issues from Slither
-          if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" ]; then
-            SLITHER_HIGH=$(jq '[.results.detectors[] | select(.impact == "High")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" 2>/dev/null || echo "0")
-            SLITHER_MEDIUM=$(jq '[.results.detectors[] | select(.impact == "Medium")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" 2>/dev/null || echo "0")
-            HIGH_ISSUES=$((HIGH_ISSUES + SLITHER_HIGH))
-            MEDIUM_ISSUES=$((MEDIUM_ISSUES + SLITHER_MEDIUM))
-            echo "📊 Slither: $SLITHER_HIGH high, $SLITHER_MEDIUM medium"
-          fi
-          
-          # Count issues from Safety
-          if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/safety/results.json" ]; then
-            SAFETY_VULNS=$(jq '.vulnerabilities | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/safety/results.json" 2>/dev/null || echo "0")
-            CRITICAL_ISSUES=$((CRITICAL_ISSUES + SAFETY_VULNS))
-            echo "📊 Safety: $SAFETY_VULNS vulnerabilities"
-          fi
-          
-          # Calculate total
-          TOTAL_ISSUES=$((CRITICAL_ISSUES + HIGH_ISSUES + MEDIUM_ISSUES + LOW_ISSUES))
           
           echo "📊 Total issues: $TOTAL_ISSUES (Critical: $CRITICAL_ISSUES, High: $HIGH_ISSUES, Medium: $MEDIUM_ISSUES, Low: $LOW_ISSUES)"
           
