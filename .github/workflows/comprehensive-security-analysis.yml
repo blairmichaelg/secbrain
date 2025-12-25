@@ -800,8 +800,8 @@ jobs:
             "analysis_completed": {
               "python_static": "${{ needs.python-static-analysis.result }}",
               "solidity_static": "${{ needs.solidity-static-analysis.result }}",
-              "fuzzing": "${{ needs.foundry-fuzzing.result }}",
-              "ai_analysis": "${{ needs.ai-engineer-analysis.result }}"
+              "fuzzing": "unknown",
+              "ai_analysis": "unknown"
             }
           }
           EOF
