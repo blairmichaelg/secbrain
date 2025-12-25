@@ -75,9 +75,32 @@ def count_safety_issues(results: dict[str, Any]) -> tuple[int, int, int, int]:
     if not results or "vulnerabilities" not in results:
         return 0, 0, 0, 0
     
-    # All dependency vulnerabilities are considered critical
-    critical = len(results["vulnerabilities"])
-    return critical, 0, 0, 0
+    critical = 0
+    high = 0
+    medium = 0
+    low = 0
+    
+    # Safety reports vulnerabilities with various attributes
+    # We classify based on CVE severity if available, otherwise treat as high
+    for vuln in results["vulnerabilities"]:
+        # Check for severity indicators in the advisory or CVE data
+        advisory = vuln.get("advisory", "").lower()
+        cve = vuln.get("cve", "").lower()
+        
+        # Look for severity keywords
+        if "critical" in advisory or "critical" in cve:
+            critical += 1
+        elif "high" in advisory or "high" in cve:
+            high += 1
+        elif "medium" in advisory or "moderate" in cve:
+            medium += 1
+        elif "low" in advisory or "low" in cve:
+            low += 1
+        else:
+            # Default to high severity for dependency vulnerabilities without explicit severity
+            high += 1
+    
+    return critical, high, medium, low
 
 
 def count_semgrep_issues(results: dict[str, Any]) -> tuple[int, int, int, int]:
@@ -168,9 +191,12 @@ def aggregate_results(artifacts_dir: str) -> dict[str, Any]:
         tool_results["safety"] = {
             "available": True,
             "critical": crit,
-            "vulnerabilities": crit,
+            "high": high,
+            "medium": med,
+            "low": low,
+            "total_vulnerabilities": crit + high + med + low,
         }
-        print(f"✅ Safety: {crit} vulnerabilities", file=sys.stderr)
+        print(f"✅ Safety: {crit} critical, {high} high, {med} medium, {low} low", file=sys.stderr)
     else:
         tool_results["safety"] = {"available": False}
         print("⚠️  Safety results not found", file=sys.stderr)

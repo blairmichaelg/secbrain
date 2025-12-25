@@ -73,9 +73,11 @@ jobs:
       - name: Validate target repository URL
         run: |
           # Basic URL validation to prevent command injection
-          if ! echo "${{ inputs.target_repo }}" | grep -qE '^https://github\.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9._-]+/?$'; then
+          # GitHub repo names: alphanumeric, hyphens, underscores (no dots in repo names)
+          if ! echo "${{ inputs.target_repo }}" | grep -qE '^https://github\.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+/?$'; then
             echo "❌ Invalid repository URL format"
             echo "Expected: https://github.com/owner/repo"
+            echo "Repository names can only contain letters, numbers, hyphens, and underscores"
             exit 1
           fi
           echo "✅ Repository URL validated"
@@ -224,10 +226,11 @@ jobs:
           SLITHER_ARGS="--json ${{ env.RESULTS_DIR }}/slither/slither-results.json"
           
           if [ "${{ inputs.analysis_depth }}" = "quick" ]; then
-            SLITHER_ARGS="$SLITHER_ARGS --exclude-low --exclude-informational"
-          elif [ "${{ inputs.analysis_depth }}" = "deep" ]; then
-            SLITHER_ARGS="$SLITHER_ARGS --exclude-optimization"
+            SLITHER_ARGS="$SLITHER_ARGS --exclude-low --exclude-informational --exclude-optimization"
+          elif [ "${{ inputs.analysis_depth }}" = "standard" ]; then
+            SLITHER_ARGS="$SLITHER_ARGS --exclude-informational --exclude-optimization"
           fi
+          # For deep mode, include all checks (no exclusions)
           
           slither . $SLITHER_ARGS || true
           slither . --print human-summary > ${{ env.RESULTS_DIR }}/slither/summary.txt 2>&1 || true
