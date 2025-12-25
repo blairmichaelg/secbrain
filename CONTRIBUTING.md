@@ -43,7 +43,7 @@ python -m pip install -e ".[dev]"
 
 ## Git Workflow
 
-> 📌 **Updated Workflow**: This repository now uses a simplified single-branch workflow. See [BRANCH-STRATEGY.md](BRANCH-STRATEGY.md) for details.
+> 📌 **Updated Workflow**: This repository now uses a simplified single-branch workflow where all work happens on `main`.
 
 ### Simplified Approach
 
