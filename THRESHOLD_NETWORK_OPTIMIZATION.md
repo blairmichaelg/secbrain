@@ -96,7 +96,7 @@ SecBrain has been thoroughly optimized for finding high-severity vulnerabilities
 
 ### 1. Threshold Network Specific Patterns (`threshold_network_patterns.py`)
 
-**17 Critical Vulnerability Patterns** mapped to Immunefi severity levels (5 new in 2024-2025):
+**18 Critical Vulnerability Patterns** mapped to Immunefi severity levels (6 new in 2024-2025):
 
 #### tBTC Bridge Patterns (Critical - up to $1M bounty)
 - **Bitcoin Peg Manipulation** - SPV proof forgery, optimistic minting exploits
@@ -108,6 +108,7 @@ SecBrain has been thoroughly optimized for finding high-severity vulnerabilities
 #### Threshold Cryptography Patterns (Critical - up to $1M bounty)
 - **Threshold Signature Manipulation** - Bypass multi-party signing requirements
 - **DKG Protocol Attack** - Compromise distributed key generation
+- **DKG Threshold Raising** - **NEW (Jan 2024)** - Polynomial degree validation vulnerability causing permanent fund freezing
 - **Operator Collusion** - Threshold bypass through operator compromise
 - **Signing Group Corruption** - Manipulate group selection/formation
 - **Random Beacon Manipulation** - Attack randomness source
@@ -136,10 +137,10 @@ SecBrain has been thoroughly optimized for finding high-severity vulnerabilities
 from secbrain.agents.threshold_network_patterns import ThresholdNetworkPatterns
 
 # Get all patterns
-patterns = ThresholdNetworkPatterns.get_all_patterns()  # 17 patterns (up from 12)
+patterns = ThresholdNetworkPatterns.get_all_patterns()  # 18 patterns (up from 12)
 
 # Get critical-only patterns
-critical = ThresholdNetworkPatterns.get_critical_patterns()  # 15 patterns (up from 10)
+critical = ThresholdNetworkPatterns.get_critical_patterns()  # 16 patterns (up from 10)
 
 # Get patterns for specific contract
 tbtc_patterns = ThresholdNetworkPatterns.get_patterns_for_contract("TBTC")
@@ -529,9 +530,9 @@ Based on Immunefi program and real exploits:
 SecBrain is now thoroughly optimized for Threshold Network bug bounty hunting with **December 2025 enhancements**:
 
 ### Core Capabilities
-- ✅ **88 total vulnerability types** (up from 58, +52% coverage)
-- ✅ **17 Threshold Network specific patterns** (up from 12, +42% coverage)
-- ✅ **11 Immunefi vulnerability classes** with $2B+ in real exploit data
+- ✅ **89 total vulnerability types** (up from 58, +53% coverage)
+- ✅ **18 Threshold Network specific patterns** (up from 12, +50% coverage)
+- ✅ **12 Immunefi vulnerability classes** with $2B+ in real exploit data
 - ✅ **Automatic severity classification** per Immunefi V2.3
 - ✅ **3x hypothesis coverage** for Threshold contracts (15 vs 5)
 - ✅ **Detection priority system** (1-10 scale)
@@ -539,6 +540,7 @@ SecBrain is now thoroughly optimized for Threshold Network bug bounty hunting wi
 - ✅ **Specialized research methods** for Threshold Network
 
 ### 2024-2025 Enhancements
+- ✅ **DKG Threshold-Raising vulnerability** - **NEW (Jan 2024)** - FROST/Trail of Bits documented attack
 - ✅ **Account abstraction (EIP-4337) patterns** - 4 new vulnerability types
 - ✅ **Intent-based protocol patterns** - 4 new vulnerability types
 - ✅ **Restaking protocol patterns** - 5 new vulnerability types
@@ -550,7 +552,7 @@ SecBrain is now thoroughly optimized for Threshold Network bug bounty hunting wi
 ### Performance Improvements
 - ✅ **Optimized hypothesis generation** - 30% faster pattern matching
 - ✅ **Smarter confidence calculation** - Multi-factor weighted scoring
-- ✅ **Better pattern coverage** - 17 Threshold patterns, 11 Immunefi classes
+- ✅ **Better pattern coverage** - 18 Threshold patterns, 12 Immunefi classes
 - ✅ **Real-world validation** - All patterns based on actual exploits
 
 **Expected Result**: Significantly higher probability of discovering critical vulnerabilities worth up to $1,000,000 in the Threshold Network bug bounty program, with improved accuracy and reduced false positives through weighted confidence scoring.

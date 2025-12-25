@@ -34,6 +34,7 @@ class ThresholdVulnerabilityPattern(Enum):
     # Threshold cryptography vulnerabilities
     THRESHOLD_SIGNATURE_MANIPULATION = "threshold_signature_manipulation"
     DKG_PROTOCOL_ATTACK = "dkg_protocol_attack"  # Distributed Key Generation
+    DKG_THRESHOLD_RAISING = "dkg_threshold_raising"  # Polynomial degree validation vulnerability
     OPERATOR_COLLUSION = "operator_collusion"
     SIGNING_GROUP_CORRUPTION = "signing_group_corruption"
     RANDOM_BEACON_MANIPULATION = "random_beacon_manipulation"
@@ -253,6 +254,46 @@ class ThresholdNetworkPatterns:
                 "https://docs.threshold.network/staking-and-running-a-node/random-beacon-overview",
             ],
             affected_contracts=["WalletRegistry", "RandomBeacon", "SortitionPool"],
+        ),
+        "dkg_threshold_raising": ThresholdSecurityPattern(
+            pattern_type=ThresholdVulnerabilityPattern.DKG_THRESHOLD_RAISING,
+            severity=ImmunefiSeverity.CRITICAL,
+            description="Malicious operator silently raises DKG threshold by submitting polynomial with incorrect degree, causing permanent fund freezing",
+            immunefi_category="Permanent freezing of funds",
+            max_bounty_usd=500_000,
+            detection_heuristics=[
+                "submitDkgResult",
+                "validateDkgResult",
+                "commitment",
+                "commitment.length",
+                "polynomial degree",
+                "Feldman VSSS",
+                "groupThreshold",
+                "groupPubKey",
+            ],
+            exploitation_steps=[
+                "1. During DKG setup with expected (t, n) = (51, 100) threshold",
+                "2. Malicious operator generates polynomial with degree > t (e.g., degree 99)",
+                "3. Submit DKG result with Feldman VSSS commitment of incorrect length",
+                "4. If commitment.length validation is missing, result passes validation",
+                "5. Threshold is silently elevated (e.g., from 51-of-100 to 100-of-100)",
+                "6. Wallet becomes unusable as all operators needed for signing (impossible or frozen)",
+                "7. All funds in wallet are permanently frozen",
+            ],
+            mitigation_strategies=[
+                "Validate commitment.length == groupThreshold + 1 in submitDkgResult",
+                "Verify polynomial degree matches expected threshold",
+                "Add explicit check: require(commitment.length == groupThreshold + 1, 'Invalid polynomial degree')",
+                "Follow FROST fix: commit to exact polynomial degree during DKG",
+                "Add integration test for malicious commitment with wrong degree",
+            ],
+            references=[
+                "https://zfnd.org/pedersen-dkg-vulnerability-in-frost-distributed-key-generation-successfully-remediated/",
+                "https://safeheron.com/blog/dkg-threshold-raising-vulnerability/",
+                "https://github.com/ZcashFoundation/frost/commit/fixing-dkg-degree",
+                "Trail of Bits security analysis (Jan 2024)",
+            ],
+            affected_contracts=["WalletRegistry", "EcdsaDkgValidator", "EcdsaDkg"],
         ),
         "operator_collusion": ThresholdSecurityPattern(
             pattern_type=ThresholdVulnerabilityPattern.OPERATOR_COLLUSION,

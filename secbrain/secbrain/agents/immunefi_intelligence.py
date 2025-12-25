@@ -356,6 +356,33 @@ class ImmunefiIntelligence:
                 "EigenLayer Testnet ($50K, 2024) - Delegation bypass",
             ],
         ),
+        "dkg_threshold_raising": ImmunefiVulnerabilityClass(
+            name="DKG Threshold-Raising Vulnerability",
+            severity="critical",
+            typical_bounty_range=(100_000, 500_000),
+            description="Missing polynomial degree validation in DKG allows malicious operators to permanently freeze funds",
+            common_patterns=[
+                "Missing commitment.length validation",
+                "No polynomial degree check",
+                "submitDkgResult without degree validation",
+                "Feldman VSSS commitment verification bypass",
+                "Threshold parameter manipulation",
+                "Distributed key generation validation flaws",
+            ],
+            detection_techniques=[
+                "Check for commitment.length == threshold + 1 validation",
+                "Verify polynomial degree validation in DKG result submission",
+                "Test submitDkgResult with malicious commitment lengths",
+                "Analyze Feldman VSSS commitment verification",
+                "Search for groupThreshold validation in DKG flow",
+                "Look for 'polynomial degree' validation in code",
+            ],
+            recent_examples=[
+                "FROST/Zcash Foundation (Disclosed Jan 3, 2024) - DKG degree validation missing",
+                "GG18/GG20/CMP Protocols (2024) - Safeheron disclosed same vulnerability",
+                "Trail of Bits analysis (Jan 2024) - Documented DKG threshold raising attack",
+            ],
+        ),
     }
 
     @classmethod
@@ -376,6 +403,7 @@ class ImmunefiIntelligence:
                 "access_control",
                 "proxy_patterns",
                 "restaking_protocols",
+                "dkg_threshold_raising",
             ],
             "defi_vault": [
                 "erc4626_vault_attacks",
