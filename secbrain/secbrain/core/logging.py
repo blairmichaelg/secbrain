@@ -1,4 +1,12 @@
-"""Structured logging for SecBrain runs."""
+"""Structured logging for SecBrain runs.
+
+This module provides structured logging capabilities with:
+- Integration with structlog for structured output
+- Fallback to stdlib logging when structlog unavailable
+- Context-aware logging with bound parameters
+- Event tracking and phase transitions
+- JSON-formatted log output
+"""
 
 from __future__ import annotations
 

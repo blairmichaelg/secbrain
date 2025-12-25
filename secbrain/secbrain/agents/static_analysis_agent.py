@@ -1,4 +1,11 @@
-"""Static analysis agent - integrates scanners for source code analysis."""
+"""Static analysis agent - integrates scanners for source code analysis.
+
+This module provides static code analysis capabilities including:
+- Integration with security scanners (Slither, Semgrep, etc.)
+- Source code vulnerability pattern detection
+- Correlation with dynamic analysis findings
+- Code quality and security metrics collection
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,11 @@
-"""Circuit breaker for external service calls."""
+"""Circuit breaker for external service calls.
+
+This module implements the circuit breaker pattern to prevent cascading failures:
+- Automatic failure detection and fast-fail behavior
+- State management (CLOSED, OPEN, HALF_OPEN)
+- Configurable thresholds and timeouts
+- Service health monitoring and recovery
+"""
 
 from __future__ import annotations
 

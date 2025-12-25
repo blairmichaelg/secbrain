@@ -1,4 +1,12 @@
-"""Insights aggregator - collects data from workspace."""
+"""Insights aggregator - collects data from workspace.
+
+This module aggregates and analyzes data from SecBrain workspace including:
+- Run summary collection and analysis
+- Learning data aggregation
+- Meta-metrics tracking
+- Phase data compilation
+- Exploit attempt history
+"""
 
 from __future__ import annotations
 

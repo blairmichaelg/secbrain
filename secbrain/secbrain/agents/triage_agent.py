@@ -1,4 +1,12 @@
-"""Triage agent - clusters and prioritizes findings."""
+"""Triage agent - clusters and prioritizes findings.
+
+This module handles vulnerability finding triage including:
+- Economic analysis and profitability assessment
+- Finding clustering and deduplication
+- Priority scoring and ranking
+- Gas cost analysis for exploit attempts
+- Severity-based classification
+"""
 
 from __future__ import annotations
 

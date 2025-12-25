@@ -1,4 +1,11 @@
-"""Checkpoint and resume capability for long-running workflows."""
+"""Checkpoint and resume capability for long-running workflows.
+
+This module provides checkpoint management for SecBrain workflows including:
+- Saving and restoring workflow state
+- Phase progress tracking
+- Incremental data persistence
+- Resume capability for interrupted runs
+"""
 
 from __future__ import annotations
 
