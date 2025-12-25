@@ -7,6 +7,7 @@ helping discover edge cases and corner cases that traditional tests might miss.
 from __future__ import annotations
 
 import json
+import math
 from typing import Any
 
 from hypothesis import given
