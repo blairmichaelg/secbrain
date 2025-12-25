@@ -39,6 +39,8 @@ async def test_hypothesis_enhancer_initialization():
     enhancer = HypothesisEnhancer(orch)
 
     assert enhancer.research_orch == orch
+    # Test backward compatibility
+    assert enhancer.research == orch
 
 
 @pytest.mark.asyncio
@@ -229,3 +231,229 @@ async def test_refine_from_failures_access():
     assert access_refined is not None
     # Confidence should be significantly lowered
     assert access_refined["confidence"] < 0.6
+
+
+@pytest.mark.asyncio
+async def test_enhance_contract_hypotheses_threshold_network():
+    """Test enhancing hypotheses for Threshold Network contracts."""
+    run_context = MockRunContext()
+    research_client = MockResearchClient()
+    orch = ResearchOrchestrator(run_context, research_client, priority_threshold=0)
+    enhancer = HypothesisEnhancer(orch)
+
+    static_hyps = [
+        {
+            "vuln_type": "bridge_attack",
+            "confidence": 0.5,
+            "contract_address": "0x123",
+        }
+    ]
+
+    enhanced = await enhancer.enhance_contract_hypotheses(
+        contract_metadata={
+            "protocol_type": "threshold_network",
+            "name": "tBTC Bridge",
+            "functions": ["deposit", "withdraw", "relay"],
+        },
+        static_hypotheses=static_hyps,
+    )
+
+    # Threshold Network patterns should enhance hypotheses
+    assert len(enhanced) == 1
+
+
+@pytest.mark.asyncio
+async def test_enhance_with_immunefi_intelligence():
+    """Test Immunefi intelligence enhancement."""
+    run_context = MockRunContext()
+    research_client = MockResearchClient()
+    orch = ResearchOrchestrator(run_context, research_client)
+    enhancer = HypothesisEnhancer(orch)
+
+    hypotheses = [
+        {
+            "vuln_type": "reentrancy",
+            "confidence": 0.6,
+            "function_signature": "withdraw(uint256)",
+        }
+    ]
+
+    enhanced = enhancer._enhance_with_immunefi_intelligence(
+        protocol_type="defi_vault",
+        contract_name="TestVault",
+        functions=["withdraw"],
+        hypotheses=hypotheses,
+    )
+
+    assert len(enhanced) == 1
+    assert enhanced[0]["confidence"] > 0.6
+    assert "detection_priority" in enhanced[0]
+
+
+@pytest.mark.asyncio
+async def test_extract_vulnerability_types():
+    """Test extracting vulnerability types from research text."""
+    run_context = MockRunContext()
+    research_client = MockResearchClient()
+    orch = ResearchOrchestrator(run_context, research_client)
+    enhancer = HypothesisEnhancer(orch)
+
+    research_text = "This contract is vulnerable to reentrancy attacks and oracle manipulation"
+    vuln_types = enhancer._extract_vulnerability_types(research_text)
+
+    assert "reentrancy" in vuln_types
+    assert "oracle" in vuln_types
+
+
+@pytest.mark.asyncio
+async def test_extract_patterns_from_research():
+    """Test extracting patterns from research text."""
+    run_context = MockRunContext()
+    research_client = MockResearchClient()
+    orch = ResearchOrchestrator(run_context, research_client)
+    enhancer = HypothesisEnhancer(orch)
+
+    research_text = "The contract should validate user inputs. Common attack: flash loan manipulation."
+    patterns = enhancer._extract_patterns_from_research(research_text)
+
+    assert isinstance(patterns, list)
+    assert len(patterns) > 0
+
+
+@pytest.mark.asyncio
+async def test_categorize_failure():
+    """Test failure categorization."""
+    run_context = MockRunContext()
+    research_client = MockResearchClient()
+    orch = ResearchOrchestrator(run_context, research_client)
+    enhancer = HypothesisEnhancer(orch)
+
+    # Test revert categorization
+    revert_failure = {"error": "Transaction reverted"}
+    category = enhancer._categorize_failure(revert_failure)
+    assert category == "revert"
+
+    # Test access control categorization
+    access_failure = {"error": "Not authorized"}
+    category = enhancer._categorize_failure(access_failure)
+    assert category == "access_control"
+
+    # Test balance categorization
+    balance_failure = {"error": "Insufficient balance"}
+    category = enhancer._categorize_failure(balance_failure)
+    assert category == "insufficient_balance"
+
+    # Test timing constraint
+    timing_failure = {"error": "Deadline exceeded"}
+    category = enhancer._categorize_failure(timing_failure)
+    assert category == "timing_constraint"
+
+    # Test arithmetic
+    overflow_failure = {"error": "Arithmetic overflow"}
+    category = enhancer._categorize_failure(overflow_failure)
+    assert category == "arithmetic"
+
+
+@pytest.mark.asyncio
+async def test_refine_from_failures_multiple_types():
+    """Test refining from failures with multiple error types."""
+    run_context = MockRunContext()
+    research_client = MockResearchClient()
+    orch = ResearchOrchestrator(run_context, research_client, priority_threshold=0)
+    enhancer = HypothesisEnhancer(orch)
+
+    failed_attempts = [
+        {"error": "Transaction reverted"},
+        {"error": "Insufficient balance"},
+    ]
+
+    refined = await enhancer.refine_from_failures(
+        failed_attempts=failed_attempts,
+        original_hypothesis={
+            "id": "hyp-multi",
+            "vuln_type": "flash_loan",
+            "confidence": 0.7,
+        },
+    )
+
+    # Should generate refinements for both error types
+    assert len(refined) > 0
+
+
+@pytest.mark.asyncio
+async def test_refine_from_failures_missing_keys():
+    """Test refining from failures with missing required keys."""
+    run_context = MockRunContext()
+    research_client = MockResearchClient()
+    orch = ResearchOrchestrator(run_context, research_client)
+    enhancer = HypothesisEnhancer(orch)
+
+    failed_attempts = [{"error": "Transaction reverted"}]
+
+    # Missing 'id' key
+    refined = await enhancer.refine_from_failures(
+        failed_attempts=failed_attempts,
+        original_hypothesis={"vuln_type": "reentrancy"},
+    )
+
+    assert len(refined) == 0
+
+
+@pytest.mark.asyncio
+async def test_enhance_contract_hypotheses_with_high_confidence():
+    """Test that high-confidence hypotheses get exploitation guidance."""
+    run_context = MockRunContext()
+    research_client = MockResearchClient(
+        research_response={
+            "answer": "Reentrancy can be exploited by calling back before state updates",
+            "confidence": 0.9,
+            "sources": ["research1", "research2", "research3"],
+        }
+    )
+    orch = ResearchOrchestrator(run_context, research_client, priority_threshold=0)
+    enhancer = HypothesisEnhancer(orch)
+
+    static_hyps = [
+        {
+            "vuln_type": "reentrancy",
+            "confidence": 0.75,  # Above HIGH_CONFIDENCE_THRESHOLD (0.7)
+            "contract_address": "0x123",
+        }
+    ]
+
+    enhanced = await enhancer.enhance_contract_hypotheses(
+        contract_metadata={"protocol_type": "defi_vault", "functions": ["withdraw"]},
+        static_hypotheses=static_hyps,
+    )
+
+    assert len(enhanced) == 1
+    # High-confidence hypotheses should get exploitation guidance
+    assert "exploitation_guidance" in enhanced[0] or enhanced[0]["confidence"] > 0.75
+
+
+@pytest.mark.asyncio
+async def test_enhance_contract_hypotheses_generic_protocol():
+    """Test enhancing hypotheses for generic protocol type."""
+    run_context = MockRunContext()
+    research_client = MockResearchClient()
+    orch = ResearchOrchestrator(run_context, research_client, priority_threshold=0)
+    enhancer = HypothesisEnhancer(orch)
+
+    static_hyps = [
+        {
+            "vuln_type": "access_control",
+            "confidence": 0.5,
+        }
+    ]
+
+    enhanced = await enhancer.enhance_contract_hypotheses(
+        contract_metadata={
+            "name": "GenericContract",
+            "functions": ["transfer", "approve"],
+        },
+        static_hypotheses=static_hyps,
+    )
+
+    # Should still enhance even for generic protocol
+    assert len(enhanced) == 1
+    assert "detection_priority" in enhanced[0]
