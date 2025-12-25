@@ -8,14 +8,14 @@ This PR comprehensively optimizes SecBrain for bug hunting in the Threshold Netw
 
 ### 1. New Modules Created
 
-#### `threshold_network_patterns.py` (542 lines)
+#### `threshold_network_patterns.py` (571 lines)
 - 12 detailed vulnerability patterns specific to Threshold Network
 - Covers tBTC bridge, threshold cryptography, cross-chain bridges, staking, governance
 - Each pattern includes: severity, max bounty, detection heuristics, exploitation steps, mitigation strategies
 - Immunefi severity classification (Critical/High/Medium/Low)
 - Contract-specific pattern mapping (TBTC, Bridge, WalletRegistry, etc.)
 
-#### `immunefi_intelligence.py` (408 lines)
+#### `immunefi_intelligence.py` (469 lines)
 - 8 major vulnerability classes based on real Immunefi exploits (2022-2024)
 - $2B+ in real exploit data (Wormhole, Ronin, Nomad, Euler, etc.)
 - Automatic severity classification per Immunefi V2.3
@@ -88,8 +88,8 @@ This PR comprehensively optimizes SecBrain for bug hunting in the Threshold Netw
 ## Files Changed
 
 ### New Files (3)
-- `secbrain/secbrain/agents/threshold_network_patterns.py` (542 lines)
-- `secbrain/secbrain/agents/immunefi_intelligence.py` (408 lines)
+- `secbrain/secbrain/agents/threshold_network_patterns.py` (571 lines)
+- `secbrain/secbrain/agents/immunefi_intelligence.py` (469 lines)
 - `THRESHOLD_NETWORK_OPTIMIZATION.md` (450 lines)
 
 ### Modified Files (4)

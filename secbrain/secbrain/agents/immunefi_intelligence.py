@@ -320,7 +320,7 @@ class ImmunefiIntelligence:
             "steal funds",
             "drain",
             "protocol insolvency",
-            "permanent freez",
+            "permanent freezing",
             "loss of funds",
             "unauthorized withdrawal",
         ]
@@ -334,7 +334,7 @@ class ImmunefiIntelligence:
         # High severity indicators
         high_indicators = [
             "unclaimed yield",
-            "temporary freez",
+            "temporary freezing",
             "freezing of funds for",
         ]
         if any(indicator in impact_lower for indicator in high_indicators):

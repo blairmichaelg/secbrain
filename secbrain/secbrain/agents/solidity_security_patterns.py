@@ -587,14 +587,14 @@ contract SecureBridge {
         require(signatures.length >= 3, "Need at least 3 signatures");
         
         address[] memory signers = new address[](signatures.length);
+        mapping(address => bool) seenSigners;
         for (uint256 i = 0; i < signatures.length; i++) {
             address signer = ECDSA.recover(messageHash, signatures[i]);
             require(trustedRelayers[signer], "Invalid signer");
             
-            // Prevent duplicate signers
-            for (uint256 j = 0; j < i; j++) {
-                require(signers[j] != signer, "Duplicate signer");
-            }
+            // Prevent duplicate signers with O(1) lookup
+            require(!seenSigners[signer], "Duplicate signer");
+            seenSigners[signer] = true;
             signers[i] = signer;
         }
         
@@ -966,13 +966,16 @@ contract SecureGovernanceToken is ERC20Votes {
     function _getVotes(
         address account,
         uint256 blockNumber,
-        bytes memory /*params*/
-    ) internal view returns (uint256) {
-        // Check if delegation is old enough
-        if (block.timestamp < delegationTimestamp[account] + DELEGATION_DELAY) {
-            return 0;  // Votes not active yet
+        bytes memory params
+    ) internal view override returns (uint256) {
+        // Only enforce the delegation delay for current block queries.
+        // Historical snapshots cannot reliably enforce a time-based delay using the current timestamp.
+        if (blockNumber == block.number) {
+            if (block.timestamp < delegationTimestamp[account] + DELEGATION_DELAY) {
+                return 0;  // Votes not active yet
+            }
         }
-        return getPastVotes(account, blockNumber);
+        return super._getVotes(account, blockNumber, params);
     }
 }
 ''',
