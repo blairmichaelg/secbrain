@@ -457,9 +457,9 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ## 📝 Changelog
 
-### v1.0 (2024)
+### v1.0 (2025)
 - Initial release
-- 12+ tool integration
+- 13+ tool integration
 - AI-powered analysis
 - Multi-phase execution
 - Adaptive depth configuration

@@ -136,8 +136,19 @@ jobs:
             HAS_SOLIDITY="true"
             echo "✅ Detected Solidity contracts"
             
-            # Try to extract Solidity version
-            SOL_VERSION=$(grep -h "pragma solidity" $(find . -name "*.sol" -type f | head -1) | head -1 | sed 's/.*solidity[^0-9]*\([0-9.^]*\).*/\1/' || echo "unknown")
+            # Try to extract Solidity version with better error handling
+            SOL_VERSION=""
+            FIRST_SOL_FILE=$(find . -name "*.sol" -type f | head -n 1)
+            if [ -n "$FIRST_SOL_FILE" ]; then
+              PRAGMA_LINE=$(grep -hE 'pragma[[:space:]]+solidity' "$FIRST_SOL_FILE" | head -n 1 || true)
+              if [ -n "$PRAGMA_LINE" ]; then
+                SOL_VERSION=$(printf '%s\n' "$PRAGMA_LINE" | sed -E 's/.*pragma[[:space:]]+solidity[[:space:]]+([^;]+);.*/\1/' || true)
+              fi
+            fi
+            if [ -z "$SOL_VERSION" ]; then
+              echo "⚠️ Unable to detect Solidity version from pragma, defaulting to 'unknown'"
+              SOL_VERSION="unknown"
+            fi
             SOLIDITY_VERSION=$SOL_VERSION
           fi
           
@@ -146,13 +157,15 @@ jobs:
             HAS_PYTHON="true"
             echo "✅ Detected Python code"
             
-            # Try to extract Python version from config
+            # Try to extract Python version from config - use 3.9 as conservative default
             if [ -f "pyproject.toml" ]; then
-              PYTHON_VERSION=$(grep "requires-python" pyproject.toml | sed 's/.*"\([^"]*\)".*/\1/' || echo "3.11")
+              PYTHON_VERSION=$(grep "requires-python" pyproject.toml | sed 's/.*"\([^"]*\)".*/\1/' || echo "3.9")
             elif [ -f ".python-version" ]; then
               PYTHON_VERSION=$(cat .python-version)
+            elif [ -f "setup.py" ]; then
+              PYTHON_VERSION=$(grep -E "Programming Language :: Python :: [0-9]+\.[0-9]+" setup.py | head -1 | sed 's/.*Python :: \([0-9]\+\.[0-9]\+\).*/\1/' || echo "3.9")
             else
-              PYTHON_VERSION="3.11"
+              PYTHON_VERSION="3.9"  # Conservative default for broader compatibility
             fi
           fi
           
@@ -198,7 +211,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.TARGET_DIR }}
-          key: target-repo-${{ github.run_id }}-${{ github.run_attempt }}
+          # Include target repo URL in cache key for better reusability across runs
+          key: target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-${{ github.run_id }}
+          restore-keys: |
+            target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-
 
   # ============================================================================
   # Phase 2: Static Analysis (Parallel Execution)
@@ -215,7 +231,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.TARGET_DIR }}
-          key: target-repo-${{ github.run_id }}-${{ github.run_attempt }}
+          key: target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-${{ github.run_id }}
+          restore-keys: |
+            target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -285,7 +303,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.TARGET_DIR }}
-          key: target-repo-${{ github.run_id }}-${{ github.run_attempt }}
+          key: target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-${{ github.run_id }}
+          restore-keys: |
+            target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -375,16 +395,16 @@ jobs:
     name: ⚡ Foundry Fuzzing
     runs-on: ubuntu-latest
     needs: setup-and-recon
-    if: |
-      inputs.enable_fuzzing == true && 
-      needs.setup-and-recon.outputs.has_foundry == 'true'
-    timeout-minutes: ${{ inputs.analysis_depth == 'quick' && 15 || inputs.analysis_depth == 'standard' && 45 || 120 }}
+    if: inputs.enable_fuzzing == true && needs.setup-and-recon.outputs.has_foundry == 'true'
+    timeout-minutes: ${{ inputs.analysis_depth == 'quick' && 15 || (inputs.analysis_depth == 'standard' && 45 || 120) }}
     steps:
       - name: Restore target repository
         uses: actions/cache@v4
         with:
           path: ${{ env.TARGET_DIR }}
-          key: target-repo-${{ github.run_id }}-${{ github.run_attempt }}
+          key: target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-${{ github.run_id }}
+          restore-keys: |
+            target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -397,6 +417,9 @@ jobs:
           cd ${{ env.TARGET_DIR }}
           
           # Configure fuzz runs based on depth
+          # Quick: 256 runs (fast feedback, basic coverage)
+          # Standard: 1000 runs (balanced coverage and speed)
+          # Deep: 10000 runs (comprehensive edge case discovery)
           FUZZ_RUNS=256
           if [ "${{ inputs.analysis_depth }}" = "standard" ]; then
             FUZZ_RUNS=1000
@@ -438,7 +461,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.TARGET_DIR }}
-          key: target-repo-${{ github.run_id }}-${{ github.run_attempt }}
+          key: target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-${{ github.run_id }}
+          restore-keys: |
+            target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-
 
       - name: Install Echidna
         run: |
@@ -484,7 +509,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.TARGET_DIR }}
-          key: target-repo-${{ github.run_id }}-${{ github.run_attempt }}
+          key: target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-${{ github.run_id }}
+          restore-keys: |
+            target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-
 
       - name: Install Mythril
         run: |
@@ -497,9 +524,16 @@ jobs:
           cd ${{ env.TARGET_DIR }}
           
           # Limit to main contracts (not tests) to save time
+          # Use array to avoid subshell issues and prevent file overwrites
+          CONTRACT_COUNT=0
           find . -name "*.sol" -type f ! -name "*Test*" ! -path "*/test/*" | head -10 | while read sol_file; do
-            echo "Analyzing $sol_file with Mythril..."
-            myth analyze "$sol_file" -o json > "${{ env.RESULTS_DIR }}/mythril/$(basename $sol_file).json" 2>&1 || true
+            CONTRACT_COUNT=$((CONTRACT_COUNT + 1))
+            # Use full path hash to prevent basename collisions
+            OUTPUT_NAME=$(echo "$sol_file" | sha256sum | cut -d' ' -f1)
+            echo "Analyzing $sol_file with Mythril (output: ${OUTPUT_NAME}.json)..."
+            myth analyze "$sol_file" -o json > "${{ env.RESULTS_DIR }}/mythril/${OUTPUT_NAME}.json" 2>&1 || true
+            # Also save the mapping
+            echo "$sol_file -> ${OUTPUT_NAME}.json" >> "${{ env.RESULTS_DIR }}/mythril/file-mapping.txt"
           done
 
       - name: Upload Mythril results
@@ -529,7 +563,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.TARGET_DIR }}
-          key: target-repo-${{ github.run_id }}-${{ github.run_attempt }}
+          key: target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-${{ github.run_id }}
+          restore-keys: |
+            target-repo-${{ hashFiles(format('{0}', inputs.target_repo)) }}-
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -628,14 +664,16 @@ jobs:
           # Use the Python aggregation script for better accuracy
           python scripts/aggregate_results.py "${{ env.RESULTS_DIR }}/artifacts" > ${{ env.RESULTS_DIR }}/final/tool-counts.json || true
           
-          # Extract counts from the aggregation result
-          if [ -f "${{ env.RESULTS_DIR }}/final/tool-counts.json" ]; then
-            TOTAL_ISSUES=$(jq -r '.summary.total_issues // 0' ${{ env.RESULTS_DIR }}/final/tool-counts.json)
-            CRITICAL_ISSUES=$(jq -r '.summary.critical_issues // 0' ${{ env.RESULTS_DIR }}/final/tool-counts.json)
-            HIGH_ISSUES=$(jq -r '.summary.high_issues // 0' ${{ env.RESULTS_DIR }}/final/tool-counts.json)
-            MEDIUM_ISSUES=$(jq -r '.summary.medium_issues // 0' ${{ env.RESULTS_DIR }}/final/tool-counts.json)
-            LOW_ISSUES=$(jq -r '.summary.low_issues // 0' ${{ env.RESULTS_DIR }}/final/tool-counts.json)
+          # Validate JSON and extract counts from the aggregation result
+          if [ -f "${{ env.RESULTS_DIR }}/final/tool-counts.json" ] && jq empty "${{ env.RESULTS_DIR }}/final/tool-counts.json" >/dev/null 2>&1; then
+            TOTAL_ISSUES=$(jq -r '.summary.total_issues // 0' "${{ env.RESULTS_DIR }}/final/tool-counts.json")
+            CRITICAL_ISSUES=$(jq -r '.summary.critical_issues // 0' "${{ env.RESULTS_DIR }}/final/tool-counts.json")
+            HIGH_ISSUES=$(jq -r '.summary.high_issues // 0' "${{ env.RESULTS_DIR }}/final/tool-counts.json")
+            MEDIUM_ISSUES=$(jq -r '.summary.medium_issues // 0' "${{ env.RESULTS_DIR }}/final/tool-counts.json")
+            LOW_ISSUES=$(jq -r '.summary.low_issues // 0' "${{ env.RESULTS_DIR }}/final/tool-counts.json")
+            echo "✅ Using aggregation script results"
           else
+            echo "⚠️ Aggregation script output invalid or missing, falling back to basic counting"
             # Fallback to basic counting if aggregation script fails
             TOTAL_ISSUES=0
             CRITICAL_ISSUES=0
@@ -643,8 +681,8 @@ jobs:
             MEDIUM_ISSUES=0
             LOW_ISSUES=0
             
-            # Count issues from Bandit
-            if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" ]; then
+            # Count issues from Bandit with validation
+            if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" ] && jq empty "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" >/dev/null 2>&1; then
               BANDIT_HIGH=$(jq '[.results[] | select(.issue_severity == "HIGH")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" 2>/dev/null || echo "0")
               BANDIT_MEDIUM=$(jq '[.results[] | select(.issue_severity == "MEDIUM")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/bandit/results.json" 2>/dev/null || echo "0")
               HIGH_ISSUES=$((HIGH_ISSUES + BANDIT_HIGH))
@@ -652,8 +690,8 @@ jobs:
               echo "📊 Bandit: $BANDIT_HIGH high, $BANDIT_MEDIUM medium"
             fi
             
-            # Count issues from Slither
-            if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" ]; then
+            # Count issues from Slither with validation
+            if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" ] && jq empty "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" >/dev/null 2>&1; then
               SLITHER_HIGH=$(jq '[.results.detectors[] | select(.impact == "High")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" 2>/dev/null || echo "0")
               SLITHER_MEDIUM=$(jq '[.results.detectors[] | select(.impact == "Medium")] | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-solidity/slither/slither-results.json" 2>/dev/null || echo "0")
               HIGH_ISSUES=$((HIGH_ISSUES + SLITHER_HIGH))
@@ -661,8 +699,8 @@ jobs:
               echo "📊 Slither: $SLITHER_HIGH high, $SLITHER_MEDIUM medium"
             fi
             
-            # Count issues from Safety
-            if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/safety/results.json" ]; then
+            # Count issues from Safety with validation
+            if [ -f "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/safety/results.json" ] && jq empty "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/safety/results.json" >/dev/null 2>&1; then
               SAFETY_VULNS=$(jq '.vulnerabilities | length' "${{ env.RESULTS_DIR }}/artifacts/static-analysis-python/safety/results.json" 2>/dev/null || echo "0")
               CRITICAL_ISSUES=$((CRITICAL_ISSUES + SAFETY_VULNS))
               echo "📊 Safety: $SAFETY_VULNS vulnerabilities"
@@ -846,6 +884,7 @@ jobs:
 
       - name: Create GitHub Issue with Results
         uses: actions/github-script@v8
+        continue-on-error: true
         with:
           script: |
             const fs = require('fs');
@@ -858,23 +897,53 @@ jobs:
               reportBody = '# Analysis Report\n\nError loading report: ' + e.message;
             }
             
-            // Create issue
-            const issue = await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `🔒 Security Analysis: ${{ inputs.target_repo }} (${{ inputs.analysis_depth }})`,
-              body: reportBody,
-              labels: ['security-analysis', 'automated', '${{ inputs.analysis_depth }}-analysis', '${{ inputs.target_type }}']
-            });
+            // Ensure labels exist or use only existing ones
+            const requestedLabels = ['security-analysis', 'automated', '${{ inputs.analysis_depth }}-analysis', '${{ inputs.target_type }}'];
+            let labelsToUse = [];
             
-            console.log(`Created issue #${issue.data.number}`);
-            core.summary.addRaw(`\n## 📝 Issue Created\n\nSee [issue #${issue.data.number}](${issue.data.html_url}) for full report.`);
+            try {
+              // Get existing labels in the repository
+              const { data: existingLabels } = await github.rest.issues.listLabelsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100
+              });
+              
+              const existingLabelNames = new Set(existingLabels.map(l => l.name));
+              
+              // Only use labels that exist
+              labelsToUse = requestedLabels.filter(label => existingLabelNames.has(label));
+              
+              // If no matching labels, create basic ones
+              if (labelsToUse.length === 0) {
+                console.log('No matching labels found, creating issue without labels');
+              }
+            } catch (e) {
+              console.log('Could not fetch labels, creating issue without labels:', e.message);
+            }
+            
+            // Create issue
+            try {
+              const issue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🔒 Security Analysis: ${{ inputs.target_repo }} (${{ inputs.analysis_depth }})`,
+                body: reportBody,
+                labels: labelsToUse.length > 0 ? labelsToUse : []
+              });
+              
+              console.log(`Created issue #${issue.data.number}`);
+              core.summary.addRaw(`\n## 📝 Issue Created\n\nSee [issue #${issue.data.number}](${issue.data.html_url}) for full report.`);
+            } catch (e) {
+              console.error('Failed to create issue:', e.message);
+              core.summary.addRaw(`\n## ⚠️ Issue Creation Failed\n\nError: ${e.message}`);
+            }
 
       - name: Upload final aggregated results
         uses: actions/upload-artifact@v6
         with:
           name: comprehensive-analysis-results
-          path: ${{ env.RESULTS_DIR }}/final/**/*
+          path: ${{ env.RESULTS_DIR }}/final/
           retention-days: 90
 
       - name: Generate workflow summary
