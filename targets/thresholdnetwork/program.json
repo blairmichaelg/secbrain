@@ -1,0 +1,81 @@
+{
+  "name": "Threshold Network",
+  "platform": "Immunefi",
+  "bounty_range": "Up to $1,000,000",
+  "program_url": "https://immunefi.com/bug-bounty/thresholdnetwork/",
+  "in_scope": [
+    "Direct theft of any user funds, whether at-rest or in-motion, other than unclaimed yield (Critical)",
+    "Permanent freezing of funds (Critical)",
+    "Protocol insolvency (Critical)",
+    "Theft of unclaimed yield (High)",
+    "Permanent freezing of unclaimed yield (High)",
+    "Temporary freezing of funds for at least 1 hour (High)",
+    "Smart contract unable to operate due to lack of token funds (Medium)",
+    "Block stuffing (Medium)",
+    "Griefing (e.g. no profit motive for an attacker, but damage to the users or the protocol) (Medium)",
+    "Theft of gas (Medium)",
+    "Unbounded gas consumption (Medium)"
+  ],
+  "out_of_scope": [
+    "Any testing on mainnet or public testnet deployed code",
+    "Any testing with pricing oracles or third-party smart contracts",
+    "Phishing or social engineering attacks against project's employees and/or customers",
+    "Testing with third-party systems and applications",
+    "Denial of service attacks that are executed against project assets",
+    "Automated testing of services that generates significant amounts of traffic",
+    "Public disclosure of an unpatched vulnerability in an embargoed bounty",
+    "Any other actions prohibited by the Immunefi Rules",
+    "Incorrect data supplied by third party oracles (except oracle manipulation/flash loan attacks)",
+    "Impacts requiring basic economic and governance attacks (e.g. 51% attack)",
+    "Lack of liquidity impacts",
+    "Impacts from Sybil attacks",
+    "Impacts involving centralization risks",
+    "Impacts requiring attacks that the reporter has already exploited themselves, leading to damage",
+    "Impacts caused by attacks requiring access to leaked keys/credentials",
+    "Impacts caused by attacks requiring access to privileged addresses without additional modifications",
+    "Impacts relying on attacks involving the depegging of an external stablecoin",
+    "Mentions of secrets, access tokens, API keys, private keys in Github without proof of production use",
+    "Best practice recommendations",
+    "Feature requests",
+    "Impacts on test files and configuration files unless stated otherwise"
+  ],
+  "rules": [
+    "All testing must be done on local-forks of either public testnet or mainnet",
+    "Proof of Concept is required for all severities",
+    "No KYC required for payouts under $100,000",
+    "KYC required for payouts above $100,000",
+    "Rewards distributed according to Immunefi Vulnerability Severity Classification System V2.3",
+    "Critical smart contract vulnerabilities capped at 10% of funds at risk",
+    "Payouts are denominated in USD and made in USDC, USDT, ETH, or T tokens",
+    "All payouts are handled by the Threshold Network team",
+    "Duplicates and private known issues are not eligible for rewards"
+  ],
+  "focus_areas": [
+    "Smart contract vulnerabilities",
+    "Loss of user funds",
+    "Bitcoin bridge security (tBTC)",
+    "Threshold cryptography implementation",
+    "Token staking mechanisms",
+    "Governance vulnerabilities",
+    "Cross-chain bridge security",
+    "Proxy pattern implementations",
+    "Access control vulnerabilities",
+    "Reentrancy attacks",
+    "Flash loan attacks",
+    "Oracle manipulation",
+    "Front-running vulnerabilities"
+  ],
+  "rewards": {
+    "critical": "Up to $1,000,000 (10% of funds at risk) - Direct theft, permanent freezing, protocol insolvency",
+    "high": "Up to $50,000 - Theft/freezing of unclaimed yield, temporary fund freezing (1+ hours)",
+    "medium": "Up to $10,000 - Contract inoperability, block stuffing, griefing, gas theft, unbounded gas",
+    "low": "Up to $1,000 - Based on Immunefi Severity Classification System"
+  },
+  "notes": "Threshold Network is a merge of Keep Network and NuCypher, providing threshold cryptography for decentralized applications. The primary products are tBTC (a decentralized Bitcoin bridge) and threshold access control. This bug bounty program focuses on smart contract security across 39 deployed contracts on Ethereum mainnet. All testing must be done on local forks to avoid impact on production systems.",
+  "contacts": {
+    "platform": "Immunefi",
+    "team": "Threshold Network team",
+    "discord": "https://discord.gg/threshold",
+    "twitter": "@ThresholdDAO"
+  }
+}

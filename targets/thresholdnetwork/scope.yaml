@@ -1,0 +1,231 @@
+contracts:
+  - name: Bank
+    address: "0x65Fbae61ad2C8836fFbFB502A0dA41b0789D9Fc6"
+    chain_id: 1
+    foundry_profile: "contract_Bank_65fb"
+    verified: true
+  - name: ProxyV5
+    address: "0x2111A49ebb717959059693a3698872a0aE9866b9"
+    chain_id: 1
+    foundry_profile: "contract_ProxyV5_2111"
+    verified: true
+  - name: TransparentUpgradeableProxy
+    address: "0x46d52E41C2F300BC82217Ce22b920c34995204eb"
+    chain_id: 1
+    foundry_profile: "contract_TransparentUpgradeableProxy_46d5"
+    verified: true
+  - name: LightRelay
+    address: "0x836cdFE63fe2d63f8Bdb69b96f6097F36635896E"
+    chain_id: 1
+    foundry_profile: "contract_LightRelay_836c"
+    verified: true
+  - name: TokenholderGovernor
+    address: "0xd101f2b25bcbf992bdf55db67c104fe7646f5447"
+    chain_id: 1
+    foundry_profile: "contract_TokenholderGovernor_d101"
+    verified: true
+  - name: TransparentUpgradeableProxy
+    address: "0x5e4861a80B55f035D899f66772117F00FA0E8e7B"
+    chain_id: 1
+    foundry_profile: "contract_TransparentUpgradeableProxy_5e48"
+    verified: true
+  - name: TransparentUpgradeableProxy
+    address: "0xC9031f76006da0BD4bFa9E02aDf0d448dB3BC155"
+    chain_id: 1
+    foundry_profile: "contract_TransparentUpgradeableProxy_c903"
+    verified: true
+  - name: MaintainerProxy
+    address: "0xcF29Ff894674775841F60Aa2a3c373DE27A8df2b"
+    chain_id: 1
+    foundry_profile: "contract_MaintainerProxy_cf29"
+    verified: true
+  - name: DonationVault
+    address: "0xa544b70dC6af906862f68eb8e68c27bb7150e672"
+    chain_id: 1
+    foundry_profile: "contract_DonationVault_a544"
+    verified: true
+  - name: WalletRegistry
+    address: "0xfbae130e06bbc8ca198861beecae6e2b830398fb"
+    chain_id: 1
+    foundry_profile: "contract_WalletRegistry_fbae"
+    verified: true
+  - name: EcdsaDkgValidator
+    address: "0x0125c8977a02b2Fa3970b1ED9AF02f5Bedd4eF27"
+    chain_id: 1
+    foundry_profile: "contract_EcdsaDkgValidator_0125"
+    verified: true
+  - name: TransparentUpgradeableProxy
+    address: "0xb810AbD43d8FCFD812d6FEB14fefc236E92a341A"
+    chain_id: 1
+    foundry_profile: "contract_TransparentUpgradeableProxy_b810"
+    verified: true
+  - name: TBTC
+    address: "0x18084fbA666a33d37592fA2633fD49a74DD93a88"
+    chain_id: 1
+    foundry_profile: "contract_TBTC_1808"
+    verified: true
+  - name: TransparentUpgradeableProxy
+    address: "0x75A6e4A7C8fAa162192FAD6C1F7A6d48992c619A"
+    chain_id: 1
+    foundry_profile: "contract_TransparentUpgradeableProxy_75a6"
+    verified: true
+  - name: CumulativeMerkleDrop
+    address: "0xea7ca290c7811d1cc2e79f8d706bd05d8280bd37"
+    chain_id: 1
+    foundry_profile: "contract_CumulativeMerkleDrop_ea7c"
+    verified: true
+  - name: TransparentUpgradeableProxy
+    address: "0x5D4d83aaB53B7E7cA915AEB2d4d3f4e03823DbDe"
+    chain_id: 1
+    foundry_profile: "contract_TransparentUpgradeableProxy_5d4d"
+    verified: true
+  - name: WalletRegistryGovernance
+    address: "0x6aed6cC30D1b2770771052555d257Da86eD47fe8"
+    chain_id: 1
+    foundry_profile: "contract_WalletRegistryGovernance_6aed"
+    verified: true
+  - name: T
+    address: "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5"
+    chain_id: 1
+    foundry_profile: "contract_T_cdf7"
+    verified: true
+  - name: TBTCVault
+    address: "0x9C070027cdC9dc8F82416B2e5314E11DFb4FE3CD"
+    chain_id: 1
+    foundry_profile: "contract_TBTCVault_9c07"
+    verified: true
+  - name: ReimbursementPool
+    address: "0x8adF3f35dBE4026112bCFc078872bcb967732Ea8"
+    chain_id: 1
+    foundry_profile: "contract_ReimbursementPool_8adf"
+    verified: true
+  - name: TransparentUpgradeableProxy
+    address: "0x0184739C32edc3471D3e4860c8E39a5f3Ff85A45"
+    chain_id: 1
+    foundry_profile: "contract_TransparentUpgradeableProxy_0184"
+    verified: true
+  - name: TransparentUpgradeableProxy
+    address: "0xB8dF0A949aC45ff8f401553A1dcb742Feb38E6D3"
+    chain_id: 1
+    foundry_profile: "contract_TransparentUpgradeableProxy_b8df"
+    verified: true
+  - name: WalletProposalValidator
+    address: "0x30019D85a86ABD3cDA1167F4C052690c32FBDEc2"
+    chain_id: 1
+    foundry_profile: "contract_WalletProposalValidator_3001"
+    verified: true
+  - name: Bridge
+    address: "0x8d014903bf7867260584d714e11809fea5293234"
+    chain_id: 1
+    foundry_profile: "contract_Bridge_8d01"
+    verified: true
+  - name: TransparentUpgradeableProxy
+    address: "0x01B67b1194C75264d06F808A921228a95C765dd7"
+    chain_id: 1
+    foundry_profile: "contract_TransparentUpgradeableProxy_01b6"
+    verified: true
+  - name: SortitionPool
+    address: "0xc2731fb2823af3Efc2694c9bC86F444d5c5bb4Dc"
+    chain_id: 1
+    foundry_profile: "contract_SortitionPool_c273"
+    verified: true
+  - name: TransparentUpgradeableProxy
+    address: "0x03E342731c08FDDc34cFb43E91cB3a7e424ee0F6"
+    chain_id: 1
+    foundry_profile: "contract_TransparentUpgradeableProxy_03e3"
+    verified: true
+  - name: BridgeGovernance
+    address: "0xA94DD662E2A247493fACCeab9f2459AAF90778Ee"
+    chain_id: 1
+    foundry_profile: "contract_BridgeGovernance_a94d"
+    verified: true
+  - name: StarknetTokenBridge
+    address: "0xf39d314c5ad7dc88958116dfa7d5ac095d563aff"
+    chain_id: 1
+    foundry_profile: "contract_StarknetTokenBridge_f39d"
+    verified: true
+  - name: WalletRegistry
+    address: "0x08d7e8ce124921caafd7670502379ced0065c832"
+    chain_id: 1
+    foundry_profile: "contract_WalletRegistry_08d7"
+    verified: true
+  - name: Bridge
+    address: "0x8ce2003abee1f37fb055e52c14a5eeea00ad1ce7"
+    chain_id: 1
+    foundry_profile: "contract_Bridge_8ce2"
+    verified: true
+  - name: StarkNetBitcoinDepositor
+    address: "0xd3585922b7f6b30953fc81726f48046826b8b2ca"
+    chain_id: 1
+    foundry_profile: "contract_StarkNetBitcoinDepositor_d358"
+    verified: true
+  - name: BTCDepositorWormhole
+    address: "0x9a5250c7bea10f7472eb9d50bb757b83d67fb5ed"
+    chain_id: 1
+    foundry_profile: "contract_BTCDepositorWormhole_9a52"
+    verified: true
+  - name: L1BitcoinDepositor
+    address: "0x3ffee7d7be970201a33d17e318e2421a06ad69f8"
+    chain_id: 1
+    foundry_profile: "contract_L1BitcoinDepositor_3ffe"
+    verified: true
+  - name: L1BTCRedeemerWormhole
+    address: "0x14d93d4c4e07130fffe6083432b66b96d8eb9dc0"
+    chain_id: 1
+    foundry_profile: "contract_L1BTCRedeemerWormhole_14d9"
+    verified: true
+  - name: RebateStaking
+    address: "0xe490c802f8455ea1f0df96a7b5043536a41e2535"
+    chain_id: 1
+    foundry_profile: "contract_RebateStaking_e490"
+    verified: true
+  - name: RedemptionWatchtower
+    address: "0xbfd04e3928923ad8c86256b9a8f64ebd01cf1daf"
+    chain_id: 1
+    foundry_profile: "contract_RedemptionWatchtower_bfd0"
+    verified: true
+  - name: TokenStaking
+    address: "0xf5a2ccfea213cb3ff0799e0c33ea2fa3da7cbb65"
+    chain_id: 1
+    foundry_profile: "contract_TokenStaking_f5a2"
+    verified: true
+  - name: LockReleaseTokenPoolUpgradeable
+    address: "0x7ff02bb686658f2d55f28fdf45286f9499beb9a5"
+    chain_id: 1
+    foundry_profile: "contract_LockReleaseTokenPoolUpgradeable_7ff0"
+    verified: true
+
+domains: []
+ips: []
+urls: []
+excluded_paths: []
+allowed_methods:
+  - GET
+  - POST
+  - PUT
+  - HEAD
+  - OPTIONS
+max_depth: 3
+notes: "Threshold Network (Immunefi) - 39 smart contracts on Ethereum mainnet. Focus on tBTC bridge, threshold cryptography, token staking, and governance. Use forked execution; do not test on mainnet directly."
+foundry_root: /home/runner/work/secbrain/secbrain/targets/thresholdnetwork/instascope
+max_requests_per_second: 10
+respect_robots_txt: true
+
+rpc_urls:
+  - "https://ethereum.publicnode.com"
+  - "https://eth.llamarpc.com"
+  - "https://rpc.ankr.com/eth"
+
+profit_tokens:
+  - symbol: "TBTC"
+    address: "0x18084fbA666a33d37592fA2633fD49a74DD93a88"
+    decimals: 18
+  - symbol: "T"
+    address: "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5"
+    decimals: 18
+  - symbol: "WETH"
+    address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    decimals: 18
+  - symbol: "USDC"
+    address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    decimals: 6
