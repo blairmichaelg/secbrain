@@ -38,6 +38,16 @@ class WorkspaceStorage:
     """
 
     def __init__(self, workspace_path: Path | RunContext, run_id: str | None = None):
+        """Initialize workspace storage.
+        
+        Args:
+            workspace_path: Either a Path to the workspace or a RunContext
+            run_id: Run identifier (required if workspace_path is a Path)
+            
+        Raises:
+            TypeError: If run_id is None when workspace_path is a Path
+            ValueError: If run_id is empty string
+        """
         if run_id is None and hasattr(workspace_path, "workspace_path"):
             rc: RunContext = workspace_path  # type: ignore[assignment]
             self.workspace_path: Path = rc.workspace_path
@@ -45,6 +55,8 @@ class WorkspaceStorage:
         else:
             if run_id is None:
                 raise TypeError("WorkspaceStorage requires run_id when workspace_path is a Path")
+            if not run_id or not run_id.strip():
+                raise ValueError("run_id cannot be empty")
             self.workspace_path = workspace_path  # type: ignore[assignment]
             self.run_id = run_id
         self.db_path: Path = self.workspace_path / "secbrain.db"
@@ -90,13 +102,22 @@ class WorkspaceStorage:
         await asyncio.to_thread(self._db.commit)
 
     async def initialize(self) -> None:
-        """Initialize the storage database."""
-        if aiosqlite is not None:
-            self._db = await aiosqlite.connect(self.db_path)
-        else:
-            import sqlite3
-            self._db = sqlite3.connect(self.db_path, check_same_thread=False)
-        await self._create_tables()
+        """Initialize the storage database.
+        
+        Creates database connection and schema if not exists.
+        
+        Raises:
+            RuntimeError: If database initialization fails
+        """
+        try:
+            if aiosqlite is not None:
+                self._db = await aiosqlite.connect(self.db_path)
+            else:
+                import sqlite3
+                self._db = sqlite3.connect(self.db_path, check_same_thread=False)
+            await self._create_tables()
+        except Exception as e:
+            raise RuntimeError(f"Failed to initialize database at {self.db_path}: {e}") from e
 
     async def _create_tables(self) -> None:
         """Create database tables if they don't exist."""

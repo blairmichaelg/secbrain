@@ -40,7 +40,13 @@ class ApprovalResponse:
 
 
 class ApprovalManager:
-    """Coordinate human-in-the-loop approval flows for sensitive tool use."""
+    """Coordinate human-in-the-loop approval flows for sensitive tool use.
+    
+    This manager supports three modes:
+    - auto: Automatically approve all requests
+    - deny: Automatically deny all requests  
+    - ask: Prompt for interactive approval
+    """
 
     def __init__(
         self,
@@ -49,6 +55,20 @@ class ApprovalManager:
         audit_log_path: Path,
         approver: str = "operator",
     ) -> None:
+        """Initialize the approval manager.
+        
+        Args:
+            mode: Approval mode ('auto', 'deny', or 'ask')
+            audit_log_path: Path where audit logs will be written
+            approver: Name/identifier of the approver
+            
+        Raises:
+            ValueError: If mode is not one of the supported values
+        """
+        if mode not in ("auto", "deny", "ask"):
+            raise ValueError(
+                f"Invalid approval mode '{mode}'. Must be 'auto', 'deny', or 'ask'"
+            )
         self.mode = mode
         self.audit_log_path = audit_log_path
         self.approver = approver
