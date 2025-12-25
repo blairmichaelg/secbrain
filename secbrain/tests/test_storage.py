@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import tempfile
 from pathlib import Path
 
@@ -93,7 +94,6 @@ async def test_start_run():
         if storage._sqlite_backend == "aiosqlite":
             row = await cursor.fetchone()
         else:
-            import asyncio
             row = await asyncio.to_thread(cursor.fetchone)
 
         assert row is not None
@@ -123,7 +123,6 @@ async def test_end_run():
         if storage._sqlite_backend == "aiosqlite":
             row = await cursor.fetchone()
         else:
-            import asyncio
             row = await asyncio.to_thread(cursor.fetchone)
 
         assert row is not None
@@ -293,7 +292,6 @@ async def test_log_tool_call():
         if storage._sqlite_backend == "aiosqlite":
             row = await cursor.fetchone()
         else:
-            import asyncio
             row = await asyncio.to_thread(cursor.fetchone)
 
         assert row is not None
