@@ -271,6 +271,35 @@ All templates in [POC_TEMPLATES.md](POC_TEMPLATES.md):
 6. **CrossChainExploit.t.sol** - Cross-chain message forgery
 7. **ProxyUpgradeExploit.t.sol** - Proxy upgrade vulnerabilities
 
+### 🆕 Active Hypothesis Tests
+
+**hyp-5430acaa: ApproveAndCall Reentrancy** (December 2024)
+
+Based on the L2WormholeGateway precedent (Oct 2023 Critical finding), comprehensive tests for approveAndCall reentrancy in recipient contracts:
+
+**Location**: `instascope/test/exploits/`
+
+**Quick Start**:
+```bash
+cd instascope
+./setup_exploit_tests.sh
+FOUNDRY_PROFILE=exploit_tests forge test --match-path test/exploits/ApproveAndCallReentrancyExploit.t.sol -vv
+```
+
+**Target Contracts**:
+- TokenStaking - Staking and authorization (Critical priority)
+- WalletRegistry - Operator management (Critical priority)  
+- VendingMachine - Token migration (High priority)
+- L2WormholeGateway - Regression test across all L2s (Critical if found)
+
+**Documentation**:
+- [Test Suite](instascope/test/exploits/ApproveAndCallReentrancyExploit.t.sol)
+- [Full Documentation](instascope/test/exploits/README.md)
+- [Quick Reference](instascope/test/exploits/QUICK_REFERENCE.md)
+- [Hypothesis Analysis](hypotheses/hyp-5430acaa-approveandcall-reentrancy.md)
+
+**Key Insight**: The vulnerability is NOT in the token contracts (TBTC, T) - they implement the intended ERC-1363 pattern. The vulnerability would be in recipient contracts that lack proper reentrancy guards.
+
 ### Attack Surface Checklist
 
 See [ATTACK_SURFACE_GUIDE.md](ATTACK_SURFACE_GUIDE.md) for complete checklists:
