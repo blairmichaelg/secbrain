@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from jsonschema import validate
+from jsonschema import ValidationError, validate
 
 from secbrain.agents.vuln_hypothesis_agent import VulnHypothesisAgent
 
@@ -88,7 +88,7 @@ def test_hypothesis_schema_rejects_invalid_confidence():
     ]
 
     for hyp in invalid_hypotheses:
-        with pytest.raises(Exception):  # ValidationError
+        with pytest.raises(ValidationError):
             validate(instance=[hyp], schema=schema)
 
 
@@ -99,13 +99,13 @@ def test_hypothesis_schema_rejects_missing_required_fields():
     # Missing vuln_type
     invalid_hypothesis1 = [{"confidence": 0.8}]
 
-    with pytest.raises(Exception):  # ValidationError
+    with pytest.raises(ValidationError):
         validate(instance=invalid_hypothesis1, schema=schema)
 
     # Missing confidence
     invalid_hypothesis2 = [{"vuln_type": "reentrancy"}]
 
-    with pytest.raises(Exception):  # ValidationError
+    with pytest.raises(ValidationError):
         validate(instance=invalid_hypothesis2, schema=schema)
 
 

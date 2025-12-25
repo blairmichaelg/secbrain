@@ -125,8 +125,8 @@ class AdvancedResearchAgent:
                 ))
 
                 logger.info(f"Found {len(findings)} emerging patterns")
-            except Exception as e:
-                logger.exception(f"Research failed: {e}")
+            except Exception:
+                logger.exception("Research failed")
         else:
             # Dry-run or no client - return curated findings
             findings.extend(self._get_curated_emerging_patterns())
@@ -375,8 +375,8 @@ class AdvancedResearchAgent:
                     research_source="perplexity",
                     references=result.get("sources", []),
                 ))
-            except Exception as e:
-                logger.exception(f"Protocol research failed: {e}")
+            except Exception:
+                logger.exception("Protocol research failed")
 
         self.findings.extend(findings)
         return findings
@@ -430,8 +430,8 @@ class AdvancedResearchAgent:
                     research_source="perplexity",
                     references=result.get("sources", []),
                 ))
-            except Exception as e:
-                logger.exception(f"Cross-protocol research failed: {e}")
+            except Exception:
+                logger.exception("Cross-protocol research failed")
         else:
             # Provide curated cross-protocol risk pattern
             findings.append(ResearchFinding(
