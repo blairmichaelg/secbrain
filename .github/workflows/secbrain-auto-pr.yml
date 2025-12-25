@@ -165,6 +165,7 @@ jobs:
           git push origin "${{ steps.branch.outputs.branch_name }}"
 
       - name: Create Pull Request
+        id: create_pr
         if: steps.commit.outputs.has_changes == 'true'
         uses: actions/github-script@v8
         with:

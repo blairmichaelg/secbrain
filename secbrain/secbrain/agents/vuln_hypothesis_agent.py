@@ -296,14 +296,15 @@ class VulnHypothesisAgent(BaseAgent):
             threshold=confidence_threshold,
         )
 
-        # Fallback: If no hypotheses generated at all, create generic ones from contract assets
-        if not ranked and contract_assets:
+        # Fallback: If no hypotheses above threshold, create generic ones from contract assets
+        if not top_hypotheses and contract_assets:
             self._log("generating_fallback_hypotheses", contract_count=len(contract_assets))
             fallback_hypotheses = self._generate_fallback_hypotheses(contract_assets[:3])
-            ranked = self._rank_hypotheses(fallback_hypotheses)
+            # Combine with existing hypotheses and re-rank
+            all_hypotheses.extend(fallback_hypotheses)
+            ranked = self._rank_hypotheses(all_hypotheses)
             filtered = [h for h in ranked if h.get("confidence", 0) >= confidence_threshold]
             top_hypotheses = filtered[:5]
-            all_hypotheses.extend(fallback_hypotheses)
 
         review = await self._advisor_review_hypotheses(top_hypotheses)
 
