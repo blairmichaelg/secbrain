@@ -109,13 +109,16 @@ class StaticAnalysisAgent(BaseAgent):
 
         for candidate in candidates:
             if candidate.exists() and candidate.is_dir():
-                # Check if it contains Solidity files
-                sol_files = list(candidate.glob("**/*.sol"))
-                if sol_files:
+                # Check if it contains Solidity files (efficiently)
+                # Use next() to avoid creating full list for large directories
+                has_sol_files = next(candidate.glob("**/*.sol"), None) is not None
+                if has_sol_files:
+                    # Get count for logging
+                    sol_files_count = sum(1 for _ in candidate.glob("**/*.sol"))
                     self._log(
                         "source_code_found",
                         path=str(candidate),
-                        sol_files_count=len(sol_files),
+                        sol_files_count=sol_files_count,
                     )
                     return candidate
 

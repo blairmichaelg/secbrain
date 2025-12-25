@@ -228,9 +228,10 @@ async def _run_workflow(
             )
         else:
             console.print("[dim]✓ All tools available[/]\n")
-    except ImportError:
+    except ImportError as e:
         # Tool checker not available, skip check
-        logger.warning("tool_checker_unavailable", reason="import_error")
+        if logger:
+            logger.warning("tool_checker_unavailable", reason="import_error", error=str(e))
 
     # Load scope config
     with open(scope_path) as f:

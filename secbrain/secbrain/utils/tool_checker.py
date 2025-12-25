@@ -191,14 +191,20 @@ Verify installation:
         self._cache[tool_name] = status
 
         # Log if tool is missing
-        if not status.available and self.logger:
-            level = "warning" if required else "info"
-            self.logger.log(
-                level,
-                f"tool_{'missing' if required else 'unavailable'}",
-                tool=tool_name,
-                required=required,
-            )
+        if not status.available:
+            if self.logger:
+                if required:
+                    self.logger.warning(
+                        "tool_missing",
+                        tool=tool_name,
+                        required=True,
+                    )
+                else:
+                    self.logger.info(
+                        "tool_unavailable",
+                        tool=tool_name,
+                        required=False,
+                    )
 
         return status
 
@@ -284,8 +290,9 @@ Verify installation:
                 report_lines.append(f"  ⚪ {tool.name}")
                 if tool.install_guide:
                     # Add indented install guide
+                    indent = "    "
                     for line in tool.install_guide.strip().split("\n"):
-                        report_lines.append(f"    {line}")
+                        report_lines.append(f"{indent}{line}")
                 report_lines.append("")
 
         if not missing_required and not missing_recommended:
