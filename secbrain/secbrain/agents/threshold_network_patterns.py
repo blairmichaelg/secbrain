@@ -290,7 +290,6 @@ class ThresholdNetworkPatterns:
             references=[
                 "https://zfnd.org/pedersen-dkg-vulnerability-in-frost-distributed-key-generation-successfully-remediated/",
                 "https://safeheron.com/blog/dkg-threshold-raising-vulnerability/",
-                "https://github.com/ZcashFoundation/frost/commit/fixing-dkg-degree",
                 "Trail of Bits security analysis (Jan 2024)",
             ],
             affected_contracts=["WalletRegistry", "EcdsaDkgValidator", "EcdsaDkg"],
