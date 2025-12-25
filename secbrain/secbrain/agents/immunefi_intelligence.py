@@ -69,7 +69,7 @@ class ImmunefiIntelligence:
     }
 
     # Common vulnerability patterns from Immunefi programs (2022-2025)
-    COMMON_VULNERABILITIES = {
+    COMMON_VULNERABILITIES: ClassVar[dict[str, ImmunefiVulnerabilityClass]] = {
         "bridge_exploits": ImmunefiVulnerabilityClass(
             name="Cross-chain Bridge Exploits",
             severity="critical",

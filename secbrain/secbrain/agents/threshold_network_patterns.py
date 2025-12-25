@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
 
 class ThresholdVulnerabilityPattern(Enum):
@@ -94,7 +94,7 @@ class ThresholdNetworkPatterns:
     """Comprehensive Threshold Network vulnerability patterns database."""
 
     # tBTC Bridge Patterns
-    TBTC_BRIDGE_PATTERNS: dict[str, ThresholdSecurityPattern] = {
+    TBTC_BRIDGE_PATTERNS: ClassVar[dict[str, ThresholdSecurityPattern]] = {
         "bitcoin_peg_manipulation": ThresholdSecurityPattern(
             pattern_type=ThresholdVulnerabilityPattern.BITCOIN_PEG_MANIPULATION,
             severity=ImmunefiSeverity.CRITICAL,
@@ -193,7 +193,7 @@ class ThresholdNetworkPatterns:
     }
 
     # Threshold Cryptography Patterns
-    THRESHOLD_CRYPTO_PATTERNS: dict[str, ThresholdSecurityPattern] = {
+    THRESHOLD_CRYPTO_PATTERNS: ClassVar[dict[str, ThresholdSecurityPattern]] = {
         "threshold_signature_manipulation": ThresholdSecurityPattern(
             pattern_type=ThresholdVulnerabilityPattern.THRESHOLD_SIGNATURE_MANIPULATION,
             severity=ImmunefiSeverity.CRITICAL,
@@ -285,7 +285,7 @@ class ThresholdNetworkPatterns:
     }
 
     # Cross-chain Bridge Patterns
-    CROSS_CHAIN_PATTERNS: dict[str, ThresholdSecurityPattern] = {
+    CROSS_CHAIN_PATTERNS: ClassVar[dict[str, ThresholdSecurityPattern]] = {
         "cross_chain_message_forgery": ThresholdSecurityPattern(
             pattern_type=ThresholdVulnerabilityPattern.CROSS_CHAIN_MESSAGE_FORGERY,
             severity=ImmunefiSeverity.CRITICAL,
@@ -346,7 +346,7 @@ class ThresholdNetworkPatterns:
     }
 
     # Staking and Governance Patterns
-    STAKING_GOVERNANCE_PATTERNS: dict[str, ThresholdSecurityPattern] = {
+    STAKING_GOVERNANCE_PATTERNS: ClassVar[dict[str, ThresholdSecurityPattern]] = {
         "staking_reward_manipulation": ThresholdSecurityPattern(
             pattern_type=ThresholdVulnerabilityPattern.STAKING_REWARD_MANIPULATION,
             severity=ImmunefiSeverity.HIGH,
@@ -449,7 +449,7 @@ class ThresholdNetworkPatterns:
     }
 
     # Token Merger Patterns (KEEP + NU -> T)
-    TOKEN_MERGER_PATTERNS: dict[str, ThresholdSecurityPattern] = {
+    TOKEN_MERGER_PATTERNS: ClassVar[dict[str, ThresholdSecurityPattern]] = {
         "vending_machine_exploit": ThresholdSecurityPattern(
             pattern_type=ThresholdVulnerabilityPattern.VENDING_MACHINE_EXPLOIT,
             severity=ImmunefiSeverity.HIGH,
@@ -485,7 +485,7 @@ class ThresholdNetworkPatterns:
     }
 
     # New 2024-2025 Attack Patterns
-    ADVANCED_PATTERNS: dict[str, ThresholdSecurityPattern] = {
+    ADVANCED_PATTERNS: ClassVar[dict[str, ThresholdSecurityPattern]] = {
         "zk_proof_verification_flaw": ThresholdSecurityPattern(
             pattern_type=ThresholdVulnerabilityPattern.ZK_PROOF_VERIFICATION_FLAW,
             severity=ImmunefiSeverity.CRITICAL,

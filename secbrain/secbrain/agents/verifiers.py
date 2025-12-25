@@ -6,7 +6,7 @@ import hashlib
 import uuid
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 from secbrain.core.verification import (
     EvidenceBundle,
@@ -124,7 +124,7 @@ class ReflectedXSSVerifier(ExploitVerifier):
 class SQLiErrorVerifier(ExploitVerifier):
     """Verify SQL Injection by detecting database error messages."""
 
-    ERROR_PATTERNS = [
+    ERROR_PATTERNS: ClassVar[list[str]] = [
         "sql syntax error",
         "mysql_error",
         "ora-",
@@ -265,7 +265,7 @@ class TimingVerifier(ExploitVerifier):
 class SSRFHeuristicVerifier(ExploitVerifier):
     """Heuristic SSRF verifier looking for external fetch indicators."""
 
-    EXFIL_PATTERNS = [
+    EXFIL_PATTERNS: ClassVar[list[str]] = [
         "169.254.169.254",
         "metadata.google.internal",
         "aws_session_token",
@@ -353,7 +353,7 @@ class SSTIVerifier(ExploitVerifier):
 class PathTraversalVerifier(ExploitVerifier):
     """Detect traversal via sensitive file snippets."""
 
-    SENSITIVE_SNIPPETS = [
+    SENSITIVE_SNIPPETS: ClassVar[list[str]] = [
         "root:x:0:0:",
         "[boot loader]",
         "[extensions]",
@@ -399,7 +399,7 @@ class PathTraversalVerifier(ExploitVerifier):
 class NoSQLiErrorVerifier(ExploitVerifier):
     """Detect NoSQL injection error or logic behavior."""
 
-    ERROR_PATTERNS = [
+    ERROR_PATTERNS: ClassVar[list[str]] = [
         "cast to objectid failed",
         "mongoerror",
         "mongodb",

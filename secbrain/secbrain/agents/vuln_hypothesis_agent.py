@@ -156,7 +156,7 @@ class VulnHypothesisAgent(BaseAgent):
     phase = "hypothesis"
     CONFIDENCE_THRESHOLD: ClassVar[float] = 0.4
 
-    HYPOTHESIS_SCHEMA = {
+    HYPOTHESIS_SCHEMA: ClassVar[dict[str, Any]] = {
         "type": "array",
         "items": {
             "type": "object",

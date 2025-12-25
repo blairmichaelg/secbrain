@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import shutil
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
     import structlog
@@ -30,7 +30,7 @@ class ToolChecker:
     """Check availability of external tools and provide guidance."""
 
     # Tool installation guides
-    INSTALL_GUIDES = {
+    INSTALL_GUIDES: ClassVar[dict[str, str]] = {
         "foundry": """
 Foundry is required for smart contract testing.
 
@@ -133,7 +133,7 @@ Verify installation:
     }
 
     # Tool requirements by phase
-    PHASE_TOOLS = {
+    PHASE_TOOLS: ClassVar[dict[str, dict[str, list[str]]]] = {
         "recon": {
             "required": ["foundry"],
             "recommended": ["subfinder", "amass", "httpx", "nuclei"],

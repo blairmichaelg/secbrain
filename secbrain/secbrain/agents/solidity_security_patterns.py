@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
 
 class VulnerabilityPattern(Enum):
@@ -84,7 +84,7 @@ class SecurityPattern:
 class SoliditySecurityPatterns:
     """Advanced Solidity security patterns database."""
 
-    REENTRANCY_PATTERNS: dict[str, SecurityPattern] = {
+    REENTRANCY_PATTERNS: ClassVar[dict[str, SecurityPattern]] = {
         "classic_reentrancy": SecurityPattern(
             pattern_type=VulnerabilityPattern.CLASSIC_REENTRANCY,
             severity="critical",
@@ -179,7 +179,7 @@ function withdraw(uint256 amount) external {
         ),
     }
 
-    FLASH_LOAN_PATTERNS: dict[str, SecurityPattern] = {
+    FLASH_LOAN_PATTERNS: ClassVar[dict[str, SecurityPattern]] = {
         "flash_loan_price_manipulation": SecurityPattern(
             pattern_type=VulnerabilityPattern.FLASH_LOAN_PRICE_MANIPULATION,
             severity="critical",
@@ -278,7 +278,7 @@ contract Secure {
         ),
     }
 
-    ACCESS_CONTROL_PATTERNS: dict[str, SecurityPattern] = {
+    ACCESS_CONTROL_PATTERNS: ClassVar[dict[str, SecurityPattern]] = {
         "role_based_access": SecurityPattern(
             pattern_type=VulnerabilityPattern.ROLE_BASED_ACCESS_NEEDED,
             severity="high",
@@ -322,7 +322,7 @@ contract Secure is AccessControl {
         ),
     }
 
-    FRONT_RUNNING_PATTERNS: dict[str, SecurityPattern] = {
+    FRONT_RUNNING_PATTERNS: ClassVar[dict[str, SecurityPattern]] = {
         "commit_reveal": SecurityPattern(
             pattern_type=VulnerabilityPattern.MISSING_COMMIT_REVEAL,
             severity="medium",
@@ -416,7 +416,7 @@ contract Secure is EIP712 {
         ),
     }
 
-    ORACLE_SECURITY_PATTERNS: dict[str, SecurityPattern] = {
+    ORACLE_SECURITY_PATTERNS: ClassVar[dict[str, SecurityPattern]] = {
         "chainlink_staleness": SecurityPattern(
             pattern_type=VulnerabilityPattern.STALE_PRICE_DATA,
             severity="high",
@@ -553,7 +553,7 @@ contract Secure {
         ),
     }
 
-    BRIDGE_SECURITY_PATTERNS: dict[str, SecurityPattern] = {
+    BRIDGE_SECURITY_PATTERNS: ClassVar[dict[str, SecurityPattern]] = {
         "bridge_message_forgery": SecurityPattern(
             pattern_type=VulnerabilityPattern.BRIDGE_MESSAGE_FORGERY,
             severity="critical",
@@ -773,7 +773,7 @@ contract SecureBridge {
         ),
     }
 
-    DAO_GOVERNANCE_PATTERNS: dict[str, SecurityPattern] = {
+    DAO_GOVERNANCE_PATTERNS: ClassVar[dict[str, SecurityPattern]] = {
         "governance_flash_loan": SecurityPattern(
             pattern_type=VulnerabilityPattern.GOVERNANCE_FLASH_LOAN_ATTACK,
             severity="critical",
