@@ -52,6 +52,22 @@ class VulnerabilityPattern(Enum):
     NO_PRICE_DEVIATION_CHECK = "no_price_deviation_check"
     NO_MULTI_ORACLE_CONSENSUS = "no_multi_oracle_consensus"
 
+    # Bridge security patterns (cross-chain)
+    BRIDGE_MESSAGE_FORGERY = "bridge_message_forgery"
+    MERKLE_PROOF_MANIPULATION = "merkle_proof_manipulation"
+    SPV_PROOF_BYPASS = "spv_proof_bypass"
+    CROSS_CHAIN_REPLAY = "cross_chain_replay"
+    RELAY_CENSORSHIP = "relay_censorship"
+    DEPOSIT_WITHDRAWAL_MISMATCH = "deposit_withdrawal_mismatch"
+    BRIDGE_SIGNATURE_BYPASS = "bridge_signature_bypass"
+
+    # DAO governance patterns
+    GOVERNANCE_FLASH_LOAN_ATTACK = "governance_flash_loan_attack"
+    PROPOSAL_EXECUTION_BYPASS = "proposal_execution_bypass"
+    TIMELOCK_BYPASS = "timelock_bypass"
+    QUORUM_MANIPULATION = "quorum_manipulation"
+    DELEGATION_ATTACK = "delegation_attack"
+
 
 @dataclass
 class SecurityPattern:
@@ -537,6 +553,435 @@ contract Secure {
         ),
     }
 
+    BRIDGE_SECURITY_PATTERNS: dict[str, SecurityPattern] = {
+        "bridge_message_forgery": SecurityPattern(
+            pattern_type=VulnerabilityPattern.BRIDGE_MESSAGE_FORGERY,
+            severity="critical",
+            description="Cross-chain message forgery allowing unauthorized operations",
+            detection_heuristics=[
+                "cross-chain",
+                "message",
+                "relay",
+                "bridge",
+                "verify message",
+                "relayer",
+            ],
+            mitigation_code='''
+// Secure cross-chain message verification
+contract SecureBridge {
+    mapping(bytes32 => bool) public processedMessages;
+    mapping(address => bool) public trustedRelayers;
+    
+    event MessageProcessed(bytes32 indexed messageHash);
+    
+    function processMessage(
+        bytes memory message,
+        bytes[] memory signatures,
+        uint256 nonce
+    ) external {
+        // Prevent replay attacks
+        bytes32 messageHash = keccak256(abi.encodePacked(message, nonce, block.chainid));
+        require(!processedMessages[messageHash], "Message already processed");
+        
+        // Verify signatures from trusted relayers
+        require(signatures.length >= 3, "Need at least 3 signatures");
+        
+        address[] memory signers = new address[](signatures.length);
+        for (uint256 i = 0; i < signatures.length; i++) {
+            address signer = ECDSA.recover(messageHash, signatures[i]);
+            require(trustedRelayers[signer], "Invalid signer");
+            
+            // Prevent duplicate signers
+            for (uint256 j = 0; j < i; j++) {
+                require(signers[j] != signer, "Duplicate signer");
+            }
+            signers[i] = signer;
+        }
+        
+        processedMessages[messageHash] = true;
+        emit MessageProcessed(messageHash);
+        
+        // Process message...
+    }
+}
+''',
+            references=[
+                "https://github.com/nomad-xyz/nomad-monorepo/blob/main/packages/contracts-core/contracts/Replica.sol",
+            ],
+        ),
+        "merkle_proof_verification": SecurityPattern(
+            pattern_type=VulnerabilityPattern.MERKLE_PROOF_MANIPULATION,
+            severity="critical",
+            description="Merkle proof verification vulnerabilities in bridges",
+            detection_heuristics=[
+                "merkle",
+                "proof",
+                "verify",
+                "root",
+                "leaf",
+            ],
+            mitigation_code='''
+// Secure Merkle proof verification
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+
+contract SecureBridge {
+    bytes32 public merkleRoot;
+    mapping(bytes32 => bool) public claimedLeaves;
+    
+    function claimWithProof(
+        bytes32 leaf,
+        bytes32[] calldata proof
+    ) external {
+        // Prevent double-claiming
+        require(!claimedLeaves[leaf], "Already claimed");
+        
+        // Verify proof
+        require(
+            MerkleProof.verify(proof, merkleRoot, leaf),
+            "Invalid Merkle proof"
+        );
+        
+        claimedLeaves[leaf] = true;
+        
+        // Process claim...
+    }
+    
+    // Admin function with timelock
+    function updateMerkleRoot(bytes32 newRoot) external onlyRole(ADMIN_ROLE) {
+        require(newRoot != bytes32(0), "Invalid root");
+        merkleRoot = newRoot;
+    }
+}
+''',
+            references=[
+                "https://docs.openzeppelin.com/contracts/4.x/api/utils#MerkleProof",
+            ],
+        ),
+        "spv_proof_verification": SecurityPattern(
+            pattern_type=VulnerabilityPattern.SPV_PROOF_BYPASS,
+            severity="critical",
+            description="Bitcoin SPV proof verification bypass in tBTC-style bridges",
+            detection_heuristics=[
+                "spv",
+                "bitcoin",
+                "btc",
+                "proof",
+                "transaction proof",
+                "header",
+            ],
+            mitigation_code='''
+// Secure Bitcoin SPV proof verification (tBTC-style)
+contract SecureBitcoinBridge {
+    uint256 public constant MIN_CONFIRMATIONS = 6;
+    uint256 public constant DIFFICULTY_ADJUSTMENT_INTERVAL = 2016;
+    
+    mapping(bytes32 => bool) public verifiedTransactions;
+    
+    function verifyTransaction(
+        bytes memory txBytes,
+        bytes memory merkleProof,
+        bytes memory blockHeader,
+        uint256 blockHeight
+    ) external {
+        // Extract transaction hash
+        bytes32 txHash = sha256(abi.encodePacked(sha256(txBytes)));
+        require(!verifiedTransactions[txHash], "Transaction already verified");
+        
+        // Verify Merkle proof
+        bytes32 merkleRoot = extractMerkleRoot(blockHeader);
+        require(verifyMerkleProof(txHash, merkleProof, merkleRoot), "Invalid Merkle proof");
+        
+        // Verify block header
+        require(verifyBlockHeader(blockHeader, blockHeight), "Invalid block header");
+        
+        // Require minimum confirmations
+        require(
+            getCurrentBlockHeight() >= blockHeight + MIN_CONFIRMATIONS,
+            "Insufficient confirmations"
+        );
+        
+        verifiedTransactions[txHash] = true;
+        
+        // Process verified transaction...
+    }
+    
+    function verifyBlockHeader(bytes memory header, uint256 height) internal view returns (bool) {
+        // Verify proof of work
+        bytes32 headerHash = sha256(abi.encodePacked(sha256(header)));
+        uint256 target = extractTarget(header);
+        require(uint256(headerHash) < target, "Invalid proof of work");
+        
+        // Additional checks: difficulty adjustment, timestamp, etc.
+        return true;
+    }
+}
+''',
+            references=[
+                "https://docs.threshold.network/applications/tbtc-v2/tbtc-v2-technical-design",
+            ],
+        ),
+        "cross_chain_replay_protection": SecurityPattern(
+            pattern_type=VulnerabilityPattern.CROSS_CHAIN_REPLAY,
+            severity="high",
+            description="Cross-chain replay attack protection",
+            detection_heuristics=[
+                "chain id",
+                "nonce",
+                "replay",
+                "cross-chain",
+            ],
+            mitigation_code='''
+// Prevent cross-chain replay attacks
+contract SecureBridge {
+    mapping(bytes32 => bool) public processedMessages;
+    uint256 public nonce;
+    
+    function processMessage(
+        bytes memory message,
+        uint256 messageNonce,
+        uint256 sourceChainId,
+        bytes memory signature
+    ) external {
+        // Include chain IDs in message hash
+        bytes32 messageHash = keccak256(
+            abi.encodePacked(
+                message,
+                messageNonce,
+                sourceChainId,
+                block.chainid,  // Destination chain ID
+                address(this)   // Contract address
+            )
+        );
+        
+        require(!processedMessages[messageHash], "Message already processed");
+        require(messageNonce == nonce + 1, "Invalid nonce");
+        
+        // Verify signature
+        address signer = ECDSA.recover(messageHash, signature);
+        require(trustedRelayer[signer], "Unauthorized signer");
+        
+        processedMessages[messageHash] = true;
+        nonce = messageNonce;
+        
+        // Process message...
+    }
+}
+''',
+            references=[
+                "https://eips.ethereum.org/EIPS/eip-155",
+            ],
+        ),
+    }
+
+    DAO_GOVERNANCE_PATTERNS: dict[str, SecurityPattern] = {
+        "governance_flash_loan": SecurityPattern(
+            pattern_type=VulnerabilityPattern.GOVERNANCE_FLASH_LOAN_ATTACK,
+            severity="critical",
+            description="Flash loan attack to temporarily gain voting power for malicious proposals",
+            detection_heuristics=[
+                "governance",
+                "vote",
+                "proposal",
+                "voting power",
+                "delegate",
+                "flash loan vulnerable",
+            ],
+            mitigation_code='''
+// Protect governance from flash loan attacks
+import "@openzeppelin/contracts/governance/Governor.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
+
+contract SecureGovernor is Governor, GovernorVotes {
+    uint256 public constant VOTING_DELAY = 1 days;  // Delay before voting starts
+    uint256 public constant VOTING_PERIOD = 3 days;  // Voting duration
+    
+    constructor(IVotes _token) Governor("SecureDAO") GovernorVotes(_token) {}
+    
+    function votingDelay() public pure override returns (uint256) {
+        return VOTING_DELAY;  // Prevents flash loan attacks
+    }
+    
+    function votingPeriod() public pure override returns (uint256) {
+        return VOTING_PERIOD;
+    }
+    
+    // Use snapshot-based voting (voting power at proposal creation)
+    function _getVotes(
+        address account,
+        uint256 blockNumber,
+        bytes memory /*params*/
+    ) internal view override returns (uint256) {
+        return token.getPastVotes(account, blockNumber);
+    }
+}
+''',
+            references=[
+                "https://blog.openzeppelin.com/protect-your-users-with-smart-contract-timelocks",
+            ],
+        ),
+        "timelock_protection": SecurityPattern(
+            pattern_type=VulnerabilityPattern.TIMELOCK_BYPASS,
+            severity="high",
+            description="Timelock bypass allowing immediate execution of critical operations",
+            detection_heuristics=[
+                "timelock",
+                "delay",
+                "execute",
+                "queue",
+                "governance",
+            ],
+            mitigation_code='''
+// Implement secure timelock for governance
+import "@openzeppelin/contracts/governance/TimelockController.sol";
+
+contract SecureDAO {
+    TimelockController public timelock;
+    uint256 public constant MIN_DELAY = 2 days;
+    
+    constructor(address[] memory proposers, address[] memory executors) {
+        timelock = new TimelockController(
+            MIN_DELAY,
+            proposers,
+            executors,
+            address(this)  // Admin (can change roles)
+        );
+    }
+    
+    function executeProposal(
+        address target,
+        uint256 value,
+        bytes calldata data,
+        bytes32 predecessor,
+        bytes32 salt
+    ) external {
+        // Must be scheduled first with MIN_DELAY
+        timelock.execute(target, value, data, predecessor, salt);
+    }
+    
+    function scheduleProposal(
+        address target,
+        uint256 value,
+        bytes calldata data,
+        bytes32 predecessor,
+        bytes32 salt,
+        uint256 delay
+    ) external onlyRole(PROPOSER_ROLE) {
+        require(delay >= MIN_DELAY, "Delay too short");
+        timelock.schedule(target, value, data, predecessor, salt, delay);
+    }
+}
+''',
+            references=[
+                "https://docs.openzeppelin.com/contracts/4.x/api/governance#TimelockController",
+            ],
+        ),
+        "quorum_protection": SecurityPattern(
+            pattern_type=VulnerabilityPattern.QUORUM_MANIPULATION,
+            severity="high",
+            description="Quorum manipulation through supply changes or voting power concentration",
+            detection_heuristics=[
+                "quorum",
+                "voting threshold",
+                "minimum votes",
+                "total supply",
+            ],
+            mitigation_code='''
+// Secure quorum implementation
+import "@openzeppelin/contracts/governance/Governor.sol";
+
+contract SecureGovernor is Governor {
+    uint256 public constant QUORUM_PERCENTAGE = 4;  // 4% of total supply
+    uint256 public constant MIN_QUORUM_VOTES = 1_000_000e18;  // Minimum absolute quorum
+    
+    function quorum(uint256 blockNumber) public view override returns (uint256) {
+        uint256 totalSupply = token.getPastTotalSupply(blockNumber);
+        uint256 percentageQuorum = (totalSupply * QUORUM_PERCENTAGE) / 100;
+        
+        // Use the higher of percentage-based or absolute minimum
+        return percentageQuorum > MIN_QUORUM_VOTES ? percentageQuorum : MIN_QUORUM_VOTES;
+    }
+    
+    // Additional: Prevent quorum manipulation via supply changes
+    function propose(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public override returns (uint256) {
+        // Check proposer has minimum voting power
+        uint256 proposerVotes = getVotes(msg.sender, block.number - 1);
+        require(
+            proposerVotes >= proposalThreshold(),
+            "Proposer votes below threshold"
+        );
+        
+        return super.propose(targets, values, calldatas, description);
+    }
+}
+''',
+            references=[
+                "https://docs.openzeppelin.com/contracts/4.x/governance",
+            ],
+        ),
+        "delegation_safety": SecurityPattern(
+            pattern_type=VulnerabilityPattern.DELEGATION_ATTACK,
+            severity="medium",
+            description="Delegation attack allowing unauthorized voting power transfer",
+            detection_heuristics=[
+                "delegate",
+                "delegateBySig",
+                "voting power",
+                "transfer votes",
+            ],
+            mitigation_code='''
+// Secure delegation implementation
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+
+contract SecureGovernanceToken is ERC20Votes {
+    // Minimum delegation period before votes become active
+    uint256 public constant DELEGATION_DELAY = 1 days;
+    
+    mapping(address => uint256) public delegationTimestamp;
+    
+    constructor() ERC20("SecureDAO", "SDAO") ERC20Permit("SecureDAO") {}
+    
+    function delegate(address delegatee) public override {
+        super.delegate(delegatee);
+        delegationTimestamp[msg.sender] = block.timestamp;
+    }
+    
+    function delegateBySig(
+        address delegatee,
+        uint256 nonce,
+        uint256 expiry,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public override {
+        super.delegateBySig(delegatee, nonce, expiry, v, r, s);
+        delegationTimestamp[_msgSender()] = block.timestamp;
+    }
+    
+    // Override to enforce delegation delay
+    function _getVotes(
+        address account,
+        uint256 blockNumber,
+        bytes memory /*params*/
+    ) internal view returns (uint256) {
+        // Check if delegation is old enough
+        if (block.timestamp < delegationTimestamp[account] + DELEGATION_DELAY) {
+            return 0;  // Votes not active yet
+        }
+        return getPastVotes(account, blockNumber);
+    }
+}
+''',
+            references=[
+                "https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#ERC20Votes",
+            ],
+        ),
+    }
+
     @classmethod
     def get_all_patterns(cls) -> dict[str, SecurityPattern]:
         """Get all security patterns."""
@@ -546,6 +991,8 @@ contract Secure {
         all_patterns.update(cls.ACCESS_CONTROL_PATTERNS)
         all_patterns.update(cls.FRONT_RUNNING_PATTERNS)
         all_patterns.update(cls.ORACLE_SECURITY_PATTERNS)
+        all_patterns.update(cls.BRIDGE_SECURITY_PATTERNS)
+        all_patterns.update(cls.DAO_GOVERNANCE_PATTERNS)
         return all_patterns
 
     @classmethod
