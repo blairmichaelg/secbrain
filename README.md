@@ -149,6 +149,8 @@ secbrain insights --workspace ./targets/protocol1 --format html --open
 
 ### Core Documentation
 - 📖 [Architecture](secbrain/docs/architecture-updated.md) - System design and components
+- 🗺️ [**Codemap Analysis**](CODEMAP_ANALYSIS.md) - **Comprehensive codebase analysis and metrics**
+- 📊 [**Visual Codemap**](docs/CODEMAP_VISUAL.md) - **Visual architecture diagrams and flow charts**
 - 🔄 [Workflows](secbrain/docs/workflows.md) - Run modes and phases
 - 🛠️ [Operations Guide](secbrain/docs/ops.md) - Setup and usage
 - 🔒 [Threat Model](secbrain/docs/threat_model.md) - Security considerations
