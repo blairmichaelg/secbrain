@@ -157,7 +157,7 @@ def test_checksum_address_strict_validation(hypothesis_agent):
         hypothesis_agent._checksum_address("0x1234")
 
     with pytest.raises(ValueError, match="invalid hex"):
-        hypothesis_agent._checksum_address("0xZZZZ0000000000000000000000000000000000")
+        hypothesis_agent._checksum_address("0xZZZZ000000000000000000000000000000000000")
 
 
 def test_normalize_address_lenient_helper(hypothesis_agent):
