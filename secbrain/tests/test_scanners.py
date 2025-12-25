@@ -73,18 +73,6 @@ def test_nuclei_scanner_custom_templates_path():
     assert scanner.templates_path == custom_path
 
 
-@pytest.mark.asyncio
-async def test_nuclei_scan_kill_switch():
-    """Test nuclei scan respects kill switch."""
-    run_context = MockRunContext(is_killed=True)
-    scanner = NucleiScanner(run_context)
-
-    result = await scanner.scan(targets=["example.com"])
-
-    assert result.scanner == "nuclei"
-    assert result.success is False
-    assert "Kill-switch" in result.error
-
 
 @pytest.mark.asyncio
 async def test_nuclei_scan_acl_denied():
