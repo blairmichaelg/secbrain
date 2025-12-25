@@ -36,6 +36,25 @@ SecBrain is a CLI-first Python project that automates bug bounty workflows using
 
 ## Quick Start
 
+### Verify Everything Works
+
+Before doing anything else, verify that everything is working:
+
+```bash
+# See VERIFICATION.md for full verification steps
+# Quick test:
+cd secbrain
+python3 -m pip install -e ".[dev]"
+cd ..
+secbrain run \
+  --scope secbrain/examples/dummy_target/scope.yaml \
+  --program secbrain/examples/dummy_target/program.json \
+  --workspace /tmp/test \
+  --dry-run
+```
+
+See [VERIFICATION.md](VERIFICATION.md) for complete verification steps.
+
 ### Installation
 
 ```bash

@@ -1,63 +1,50 @@
-# Branch Strategy
+# Branch Strategy: Keep It Simple
 
-## Current State
+## The Rule
 
-All development work is now consolidated on the **main** branch.
+**Work on one branch. Keep it simple.**
 
-> ⚠️ **Action Required**: This change is implemented via PR. Once this PR is merged to `main`, delete all `copilot/*` branches and work directly on `main` going forward. See [BRANCH-CONSOLIDATION.md](BRANCH-CONSOLIDATION.md) for details.
+Currently you're on `copilot/ensure-everything-works`. You can:
+- Keep using this branch, OR
+- Merge to `main` and use that
 
-## Why Main Only?
+Either way works. The code is the same.
 
-To avoid merge conflicts and branch management complexity, this repository uses a simplified single-branch strategy:
+## Why One Branch?
 
-- ✅ All work happens on `main`
-- ✅ Direct commits to `main` are allowed
-- ✅ No need to manage multiple feature branches
-- ✅ No merge conflicts between branches
+You said: "keep it on one branch, i dont need a bunch of branches making things confusing"
 
-## Development Workflow
+So that's what we're doing. One branch. No confusion.
 
-1. Always work on the `main` branch:
-   ```bash
-   git checkout main
-   git pull origin main
-   ```
+## Daily Workflow
 
-2. Make your changes and commit:
-   ```bash
-   git add .
-   git commit -m "Your commit message"
-   git push origin main
-   ```
+```bash
+# Make changes
+git add .
+git commit -m "what you changed"
+git push
+```
 
-3. That's it! No branches, no merges, no conflicts.
+That's it. No branch switching. No merging. No headaches.
 
-## For GitHub Copilot / Automation
+## What If I Need to Experiment?
 
-When automated tools create branches (like `copilot/*`), they should be:
-- Merged into main immediately after validation
-- Deleted after merging
-- Never left to accumulate
+If you want to try something risky:
 
-## Previous Branches
+1. Make a temporary branch
+2. Test your changes
+3. Merge it back the same day
+4. Delete the temp branch
 
-All previous `copilot/*` branches have been consolidated. If you see old branches:
-- They can be safely deleted
-- All work is on `main`
-- No need to merge them - main has everything
+Key: Don't let branches pile up. Keep it clean.
 
 ## Benefits
 
-- 🚀 Faster development - no branch switching
-- 🎯 Single source of truth - everything is on main
-- 🔧 Simpler maintenance - no orphaned branches
-- ✨ Zero merge conflicts - no parallel branches to merge
+- ✅ No merge conflicts
+- ✅ No branch confusion  
+- ✅ Faster workflow
+- ✅ Everything in one place
 
-## Trade-offs
+## That's It
 
-This strategy works best for:
-- Solo developers or small teams
-- Projects where main is always deployable
-- Rapid iteration and development
-
-If you need to experiment with breaking changes, create a temporary branch but merge or delete it quickly.
+Keep it simple. One branch. That's the strategy.
