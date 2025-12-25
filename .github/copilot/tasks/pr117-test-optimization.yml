@@ -1,0 +1,132 @@
+name: PR117 Test Optimization Agent
+description: Specialized agent for testing Threshold Network optimizations in PR #117
+
+# This agent focuses on testing the Threshold Network specific code
+agent_role: test_specialist
+coordination_id: pr117_parallel_work
+agent_id: test_optimizer
+
+trigger:
+  manual: true
+  pr_numbers: [117]
+
+inputs:
+  pr_number:
+    description: Pull request number to work on
+    default: 117
+    required: true
+  
+  focus_area:
+    description: Specific area to test
+    default: "threshold_network_patterns"
+    options:
+      - threshold_network_patterns
+      - immunefi_intelligence
+      - hypothesis_enhancer
+      - security_patterns
+      - all
+
+task:
+  steps:
+    - name: Read coordination state
+      action: check_agent_state
+      with:
+        coordination_file: .github/copilot/coordination/pr117_state.json
+        agent_id: test_optimizer
+    
+    - name: Claim test tasks
+      action: update_coordination
+      with:
+        claim_tasks:
+          - "test_threshold_network_patterns"
+          - "test_immunefi_intelligence_integration"
+          - "test_hypothesis_enhancement"
+          - "test_cross_chain_vulnerability_detection"
+    
+    - name: Create unit tests for Threshold Network patterns
+      action: ai_code_generation
+      prompt: |
+        Create comprehensive unit tests for the new Threshold Network vulnerability patterns.
+        
+        Focus on:
+        1. ThresholdNetworkPatterns class in threshold_network_patterns.py
+        2. Test all vulnerability pattern types (tBTC bridge, threshold crypto, cross-chain)
+        3. Test pattern matching for contract names
+        4. Test severity classification
+        5. Test Immunefi severity guidance
+        
+        Use pytest and follow existing test patterns in the repository.
+        Aim for >90% coverage of new code.
+    
+    - name: Create integration tests for Immunefi intelligence
+      action: ai_code_generation
+      prompt: |
+        Create integration tests for ImmunefiIntelligence module.
+        
+        Test:
+        1. Vulnerability pattern retrieval for different protocol types
+        2. Severity classification logic
+        3. Detection priority calculation
+        4. Threshold Network focus areas
+        5. Integration with hypothesis enhancer
+    
+    - name: Test hypothesis enhancement with new patterns
+      action: ai_code_generation
+      prompt: |
+        Create tests for the enhanced hypothesis generation in hypothesis_enhancer.py.
+        
+        Verify:
+        1. Threshold Network hypotheses are properly enhanced
+        2. Immunefi intelligence is correctly integrated
+        3. Confidence boosting logic works as expected
+        4. Research orchestrator integration
+        5. Edge cases and error handling
+    
+    - name: Run tests and collect results
+      action: execute_tests
+      with:
+        test_command: "pytest -v --cov=secbrain/agents --cov-report=term-missing"
+        collect_coverage: true
+    
+    - name: Update coordination state
+      action: update_coordination
+      with:
+        mark_complete:
+          - "test_threshold_network_patterns"
+          - "test_immunefi_intelligence_integration"
+          - "test_hypothesis_enhancement"
+          - "test_cross_chain_vulnerability_detection"
+        report_status:
+          agent_id: test_optimizer
+          status: completed
+          coverage_achieved: "{{ test_results.coverage }}"
+          tests_added: "{{ test_results.count }}"
+
+outputs:
+  tests_created:
+    description: Number of new tests created
+  
+  coverage_percentage:
+    description: Code coverage achieved
+  
+  test_results:
+    description: Summary of test execution results
+  
+  coordination_state:
+    description: Updated coordination state for other agents
+
+success_criteria:
+  - tests_created > 0
+  - coverage_percentage >= 85
+  - all_tests_passing == true
+
+communication:
+  status_updates:
+    - Write status to .github/copilot/coordination/pr117_state.json
+    - Update PR comment with progress
+  
+  completion_signal:
+    - Mark tasks complete in coordination file
+    - Notify code_review_agent that tests are ready
+
+next_agent: code_review_agent
