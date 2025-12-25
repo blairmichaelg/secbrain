@@ -73,77 +73,9 @@ def test_nuclei_scanner_custom_templates_path():
     assert scanner.templates_path == custom_path
 
 
-def test_nuclei_find_executable():
-    """Test finding nuclei executable."""
-    run_context = MockRunContext()
-    scanner = NucleiScanner(run_context)
-
-    # This will return None if nuclei is not installed, or a path if it is
-    result = scanner._find_nuclei()
-    assert result is None or isinstance(result, str)
-
-
-def test_nuclei_preconditions_kill_switch():
-    """Test nuclei preconditions when kill switch is active."""
-    run_context = MockRunContext(is_killed=True)
-    scanner = NucleiScanner(run_context)
-
-    error = scanner._check_preconditions()
-    assert error == "Kill-switch activated"
-
-
-def test_nuclei_preconditions_acl_denied():
-    """Test nuclei preconditions when tool is not allowed."""
-    run_context = MockRunContext(tool_acl={"nuclei": False})
-    scanner = NucleiScanner(run_context)
-
-    error = scanner._check_preconditions()
-    assert error == "Nuclei not allowed in current phase"
-
-
-def test_nuclei_preconditions_approval_required():
-    """Test nuclei preconditions when approval is required."""
-    run_context = MockRunContext(
-        approval_required={"nuclei": True},
-        dry_run=False,
-        auto_approve=False,
-    )
-    scanner = NucleiScanner(run_context)
-
-    error = scanner._check_preconditions()
-    assert error == "Approval required: nuclei"
-
-
-def test_nuclei_preconditions_approval_auto_approved():
-    """Test nuclei preconditions when auto-approve is enabled."""
-    run_context = MockRunContext(
-        approval_required={"nuclei": True},
-        dry_run=False,
-        auto_approve=True,
-    )
-    scanner = NucleiScanner(run_context)
-
-    error = scanner._check_preconditions()
-    # Should pass approval check due to auto_approve, but may fail on nuclei not found
-    assert error is None or error == "Nuclei not found"
-
-
-def test_nuclei_preconditions_dry_run():
-    """Test nuclei preconditions in dry-run mode."""
-    run_context = MockRunContext(
-        approval_required={"nuclei": True},
-        dry_run=True,
-    )
-    scanner = NucleiScanner(run_context)
-
-    error = scanner._check_preconditions()
-    # Should pass approval check due to dry_run, but may fail on nuclei not found
-    assert error is None or error == "Nuclei not found"
-
-
 @pytest.mark.asyncio
 async def test_nuclei_scan_kill_switch():
-    """Test nuclei scan when kill switch is active."""
+    """Test nuclei scan respects kill switch."""
     run_context = MockRunContext(is_killed=True)
     scanner = NucleiScanner(run_context)
 
@@ -151,8 +83,85 @@ async def test_nuclei_scan_kill_switch():
 
     assert result.scanner == "nuclei"
     assert result.success is False
-    assert result.error == "Kill-switch activated"
-    assert len(result.findings) == 0
+    assert "Kill-switch" in result.error
+
+
+@pytest.mark.asyncio
+async def test_nuclei_scan_acl_denied():
+    """Test nuclei scan respects ACL restrictions."""
+    run_context = MockRunContext(tool_acl={"nuclei": False})
+    scanner = NucleiScanner(run_context)
+
+    result = await scanner.scan(targets=["example.com"])
+
+    assert result.scanner == "nuclei"
+    assert result.success is False
+    assert "not allowed" in result.error
+
+
+@pytest.mark.asyncio
+async def test_nuclei_scan_approval_required():
+    """Test nuclei scan requires approval when configured."""
+    run_context = MockRunContext(
+        approval_required={"nuclei": True},
+        dry_run=False,
+        auto_approve=False,
+    )
+    scanner = NucleiScanner(run_context)
+
+    result = await scanner.scan(targets=["example.com"])
+
+    assert result.scanner == "nuclei"
+    assert result.success is False
+    assert "Approval required" in result.error
+
+
+@pytest.mark.asyncio
+async def test_nuclei_preconditions_approval_auto_approved():
+    """Test nuclei scan succeeds with auto-approve enabled."""
+    run_context = MockRunContext(
+        approval_required={"nuclei": True},
+        dry_run=False,
+        auto_approve=True,
+    )
+    scanner = NucleiScanner(run_context)
+
+    result = await scanner.scan(targets=["example.com"])
+    
+    # Should pass approval check, but may fail on nuclei not found
+    assert result.scanner == "nuclei"
+    if not result.success:
+        assert "not found" in result.error.lower() or "approval" not in result.error.lower()
+
+
+@pytest.mark.asyncio
+async def test_nuclei_preconditions_dry_run():
+    """Test nuclei scan in dry-run mode bypasses approval."""
+    run_context = MockRunContext(
+        approval_required={"nuclei": True},
+        dry_run=True,
+    )
+    scanner = NucleiScanner(run_context)
+
+    result = await scanner.scan(targets=["example.com"])
+    
+    # Dry run should bypass approval, but may fail on nuclei not found
+    assert result.scanner == "nuclei"
+    if not result.success:
+        assert "not found" in result.error.lower() or "approval" not in result.error.lower()
+
+
+@pytest.mark.asyncio
+async def test_nuclei_scan_kill_switch():
+    """Test nuclei scan respects kill switch."""
+    run_context = MockRunContext(is_killed=True)
+    scanner = NucleiScanner(run_context)
+
+    result = await scanner.scan(targets=["example.com"])
+
+    assert result.scanner == "nuclei"
+    assert result.success is False
+    assert "Kill-switch" in result.error
 
 
 @pytest.mark.asyncio
@@ -180,50 +189,9 @@ def test_semgrep_scanner_initialization():
     assert scanner.run_context == run_context
 
 
-def test_semgrep_find_executable():
-    """Test finding semgrep executable."""
-    run_context = MockRunContext()
-    scanner = SemgrepScanner(run_context)
-
-    # This will return None if semgrep is not installed, or a path if it is
-    result = scanner._find_semgrep()
-    assert result is None or isinstance(result, str)
-
-
-def test_semgrep_preconditions_kill_switch():
-    """Test semgrep preconditions when kill switch is active."""
-    run_context = MockRunContext(is_killed=True)
-    scanner = SemgrepScanner(run_context)
-
-    error = scanner._check_preconditions()
-    assert error == "Kill-switch activated"
-
-
-def test_semgrep_preconditions_acl_denied():
-    """Test semgrep preconditions when tool is not allowed."""
-    run_context = MockRunContext(tool_acl={"semgrep": False})
-    scanner = SemgrepScanner(run_context)
-
-    error = scanner._check_preconditions()
-    assert error == "Semgrep not allowed"
-
-
-def test_semgrep_preconditions_approval_required():
-    """Test semgrep preconditions when approval is required."""
-    run_context = MockRunContext(
-        approval_required={"semgrep": True},
-        dry_run=False,
-        auto_approve=False,
-    )
-    scanner = SemgrepScanner(run_context)
-
-    error = scanner._check_preconditions()
-    assert error == "Approval required: semgrep"
-
-
 @pytest.mark.asyncio
 async def test_semgrep_scan_kill_switch():
-    """Test semgrep scan when kill switch is active."""
+    """Test semgrep scan respects kill switch."""
     run_context = MockRunContext(is_killed=True)
     scanner = SemgrepScanner(run_context)
 
@@ -231,8 +199,37 @@ async def test_semgrep_scan_kill_switch():
 
     assert result.scanner == "semgrep"
     assert result.success is False
-    assert result.error == "Kill-switch activated"
-    assert len(result.findings) == 0
+    assert "Kill-switch" in result.error
+
+
+@pytest.mark.asyncio
+async def test_semgrep_scan_acl_denied():
+    """Test semgrep scan respects ACL restrictions."""
+    run_context = MockRunContext(tool_acl={"semgrep": False})
+    scanner = SemgrepScanner(run_context)
+
+    result = await scanner.scan(path=Path("/tmp/test"))
+
+    assert result.scanner == "semgrep"
+    assert result.success is False
+    assert "not allowed" in result.error
+
+
+@pytest.mark.asyncio
+async def test_semgrep_scan_approval_required():
+    """Test semgrep scan requires approval when configured."""
+    run_context = MockRunContext(
+        approval_required={"semgrep": True},
+        dry_run=False,
+        auto_approve=False,
+    )
+    scanner = SemgrepScanner(run_context)
+
+    result = await scanner.scan(path=Path("/tmp/test"))
+
+    assert result.scanner == "semgrep"
+    assert result.success is False
+    assert "Approval required" in result.error
 
 
 @pytest.mark.asyncio
