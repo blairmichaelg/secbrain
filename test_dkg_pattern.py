@@ -107,8 +107,9 @@ def test_vuln_hypothesis_agent():
     
     print("\nTesting Vulnerability Hypothesis Agent...")
     
-    # Read the file
-    with open('secbrain/secbrain/agents/vuln_hypothesis_agent.py', 'r') as f:
+    # Read the file with proper path
+    file_path = os.path.join(os.path.dirname(__file__), 'secbrain/secbrain/agents/vuln_hypothesis_agent.py')
+    with open(file_path, 'r') as f:
         content = f.read()
     
     # Test 1: Pattern in threshold_network list
