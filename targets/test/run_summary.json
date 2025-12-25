@@ -1,5 +1,5 @@
 {
-  "run_id": "2f93c626",
+  "run_id": "3d355e7f",
   "success": true,
   "phases_completed": [
     "ingest",
@@ -16,14 +16,17 @@
   ],
   "findings_count": 0,
   "reports_generated": 0,
-  "duration_seconds": 0.023219,
+  "duration_seconds": 0.004453,
   "errors": [
     "No hypotheses to test"
   ],
   "economic": {
     "decision": "SKIP",
     "reason": "no_attempts",
-    "max_profit_eth": 0.0
+    "max_profit_eth": 0.0,
+    "max_profit_usd": 0.0,
+    "gas_cost_usd_est": 0.0,
+    "net_usd_est": 0.0
   },
   "attempts_count": 0,
   "meta_metrics": {
@@ -36,6 +39,6 @@
     "attempts_count": 0,
     "attempts_with_profit": 0,
     "economic_decision": "SKIP",
-    "total_duration_seconds": 0.023219
+    "total_duration_seconds": 0.004453
   }
 }

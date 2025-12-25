@@ -1,0 +1,36 @@
+{
+  "run_id": "3d355e7f",
+  "program": "dummy-localhost",
+  "timestamp": "2025-12-25T00:04:10.773844",
+  "metrics": {
+    "recon": {
+      "assets_discovered": 2,
+      "live_hosts": 0
+    },
+    "hypotheses": {
+      "total_generated": 0,
+      "by_type": {}
+    },
+    "exploitation": {
+      "tested": 0,
+      "confirmed": 0,
+      "confirmation_rate": 0
+    },
+    "findings": {
+      "total": 0,
+      "by_severity": {}
+    }
+  },
+  "analysis": {
+    "effective_types": {},
+    "ineffective_types": {},
+    "success_rates": {},
+    "top_performing": [],
+    "hypothesis_effectiveness": {}
+  },
+  "recommendations": [
+    "Low confirmation rate - consider improving hypothesis quality or testing methodology",
+    "No findings - consider expanding attack surface or trying new techniques",
+    "AI Insights: [DRY-RUN] Mock response for prompt: Based on this security testing run analysis, provide 2-3 specific recommendations.\n\nMetrics:\n{\n  \"re..."
+  ]
+}
