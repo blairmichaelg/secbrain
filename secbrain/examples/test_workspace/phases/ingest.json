@@ -1,8 +1,8 @@
 {
-  "run_id": "3a13475d",
+  "run_id": "e6dd55a7",
   "phase": "ingest",
   "success": true,
-  "duration_seconds": 0.000195,
+  "duration_seconds": 0.000183,
   "errors": [],
   "data": {
     "program_name": "Test Program",
@@ -47,5 +47,5 @@
       ]
     }
   },
-  "timestamp": "2025-12-21T10:56:22.970067"
+  "timestamp": "2025-12-25T00:39:18.250560"
 }

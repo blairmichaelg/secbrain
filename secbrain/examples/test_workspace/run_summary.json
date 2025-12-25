@@ -1,5 +1,5 @@
 {
-  "run_id": "3a13475d",
+  "run_id": "e6dd55a7",
   "success": true,
   "phases_completed": [
     "ingest",
@@ -8,7 +8,7 @@
   "phases_failed": [],
   "findings_count": 0,
   "reports_generated": 0,
-  "duration_seconds": 0.000973,
+  "duration_seconds": 0.000811,
   "errors": [],
   "economic": {},
   "attempts_count": 0,
@@ -19,6 +19,6 @@
     "attempts_count": 0,
     "attempts_with_profit": 0,
     "economic_decision": null,
-    "total_duration_seconds": 0.000973
+    "total_duration_seconds": 0.000811
   }
 }
