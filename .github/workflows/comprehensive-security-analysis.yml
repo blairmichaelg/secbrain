@@ -40,6 +40,11 @@ on:
         required: false
         type: string
         default: ''
+      instascope_path:
+        description: 'Path to Instascope download directory (optional, for analyzing Immunefi downloads)'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -73,11 +78,12 @@ jobs:
       - name: Validate target repository URL
         run: |
           # Basic URL validation to prevent command injection
-          # GitHub repo names: alphanumeric, hyphens, underscores (no dots in repo names)
-          if ! echo "${{ inputs.target_repo }}" | grep -qE '^https://github\.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+/?$'; then
+          # GitHub repo names: alphanumeric, hyphens, underscores, and dots
+          # Allow optional .git suffix and trailing slash
+          if ! echo "${{ inputs.target_repo }}" | grep -qE '^https://github\.com/[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+(\.git)?/?$'; then
             echo "❌ Invalid repository URL format"
-            echo "Expected: https://github.com/owner/repo"
-            echo "Repository names can only contain letters, numbers, hyphens, and underscores"
+            echo "Expected: https://github.com/owner/repo or https://github.com/owner/repo.git"
+            echo "Repository names can only contain letters, numbers, hyphens, underscores, and dots"
             exit 1
           fi
           echo "✅ Repository URL validated"
@@ -99,6 +105,17 @@ jobs:
           
           echo "✅ Repository cloned successfully"
           echo "clone_success=true" >> $GITHUB_OUTPUT
+
+      - name: Copy Instascope downloads (if provided)
+        if: inputs.instascope_path != ''
+        run: |
+          if [ -d "${{ inputs.instascope_path }}" ]; then
+            echo "📦 Copying Instascope downloads from ${{ inputs.instascope_path }}"
+            cp -r "${{ inputs.instascope_path }}"/* ${{ env.TARGET_DIR }}/ || true
+            echo "✅ Instascope files copied"
+          else
+            echo "⚠️ Instascope path provided but directory not found: ${{ inputs.instascope_path }}"
+          fi
 
       - name: Detect project characteristics
         id: detect
@@ -288,9 +305,12 @@ jobs:
           cd ${{ env.TARGET_DIR }}
           
           # Adjust Bandit severity based on depth
+          # -l = low severity, -ll = medium, -lll = high
           SEVERITY_LEVEL="-ll"
-          if [ "${{ inputs.analysis_depth }}" = "deep" ]; then
-            SEVERITY_LEVEL="-l"
+          if [ "${{ inputs.analysis_depth }}" = "quick" ]; then
+            SEVERITY_LEVEL="-ll"  # Medium and high only
+          elif [ "${{ inputs.analysis_depth }}" = "deep" ]; then
+            SEVERITY_LEVEL="-lll"  # All severities including low
           fi
           
           bandit -r . $SEVERITY_LEVEL -f json -o ${{ env.RESULTS_DIR }}/bandit/results.json || true
@@ -532,23 +552,29 @@ jobs:
         run: |
           mkdir -p ${{ env.RESULTS_DIR }}/ai-analysis
           
-          # Run codebase analysis
+          # Run codebase analysis - use correct path to SecBrain scripts
           cd ${{ env.TARGET_DIR }}
-          python $GITHUB_WORKSPACE/scripts/ai_engineer_analysis.py > ${{ env.RESULTS_DIR }}/ai-analysis/codebase-analysis.json || true
+          python3 "$GITHUB_WORKSPACE/scripts/ai_engineer_analysis.py" > ${{ env.RESULTS_DIR }}/ai-analysis/codebase-analysis.json || true
 
       - name: Run Security Intelligence Gathering
         continue-on-error: true
         run: |
-          python $GITHUB_WORKSPACE/scripts/security_intelligence.py > ${{ env.RESULTS_DIR }}/ai-analysis/security-intel.json || true
+          python3 "$GITHUB_WORKSPACE/scripts/security_intelligence.py" > ${{ env.RESULTS_DIR }}/ai-analysis/security-intel.json || true
 
       - name: Generate AI Recommendations
         continue-on-error: true
         run: |
           # Combine analysis and intelligence for recommendations
-          jq -s '{"codebase_analysis": .[0], "security_intel": .[1]}' \
-            ${{ env.RESULTS_DIR }}/ai-analysis/codebase-analysis.json \
-            ${{ env.RESULTS_DIR }}/ai-analysis/security-intel.json | \
-            python $GITHUB_WORKSPACE/scripts/generate_recommendations.py > ${{ env.RESULTS_DIR }}/ai-analysis/recommendations.json || true
+          # Check if both files exist before attempting to merge
+          if [ -f "${{ env.RESULTS_DIR }}/ai-analysis/codebase-analysis.json" ] && [ -f "${{ env.RESULTS_DIR }}/ai-analysis/security-intel.json" ]; then
+            jq -s '{"codebase_analysis": .[0], "security_intel": .[1]}' \
+              ${{ env.RESULTS_DIR }}/ai-analysis/codebase-analysis.json \
+              ${{ env.RESULTS_DIR }}/ai-analysis/security-intel.json | \
+              python3 "$GITHUB_WORKSPACE/scripts/generate_recommendations.py" > ${{ env.RESULTS_DIR }}/ai-analysis/recommendations.json || true
+          else
+            echo "⚠️ Missing required files for recommendations generation" >&2
+            echo '{"error": "Missing input files"}' > ${{ env.RESULTS_DIR }}/ai-analysis/recommendations.json
+          fi
 
       - name: Get Immunefi Intelligence
         if: inputs.immunefi_program != ''
@@ -575,8 +601,8 @@ jobs:
   aggregate-and-report:
     name: 📊 Aggregate Results & Report
     runs-on: ubuntu-latest
-    needs: [setup-and-recon, static-analysis-solidity, static-analysis-python, ai-analysis-secbrain]
-    if: always()
+    needs: [setup-and-recon]
+    if: always() && needs.setup-and-recon.result != 'failure'
     timeout-minutes: 15
     steps:
       - name: Checkout SecBrain
@@ -704,7 +730,7 @@ jobs:
 
       - name: Generate Markdown Report
         run: |
-          cat > ${{ env.RESULTS_DIR }}/final/ANALYSIS-REPORT.md << 'EOMD'
+          cat > ${{ env.RESULTS_DIR }}/final/ANALYSIS-REPORT.md << EOMD
           # 🔒 Comprehensive Security Analysis Report
           
           **Target Repository:** ${{ inputs.target_repo }}
@@ -717,7 +743,7 @@ jobs:
           
           ## 📋 Executive Summary
           
-          This comprehensive security analysis was performed using 12+ industry-standard tools
+          This comprehensive security analysis was performed using 13+ industry-standard tools
           and AI-powered analysis to identify vulnerabilities, code quality issues, and security
           best practice violations.
           
@@ -739,6 +765,7 @@ jobs:
           - ✅ **Safety** - Dependency vulnerability scanning
           - ✅ **pip-audit** - Python package auditing
           - ✅ **Semgrep** - Pattern-based security analysis
+          - ✅ **detect-secrets** - Secret scanning
           
           ### Dynamic Analysis
           ${{ inputs.enable_fuzzing == true && '- ✅ **Foundry Fuzzing** - Property-based testing' || '- ⏭️ Foundry Fuzzing (disabled)' }}
@@ -758,11 +785,11 @@ jobs:
           
           | Severity | Count | Status |
           |----------|-------|--------|
-          | 🔴 Critical | ${CRITICAL_ISSUES:-0} | Requires immediate action |
-          | 🟠 High | ${HIGH_ISSUES:-0} | Should be addressed soon |
-          | 🟡 Medium | ${MEDIUM_ISSUES:-0} | Plan for remediation |
-          | 🟢 Low | ${LOW_ISSUES:-0} | Consider addressing |
-          | 📊 **Total** | **${TOTAL_ISSUES:-0}** | **All findings** |
+          | 🔴 Critical | \${CRITICAL_ISSUES:-0} | Requires immediate action |
+          | 🟠 High | \${HIGH_ISSUES:-0} | Should be addressed soon |
+          | 🟡 Medium | \${MEDIUM_ISSUES:-0} | Plan for remediation |
+          | 🟢 Low | \${LOW_ISSUES:-0} | Consider addressing |
+          | 📊 **Total** | **\${TOTAL_ISSUES:-0}** | **All findings** |
           
           *Detailed findings are available in the artifacts and aggregated JSON report.*
           
@@ -776,7 +803,7 @@ jobs:
           2. **Short-term** - Implement recommended security patterns
           3. **Long-term** - Enhance testing coverage and adopt best practices
           
-          See `ai-analysis/recommendations.json` for detailed, context-aware suggestions.
+          See \`ai-analysis/recommendations.json\` for detailed, context-aware suggestions.
           
           ---
           
@@ -784,12 +811,14 @@ jobs:
           
           All analysis results are available as workflow artifacts:
           
-          - `aggregated-results.json` - Unified JSON with all findings
-          - `static-analysis-*` - Static analysis tool outputs
-          - `dynamic-analysis-*` - Fuzzing and testing results
-          - `ai-analysis-*` - AI-generated insights and recommendations
+          - \`aggregated-results.json\` - Unified JSON with all findings
+          - \`static-analysis-*\` - Static analysis tool outputs
+          - \`dynamic-analysis-*\` - Fuzzing and testing results
+          - \`ai-analysis-*\` - AI-generated insights and recommendations
           
           **Retention:** 90 days
+          
+          [Download Artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
           
           ---
           
@@ -851,7 +880,7 @@ jobs:
       - name: Generate workflow summary
         if: always()
         run: |
-          cat >> $GITHUB_STEP_SUMMARY << 'EOSUMMARY'
+          cat >> $GITHUB_STEP_SUMMARY << EOSUMMARY
           ## 🔒 Comprehensive Security Analysis Complete
           
           ### 📋 Analysis Configuration
@@ -864,6 +893,7 @@ jobs:
           | AI Analysis | ${{ inputs.enable_ai_analysis }} |
           | Fuzzing Enabled | ${{ inputs.enable_fuzzing }} |
           | Immunefi Program | ${{ inputs.immunefi_program || 'N/A' }} |
+          | Instascope Path | ${{ inputs.instascope_path || 'N/A' }} |
           
           ### 🎯 Tools Executed
           
@@ -874,6 +904,7 @@ jobs:
           - ✅ Safety (Dependencies)
           - ✅ pip-audit (Packages)
           - ✅ Semgrep (Patterns)
+          - ✅ detect-secrets (Hardcoded secrets)
           
           #### Dynamic Analysis
           ${{ inputs.enable_fuzzing == true && '- ✅ Foundry Fuzzing' || '- ⏭️ Foundry (disabled)' }}
@@ -889,10 +920,10 @@ jobs:
           
           ### 📦 Artifacts Generated
           
-          - `comprehensive-analysis-results` - Final aggregated report
-          - `static-analysis-*` - Static analysis outputs
-          - `dynamic-analysis-*` - Fuzzing results
-          - `ai-analysis-*` - AI insights and recommendations
+          - \`comprehensive-analysis-results\` - Final aggregated report
+          - \`static-analysis-*\` - Static analysis outputs
+          - \`dynamic-analysis-*\` - Fuzzing results
+          - \`ai-analysis-*\` - AI insights and recommendations
           
           ### ⏱️ Analysis Duration
           
