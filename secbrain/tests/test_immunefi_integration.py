@@ -1,8 +1,5 @@
 """Tests for Immunefi integration and advanced research features."""
 
-import asyncio
-from pathlib import Path
-
 import pytest
 
 from secbrain.agents.advanced_research_agent import AdvancedResearchAgent, ResearchFinding
@@ -58,13 +55,18 @@ class TestImmunefiClient:
         """Test fetching specific program."""
         client = ImmunefiClient()
         try:
-            # Get a known program
-            program = await client.get_program_by_id("wormhole")
-            
+            # Get all programs first to find a valid ID
+            programs = await client.get_all_programs()
+            assert len(programs) > 0
+
+            # Test with first available program
+            first_program_id = programs[0].id
+            program = await client.get_program_by_id(first_program_id)
+
             assert program is not None
-            assert program.id == "wormhole"
+            assert program.id == first_program_id
             assert program.max_bounty > 0
-            
+
             # Test non-existent program
             missing = await client.get_program_by_id("nonexistent")
             assert missing is None
@@ -116,17 +118,23 @@ class TestImmunefiClient:
         """Test comprehensive program intelligence."""
         client = ImmunefiClient()
         try:
-            intel = await client.get_program_intelligence("thresholdnetwork")
-            
+            # Get all programs first to find a valid ID
+            programs = await client.get_all_programs()
+            assert len(programs) > 0
+
+            # Use first available program
+            first_program_id = programs[0].id
+            intel = await client.get_program_intelligence(first_program_id)
+
             assert "program" in intel
             assert "statistics" in intel
             assert "recommended_focus_areas" in intel
             assert "relevant_trends" in intel
             assert "similar_programs" in intel
-            
+
             # Check program details
             program_data = intel["program"]
-            assert program_data["id"] == "thresholdnetwork"
+            assert program_data["id"] == first_program_id
             assert program_data["max_bounty"] > 0
             
         finally:

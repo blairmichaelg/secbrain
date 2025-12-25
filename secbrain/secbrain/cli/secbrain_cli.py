@@ -643,7 +643,7 @@ def immunefi(
                 
             elif action == "show":
                 if not program_id:
-                    console.print("[red]Error: --program required for 'show' action[/]")
+                    console.print("[red]Error: --program (program ID) required for 'show' action[/]")
                     raise typer.Exit(code=1)
                 
                 program = await client.get_program_by_id(program_id)
@@ -686,7 +686,7 @@ def immunefi(
                 
             elif action == "intelligence":
                 if not program_id:
-                    console.print("[red]Error: --program required for 'intelligence' action[/]")
+                    console.print("[red]Error: --program (program ID) required for 'intelligence' action[/]")
                     raise typer.Exit(code=1)
                 
                 intel = await client.get_program_intelligence(program_id)
@@ -868,7 +868,7 @@ def research(
 def metrics(
     action: str = typer.Argument(
         ...,
-        help="Action: summary, programs, patterns, or record",
+        help="Action: summary, programs, patterns, or insights",
     ),
     workspace: Path = typer.Option(
         Path.cwd() / "metrics",
@@ -888,7 +888,7 @@ def metrics(
     ),
 ) -> None:
     """Track and analyze bug bounty success metrics.
-    
+
     Actions:
       summary  - Show overall success metrics
       programs - Show per-program statistics
@@ -896,17 +896,17 @@ def metrics(
       insights - Get learning insights for improvement
     """
     from secbrain.tools.bounty_metrics import BountyMetricsTracker
-    
+
     console.print("[bold blue]SecBrain Bounty Metrics[/]")
-    
+
     tracker = BountyMetricsTracker(workspace)
-    
+
     if action == "summary":
         metrics = tracker.get_overall_metrics()
-        
+
         if metrics.get("total_submissions", 0) == 0:
             console.print("\n[yellow]No submissions recorded yet.[/]")
-            console.print("Use 'secbrain metrics record' to add submissions.")
+            console.print("Submissions can be recorded programmatically using BountyMetricsTracker.")
             return
         
         console.print("\n[bold]Overall Metrics:[/]")

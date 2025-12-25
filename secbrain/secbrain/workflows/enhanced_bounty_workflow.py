@@ -166,9 +166,11 @@ class EnhancedBountyWorkflow:
         # Protocol-specific research if name provided
         protocol_findings = []
         if protocol_name:
+            # Default to Ethereum, could be extended to read from program config
+            blockchain = "Ethereum"
             protocol_findings = await agent.analyze_protocol_specific(
                 protocol_name=protocol_name,
-                blockchain=self.run_context.config.get("blockchain", "Ethereum"),
+                blockchain=blockchain,
             )
 
         # Generate novel hypotheses
@@ -201,7 +203,7 @@ class EnhancedBountyWorkflow:
     async def optimize_analysis_with_metrics(
         self,
         hypotheses: list[dict[str, Any]],
-        metrics_dir: str | None = None,
+        metrics_dir: Path | str | None = None,
     ) -> list[dict[str, Any]]:
         """
         Optimize hypotheses using historical success metrics.
@@ -219,7 +221,7 @@ class EnhancedBountyWorkflow:
 
         if not metrics_dir:
             # Use workspace metrics directory
-            workspace = Path(self.run_context.workspace)
+            workspace = Path(self.run_context.workspace_path)
             metrics_dir = workspace / "metrics"
 
         tracker = BountyMetricsTracker(metrics_dir)
@@ -231,9 +233,9 @@ class EnhancedBountyWorkflow:
 
         # Optimize hypotheses
         optimized = []
-        for hyp in hypotheses:
-            vuln_type = hyp.get("vulnerability_type", hyp.get("title", "unknown"))
-            confidence = hyp.get("confidence", 0.5)
+        for hypothesis in hypotheses:
+            vuln_type = hypothesis.get("vulnerability_type", hypothesis.get("title", "unknown"))
+            confidence = hypothesis.get("confidence", 0.5)
 
             # Check if should submit based on historical data
             decision = tracker.should_submit(
@@ -245,16 +247,16 @@ class EnhancedBountyWorkflow:
             priority_boost = 0.0
             if vuln_type in high_value_patterns:
                 priority_boost = 0.3
-                hyp["high_value_pattern"] = True
+                hypothesis["high_value_pattern"] = True
             elif vuln_type in low_confidence_patterns:
                 priority_boost = -0.2
-                hyp["low_confidence_pattern"] = True
+                hypothesis["low_confidence_pattern"] = True
 
             # Add submission recommendation
-            hyp["submission_recommendation"] = decision
-            hyp["priority_score"] = confidence + priority_boost
+            hypothesis["submission_recommendation"] = decision
+            hypothesis["priority_score"] = confidence + priority_boost
 
-            optimized.append(hyp)
+            optimized.append(hypothesis)
 
         # Sort by priority
         optimized.sort(key=lambda h: h.get("priority_score", 0), reverse=True)
