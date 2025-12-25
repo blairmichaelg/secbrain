@@ -1,0 +1,285 @@
+name: SecBrain Auto PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target name (e.g., thresholdnetwork)'
+        required: true
+        type: string
+      run_mode:
+        description: 'Run mode (dry-run or full)'
+        required: false
+        default: 'dry-run'
+        type: choice
+        options:
+          - dry-run
+          - full
+      branch_name:
+        description: 'Branch name for PR (auto-generated if empty)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  run-secbrain-and-create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install SecBrain
+        run: |
+          cd secbrain
+          pip install --require-hashes -r requirements.lock
+          pip install -e .
+
+      - name: Generate branch name
+        id: branch
+        run: |
+          if [ -n "${{ inputs.branch_name }}" ]; then
+            BRANCH="${{ inputs.branch_name }}"
+          else
+            TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+            BRANCH="secbrain-run/${{ inputs.target }}-${TIMESTAMP}"
+          fi
+          echo "branch_name=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "Branch name: ${BRANCH}"
+
+      - name: Create and checkout branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${{ steps.branch.outputs.branch_name }}"
+
+      - name: Validate configuration
+        run: |
+          TARGET_DIR="targets/${{ inputs.target }}"
+          
+          if [ ! -d "$TARGET_DIR" ]; then
+            echo "::error::Target directory not found: $TARGET_DIR"
+            exit 1
+          fi
+          
+          if [ ! -f "$TARGET_DIR/scope.yaml" ]; then
+            echo "::error::scope.yaml not found in $TARGET_DIR"
+            exit 1
+          fi
+          
+          if [ ! -f "$TARGET_DIR/program.json" ]; then
+            echo "::error::program.json not found in $TARGET_DIR"
+            exit 1
+          fi
+          
+          secbrain validate \
+            --scope "$TARGET_DIR/scope.yaml" \
+            --program "$TARGET_DIR/program.json"
+
+      - name: Run SecBrain
+        id: run_secbrain
+        run: |
+          TARGET_DIR="targets/${{ inputs.target }}"
+          WORKSPACE="$TARGET_DIR/workspace"
+          
+          mkdir -p "$WORKSPACE"
+          
+          if [ "${{ inputs.run_mode }}" = "dry-run" ]; then
+            echo "Running in dry-run mode..."
+            secbrain run \
+              --scope "$TARGET_DIR/scope.yaml" \
+              --program "$TARGET_DIR/program.json" \
+              --workspace "$WORKSPACE" \
+              --dry-run
+          else
+            echo "Running in full mode..."
+            secbrain run \
+              --scope "$TARGET_DIR/scope.yaml" \
+              --program "$TARGET_DIR/program.json" \
+              --workspace "$WORKSPACE" \
+              --no-dry-run
+          fi
+          
+          # Check if run_summary.json was created
+          if [ -f "$WORKSPACE/run_summary.json" ]; then
+            echo "run_completed=true" >> $GITHUB_OUTPUT
+            
+            # Extract key metrics
+            RUN_ID=$(jq -r '.run_id' "$WORKSPACE/run_summary.json")
+            FINDINGS=$(jq -r '.findings_count // 0' "$WORKSPACE/run_summary.json")
+            PHASES=$(jq -r '.phases_completed | join(", ")' "$WORKSPACE/run_summary.json")
+            
+            echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
+            echo "findings_count=${FINDINGS}" >> $GITHUB_OUTPUT
+            echo "phases_completed=${PHASES}" >> $GITHUB_OUTPUT
+          else
+            echo "run_completed=false" >> $GITHUB_OUTPUT
+            echo "::warning::run_summary.json not created"
+          fi
+
+      - name: Generate insights report
+        if: steps.run_secbrain.outputs.run_completed == 'true'
+        continue-on-error: true
+        run: |
+          TARGET_DIR="targets/${{ inputs.target }}"
+          WORKSPACE="$TARGET_DIR/workspace"
+          
+          secbrain insights \
+            --workspace "$WORKSPACE" \
+            --format all \
+            --output "$WORKSPACE/insights"
+
+      - name: Commit results
+        id: commit
+        run: |
+          git add targets/${{ inputs.target }}/workspace/
+          
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            git commit -m "SecBrain run for ${{ inputs.target }}
+            
+            Run mode: ${{ inputs.run_mode }}
+            Run ID: ${{ steps.run_secbrain.outputs.run_id }}
+            Findings: ${{ steps.run_secbrain.outputs.findings_count }}
+            Phases: ${{ steps.run_secbrain.outputs.phases_completed }}"
+            
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push branch
+        if: steps.commit.outputs.has_changes == 'true'
+        run: |
+          git push origin "${{ steps.branch.outputs.branch_name }}"
+
+      - name: Create Pull Request
+        if: steps.commit.outputs.has_changes == 'true'
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const workspacePath = `targets/${{ inputs.target }}/workspace`;
+            const summaryPath = path.join(workspacePath, 'run_summary.json');
+            
+            let prBody = `## SecBrain Run Results\n\n`;
+            prBody += `**Target:** ${{ inputs.target }}\n`;
+            prBody += `**Mode:** ${{ inputs.run_mode }}\n`;
+            prBody += `**Run ID:** ${{ steps.run_secbrain.outputs.run_id }}\n\n`;
+            
+            if (fs.existsSync(summaryPath)) {
+              const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+              
+              prBody += `### Summary\n\n`;
+              prBody += `- **Findings:** ${summary.findings_count || 0}\n`;
+              prBody += `- **Reports Generated:** ${summary.reports_generated || 0}\n`;
+              prBody += `- **Duration:** ${summary.duration_seconds?.toFixed(1) || 'N/A'}s\n`;
+              prBody += `- **Phases Completed:** ${summary.phases_completed?.join(', ') || 'None'}\n\n`;
+              
+              if (summary.errors && summary.errors.length > 0) {
+                prBody += `### Errors\n\n`;
+                summary.errors.forEach(error => {
+                  prBody += `- ${error}\n`;
+                });
+                prBody += `\n`;
+              }
+              
+              if (summary.economic) {
+                prBody += `### Economic Decision\n\n`;
+                prBody += `- **Decision:** ${summary.economic.decision || 'N/A'}\n`;
+                if (summary.economic.profitable_attempts !== undefined) {
+                  prBody += `- **Profitable Attempts:** ${summary.economic.profitable_attempts}\n`;
+                }
+                prBody += `\n`;
+              }
+              
+              if (summary.meta_metrics) {
+                prBody += `### Metrics\n\n`;
+                prBody += `- **Hypotheses Generated:** ${summary.meta_metrics.hypotheses_count || 0}\n`;
+                prBody += `- **Hypotheses with Concrete Target:** ${summary.meta_metrics.hypotheses_with_concrete_target || 0}\n`;
+                prBody += `- **Attempts Count:** ${summary.meta_metrics.attempts_count || 0}\n`;
+                prBody += `- **Attempts with Profit:** ${summary.meta_metrics.attempts_with_profit || 0}\n`;
+              }
+            }
+            
+            prBody += `\n---\n`;
+            prBody += `*This PR was automatically generated by SecBrain workflow.*\n`;
+            
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[SecBrain] ${{ inputs.target }} - ${{ inputs.run_mode }} run`,
+              head: '${{ steps.branch.outputs.branch_name }}',
+              base: 'main',
+              body: prBody
+            });
+            
+            core.info(`Pull Request created: ${pr.html_url}`);
+            core.setOutput('pr_number', pr.number);
+            core.setOutput('pr_url', pr.html_url);
+
+      - name: Add labels to PR
+        if: steps.commit.outputs.has_changes == 'true'
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = ${{ steps.create_pr.outputs.pr_number }};
+            const labels = ['secbrain', 'automated'];
+            
+            if ('${{ inputs.run_mode }}' === 'dry-run') {
+              labels.push('dry-run');
+            }
+            
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: labels
+            });
+
+      - name: Generate summary
+        if: always()
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## 🧠 SecBrain Run Summary
+          
+          **Target:** ${{ inputs.target }}
+          **Mode:** ${{ inputs.run_mode }}
+          **Branch:** ${{ steps.branch.outputs.branch_name }}
+          
+          ### Results
+          - **Run Completed:** ${{ steps.run_secbrain.outputs.run_completed }}
+          - **Findings:** ${{ steps.run_secbrain.outputs.findings_count }}
+          - **Phases:** ${{ steps.run_secbrain.outputs.phases_completed }}
+          
+          ### Files Generated
+          - Run summary: `targets/${{ inputs.target }}/workspace/run_summary.json`
+          - Phase outputs: `targets/${{ inputs.target }}/workspace/phases/`
+          - Insights: `targets/${{ inputs.target }}/workspace/insights/`
+          
+          ---
+          *Check the artifacts for detailed results.*
+          EOF
+
+      - name: Upload workspace artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: secbrain-workspace-${{ inputs.target }}
+          path: targets/${{ inputs.target }}/workspace/
+          retention-days: 30

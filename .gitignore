@@ -93,5 +93,9 @@ targets/**/insights/
 targets/**/run-live-*
 
 # Target workspace directories (runtime generated)
-targets/**/workspace/
+# Allow critical summary files but ignore most runtime artifacts
+targets/**/workspace/*
+!targets/**/workspace/run_summary.json
+!targets/**/workspace/phases/
+!targets/**/workspace/findings/
 !targets/**/workspace/.gitkeep

@@ -296,6 +296,15 @@ class VulnHypothesisAgent(BaseAgent):
             threshold=confidence_threshold,
         )
 
+        # Fallback: If no hypotheses generated at all, create generic ones from contract assets
+        if not ranked and contract_assets:
+            self._log("generating_fallback_hypotheses", contract_count=len(contract_assets))
+            fallback_hypotheses = self._generate_fallback_hypotheses(contract_assets[:3])
+            ranked = self._rank_hypotheses(fallback_hypotheses)
+            filtered = [h for h in ranked if h.get("confidence", 0) >= confidence_threshold]
+            top_hypotheses = filtered[:5]
+            all_hypotheses.extend(fallback_hypotheses)
+
         review = await self._advisor_review_hypotheses(top_hypotheses)
 
         missing_targets = [h for h in ranked if not h.get("contract_address") or not h.get("function_signature")]
@@ -1466,6 +1475,62 @@ Respond with JSON:
             vtype = h.get("vuln_type", "unknown")
             counts[vtype] = counts.get(vtype, 0) + 1
         return counts
+
+    def _generate_fallback_hypotheses(
+        self,
+        contract_assets: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        """
+        Generate generic fallback hypotheses when no hypotheses were generated.
+        
+        This ensures the workflow can continue even when LLM/research calls fail,
+        by creating basic hypotheses from contract metadata.
+        """
+        fallback_hypotheses: list[dict[str, Any]] = []
+        
+        for asset in contract_assets:
+            metadata = asset.get("metadata", {}) or {}
+            address = metadata.get("address") or asset.get("value", "")
+            name = metadata.get("name") or asset.get("name", "Unknown")
+            chain_id = metadata.get("chain_id", 1)
+            functions = metadata.get("functions", [])
+            classification = metadata.get("classification", {})
+            protocol_type = classification.get("protocol_type", "generic")
+            
+            # Get appropriate vulnerability patterns based on protocol type
+            profile = ProtocolProfile.from_type(protocol_type)
+            
+            # Create a few generic hypotheses per contract
+            for pattern in profile.patterns[:2]:  # Top 2 patterns for this protocol type
+                hypothesis = {
+                    "id": str(uuid.uuid4()),
+                    "vuln_type": pattern,
+                    "confidence": 0.45,  # Just above threshold but clearly a fallback
+                    "contract_address": address,
+                    "chain_id": chain_id,
+                    "function_signature": functions[0] if functions else None,
+                    "rationale": f"Fallback hypothesis for {protocol_type} contract. "
+                                f"Pattern: {pattern}. Manual review recommended.",
+                    "attack_description": f"Generic {pattern} attack vector based on protocol type",
+                    "expected_profit_hint_eth": 0.0,
+                    "exploit_notes": [
+                        "Generated as fallback - LLM hypothesis generation failed or returned no results",
+                        f"Contract: {name}",
+                        f"Protocol type: {protocol_type}",
+                        "Requires manual verification"
+                    ],
+                    "status": "pending",
+                    "is_fallback": True,
+                }
+                fallback_hypotheses.append(hypothesis)
+        
+        self._log(
+            "fallback_hypotheses_generated",
+            count=len(fallback_hypotheses),
+            contracts=len(contract_assets),
+        )
+        
+        return fallback_hypotheses
 
     def _rank_hypotheses(
         self,
