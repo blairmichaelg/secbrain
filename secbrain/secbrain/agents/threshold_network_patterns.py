@@ -34,6 +34,7 @@ class ThresholdVulnerabilityPattern(Enum):
     # Threshold cryptography vulnerabilities
     THRESHOLD_SIGNATURE_MANIPULATION = "threshold_signature_manipulation"
     DKG_PROTOCOL_ATTACK = "dkg_protocol_attack"  # Distributed Key Generation
+    DKG_THRESHOLD_RAISING = "dkg_threshold_raising"  # Polynomial degree validation bypass
     OPERATOR_COLLUSION = "operator_collusion"
     SIGNING_GROUP_CORRUPTION = "signing_group_corruption"
     RANDOM_BEACON_MANIPULATION = "random_beacon_manipulation"
@@ -253,6 +254,50 @@ class ThresholdNetworkPatterns:
                 "https://docs.threshold.network/staking-and-running-a-node/random-beacon-overview",
             ],
             affected_contracts=["WalletRegistry", "RandomBeacon", "SortitionPool"],
+        ),
+        "dkg_threshold_raising": ThresholdSecurityPattern(
+            pattern_type=ThresholdVulnerabilityPattern.DKG_THRESHOLD_RAISING,
+            severity=ImmunefiSeverity.CRITICAL,
+            description="DKG result submission with polynomial degree higher than expected threshold, causing permanent fund freezing",
+            immunefi_category="Permanent freezing of funds (Protocol Insolvency)",
+            max_bounty_usd=1_000_000,
+            detection_heuristics=[
+                "submitDkgResult",
+                "dkgValidator.validate",
+                "EcdsaDkgValidator",
+                "groupCommitment",
+                "groupPubKey",
+                "polynomial degree",
+                "threshold",
+                "commitment.length",
+                "result.misbehavedMembers",
+                "ECDSA DKG",
+            ],
+            exploitation_steps=[
+                "1. Identify WalletRegistry.submitDkgResult entry point",
+                "2. Check if EcdsaDkgValidator.validate verifies polynomial degree",
+                "3. Verify absence of: require(result.groupCommitment.length == threshold + 1)",
+                "4. Coordinate malicious operators off-chain to produce higher-degree polynomial",
+                "5. Submit DKG result with commitment.length = threshold + 2 (or higher)",
+                "6. If accepted, new wallet cannot sign transactions (permanent fund lock)",
+                "7. All tBTC deposits to compromised wallet are permanently frozen",
+            ],
+            mitigation_strategies=[
+                "Add explicit check: require(result.groupCommitment.length == threshold + 1, 'Invalid polynomial degree')",
+                "Validate commitment vector size matches expected threshold parameter",
+                "Add pre-condition checks in submitDkgResult before delegation to validator",
+                "Implement slashing for operators submitting invalid-degree commitments",
+                "Add circuit breakers to pause wallet creation if anomalous commitments detected",
+                "Multiple independent validators for DKG result verification",
+            ],
+            references=[
+                "https://eprint.iacr.org/2020/852.pdf (FROST DKG vulnerability)",
+                "https://github.com/safeheron/safeheron-api-sdk-js/security/advisories",
+                "https://docs.threshold.network/app-development/tbtc-contracts-api/ecdsa-api/walletregistry",
+                "https://docs.threshold.network/app-development/tbtc-contracts-api/ecdsa-api/ecdsadkgvalidator",
+                "Trail of Bits: Threshold cryptography implementation audits",
+            ],
+            affected_contracts=["WalletRegistry", "EcdsaDkgValidator", "EcdsaDkg", "Bridge"],
         ),
         "operator_collusion": ThresholdSecurityPattern(
             pattern_type=ThresholdVulnerabilityPattern.OPERATOR_COLLUSION,
