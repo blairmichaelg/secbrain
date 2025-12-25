@@ -91,9 +91,6 @@ class CheckpointManager:
             
         Raises:
             ValueError: If run_id is empty or phase data is invalid
-
-        Returns:
-            Path to saved checkpoint file
         """
         checkpoint = Checkpoint(
             run_id=run_id,

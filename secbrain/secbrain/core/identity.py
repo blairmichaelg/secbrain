@@ -97,7 +97,7 @@ class IdentityRegistry:
                 f"Cannot switch to '{name}': not registered. Available: {available}"
             )
         self.active = name
-        return self._identities[name]
+        return self.get(name)
 
     def list_identities(self) -> list[str]:
         return list(self._identities.keys())

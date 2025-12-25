@@ -68,9 +68,10 @@ class CircuitBreaker:
                 if self._should_attempt_reset():
                     self._state = CircuitState.HALF_OPEN
                 else:
+                    retry_after = self._get_retry_after()
                     raise CircuitBreakerOpenError(
-                        "Circuit breaker open, retry after "
-                        f"{self._get_retry_after():.1f} seconds"
+                        f"Circuit breaker open, retry after {retry_after:.1f} seconds",
+                        retry_after=retry_after
                     )
 
         try:
