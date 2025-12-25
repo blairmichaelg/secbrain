@@ -105,13 +105,13 @@ class TestExtractJsonFromResponse:
             extract_json_from_response("{invalid json}")
 
     def test_type_mismatch_raises_error(self) -> None:
-        """Test type mismatch raises ValueError."""
-        with pytest.raises(ValueError, match="Expected list, got dict"):
+        """Test type mismatch raises TypeError."""
+        with pytest.raises(TypeError, match="Expected list, got dict"):
             extract_json_from_response('{"key": "value"}', expected_type=list)
 
     def test_dict_expected_got_list_raises_error(self) -> None:
-        """Test expecting dict but getting list raises ValueError."""
-        with pytest.raises(ValueError, match="Expected dict, got list"):
+        """Test expecting dict but getting list raises TypeError."""
+        with pytest.raises(TypeError, match="Expected dict, got list"):
             extract_json_from_response('[1, 2, 3]', expected_type=dict)
 
     def test_no_json_boundaries_found(self) -> None:
