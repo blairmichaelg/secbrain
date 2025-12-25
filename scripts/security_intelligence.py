@@ -249,7 +249,7 @@ def main() -> None:
     print("🚀 Gathering security intelligence...\n", file=sys.stderr)
     
     intelligence = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "python_cves": get_recent_python_cves(),
         "defi_exploits": get_defi_exploit_patterns(),
         "solidity_best_practices": get_solidity_best_practices(),

@@ -111,10 +111,10 @@ def main():
 
     # Save consolidated JSON report
     import json
-    from datetime import datetime
+    from datetime import UTC, datetime
 
     dashboard_data = {
-        "generated_at": datetime.now().isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "summary": {
             "total_workspaces": len(all_results),
             "requires_attention": requires_attention,

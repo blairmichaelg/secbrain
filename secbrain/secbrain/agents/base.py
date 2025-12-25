@@ -7,7 +7,7 @@ import contextlib
 import hashlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -309,7 +309,7 @@ class BaseAgent(ABC):
         return BaseAgent.HealthCheck(
             component=self.name,
             status=overall,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(UTC),
             message="; ".join(f"{comp}: {msg}" for comp, _, msg in checks if msg),
             metrics={
                 "checks": len(checks),
