@@ -4,10 +4,51 @@ This guide covers common issues and their solutions when running SecBrain.
 
 ## Table of Contents
 
+- [Dependency Issues](#dependency-issues)
 - [Model Provider Issues](#model-provider-issues)
 - [RPC Configuration Issues](#rpc-configuration-issues)
 - [Foundry/Forge Issues](#foundryforge-issues)
 - [Performance Issues](#performance-issues)
+
+## Dependency Issues
+
+### eth-hash Backend Missing
+
+**Symptoms:**
+- Hypothesis phase fails with error: `None of these hashing backends are installed: ['pycryptodome', 'pysha3']`
+- Run completes with 0 hypotheses generated
+- Error appears in logs during address validation
+
+**Cause:**
+The `eth-utils` library requires `eth-hash` with a cryptographic backend (either `pycryptodome` or `pysha3`) for address checksumming. This is needed during hypothesis generation to validate and normalize Ethereum contract addresses.
+
+**Solution:**
+
+1. **Install eth-hash with pycryptodome backend:**
+   ```bash
+   pip install "eth-hash[pycryptodome]"
+   ```
+
+2. **Verify the fix:**
+   ```bash
+   python3 scripts/test_eth_hash_fix.py
+   ```
+   
+   You should see:
+   ```
+   ✅ All tests passed! eth-hash backend is working correctly.
+   ```
+
+3. **Install from updated requirements:**
+   ```bash
+   cd secbrain
+   pip install -r requirements.txt
+   ```
+
+**Notes:**
+- This dependency is now included in `requirements.in` and `pyproject.toml`
+- The fix was added in response to hypothesis generation failures
+- See [RUN_ANALYSIS_GUIDANCE.md](../RUN_ANALYSIS_GUIDANCE.md) for detailed analysis
 
 ## Model Provider Issues
 
