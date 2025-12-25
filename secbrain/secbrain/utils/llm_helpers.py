@@ -58,7 +58,7 @@ def extract_json_from_response(
     data: Any = json.loads(text)
 
     if not isinstance(data, expected_type):
-        raise ValueError(f"Expected {expected_type.__name__}, got {type(data).__name__}")
+        raise TypeError(f"Expected {expected_type.__name__}, got {type(data).__name__}")
 
     return data
 
