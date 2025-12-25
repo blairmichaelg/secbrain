@@ -7,6 +7,7 @@ import hashlib
 import json
 import logging
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -297,8 +298,9 @@ class ResearchOrchestrator:
         """Clear the result cache."""
         self._cache.clear()
 
-    def save_cache(self, filepath: str) -> None:
+    def save_cache(self, filepath: str | Path) -> None:
         """Save cache to a JSON file."""
+        filepath = Path(filepath)
         cache_data = {}
         for query_hash, result in self._cache.items():
             cache_data[query_hash] = {
@@ -312,8 +314,9 @@ class ResearchOrchestrator:
         with filepath.open("w") as f:
             json.dump(cache_data, f, indent=2)
 
-    def load_cache(self, filepath: str) -> int:
+    def load_cache(self, filepath: str | Path) -> int:
         """Load cache from a JSON file."""
+        filepath = Path(filepath)
         try:
             with filepath.open() as f:
                 cache_data = json.load(f)
