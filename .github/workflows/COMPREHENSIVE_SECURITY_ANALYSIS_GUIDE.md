@@ -63,6 +63,7 @@ TOGETHER_API_KEY     # For worker model (optional, for AI analysis)
 | **enable_ai_analysis** | Enable AI-powered insights | `true` / `false` |
 | **enable_fuzzing** | Enable fuzzing tests | `true` / `false` |
 | **immunefi_program** | Immunefi program name | Optional |
+| **instascope_path** | Path to Instascope downloads | Optional |
 
 5. Click **"Run workflow"**
 
@@ -93,7 +94,50 @@ gh workflow run comprehensive-security-analysis.yml \
   -f enable_ai_analysis=true \
   -f enable_fuzzing=true \
   -f immunefi_program=wormhole
+
+# Analyze Instascope downloads from Immunefi
+gh workflow run comprehensive-security-analysis.yml \
+  -f target_repo=https://github.com/example/placeholder \
+  -f target_type=smart-contract \
+  -f analysis_depth=standard \
+  -f enable_ai_analysis=true \
+  -f enable_fuzzing=true \
+  -f instascope_path=/path/to/instascope/downloads
 ```
+
+## 🎯 Immunefi Instascope Integration
+
+### What is Instascope?
+
+Instascope is Immunefi's tool that allows you to download complete project codebases for bug bounty programs. This workflow now supports analyzing these downloads directly.
+
+### How to Use Instascope with This Workflow
+
+1. **Download from Immunefi**: Use Instascope to download a program's codebase
+2. **Note the download path**: Instascope typically downloads to a local directory
+3. **Run the workflow** with the `instascope_path` parameter:
+
+```bash
+gh workflow run comprehensive-security-analysis.yml \
+  -f target_repo=https://github.com/example/placeholder \
+  -f target_type=smart-contract \
+  -f instascope_path=/path/to/instascope/downloads \
+  -f analysis_depth=standard
+```
+
+### How It Works
+
+- The workflow will copy all files from your Instascope download directory
+- Files are merged into the analysis workspace
+- All 13+ security tools run on the combined codebase
+- You can use this with or instead of a git repository URL
+
+### Use Cases
+
+- **Analyzing private programs**: When repositories aren't public
+- **Testing specific snapshots**: Analyze exact versions from Immunefi
+- **Offline analysis**: Work with downloaded codebases
+- **Combined analysis**: Layer Instascope files over a cloned repository
 
 ## 📊 Analysis Depth Comparison
 
