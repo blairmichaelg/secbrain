@@ -882,6 +882,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup-and-recon, aggregate-findings]
     if: always() && !cancelled()
+    timeout-minutes: 10
     permissions:
       issues: write
     
