@@ -71,20 +71,23 @@ pip install -e ".[dev]"
 
 ### Set up API keys
 
+**All configured to use FREE tier models!** See [FREE_TIER_MODELS.md](FREE_TIER_MODELS.md) for details.
+
 ```bash
-# Required for research integration
+# Required for research integration (FREE with Perplexity PRO - unlimited)
 export PERPLEXITY_API_KEY=pplx-xxxx
 
-# Required for advisor model
+# Required for advisor model (FREE with Google PRO)
 export GOOGLE_API_KEY=AIza-xxxx
 
-# Required for worker model (choose one)
-export TOGETHER_API_KEY=your-together-key      # Recommended: Together AI
-# OR
-export OPENROUTER_API_KEY=your-openrouter-key  # Alternative: OpenRouter
-# OR
-export OPENAI_API_KEY=your-openai-key          # Alternative: OpenAI
+# Required for worker model (FREE tier on Together AI)
+export TOGETHER_API_KEY=your-together-key      # Recommended: Together AI (FREE tier)
+# OR use alternative free providers (see FREE_TIER_MODELS.md):
+# export GROQ_API_KEY=your-groq-key             # Alternative: Groq (FREE tier)
+# export OPENROUTER_API_KEY=your-openrouter-key # Alternative: OpenRouter (FREE models)
 ```
+
+**Note:** All default models are configured to use free tiers. No paid API calls required!
 
 ### Run a dry-run test
 

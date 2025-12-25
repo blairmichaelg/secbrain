@@ -318,7 +318,7 @@ def _create_worker_client(config: dict[str, Any] | None) -> ModelClient | None:
         return None
 
     provider = (config.get("provider") or "openai_compatible").lower()
-    model_name = config.get("model", "deepseek-ai/DeepSeek-V3")
+    model_name = config.get("model", "meta-llama/Llama-3.2-3B-Instruct-Turbo")  # FREE tier default
     base_url = config.get("base_url")
     api_key = config.get("api_key")
     extra_args = {
@@ -342,7 +342,7 @@ def _create_advisor_client(config: dict[str, Any] | None) -> ModelClient | None:
         return None
 
     provider = (config.get("provider") or "openai_compatible").lower()
-    model_name = config.get("model", "Qwen/Qwen2.5-Coder-32B-Instruct")
+    model_name = config.get("model", "meta-llama/Meta-Llama-3-8B-Instruct-Turbo")  # FREE tier default
     base_url = config.get("base_url")
     api_key = config.get("api_key")
     extra_args = {

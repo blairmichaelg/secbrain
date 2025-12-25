@@ -1,39 +1,47 @@
-# SecBrain Model Configuration
+# SecBrain Model Configuration - FREE TIER OPTIMIZED
 #
 # This file configures AI model providers for different SecBrain components.
+# ALL DEFAULT MODELS ARE CONFIGURED TO USE FREE TIERS OR USER'S PRO SUBSCRIPTIONS
+#
+# FREE TIER PROVIDERS CONFIGURED:
+# - Together AI: Free tier models (Llama-3.2-3B, Llama-3-8B)
+# - Perplexity: Free tier "sonar" model (with PRO subscription = unlimited)
+# - Google Gemini: Free with PRO subscription
+# - Groq: Free tier with rate limits (commented out alternative)
+# - OpenRouter: Free models with :free suffix (commented out alternative)
 # 
 # TROUBLESHOOTING PROVIDER SPEND LIMITS:
 # If you encounter spend limit errors (e.g., "spend_limit_reached"), you can:
-#   1. Switch to alternative providers by uncommenting one of the configurations below
-#   2. Increase your API provider's spend limit
-#   3. Use cached responses (SecBrain automatically caches to reduce API calls)
-#   4. Switch to local models (see 'local' configuration)
+#   1. Switch to alternative free providers by uncommenting configurations below
+#   2. Use local models (see 'local' configuration)
+#   3. Verify you're using the free tier models listed above
 #
 # REQUIRED API KEYS (set as environment variables):
-#   - TOGETHER_API_KEY: For Together AI (default provider)
-#   - OPENAI_API_KEY: For OpenAI models
-#   - GOOGLE_API_KEY: For Gemini models
-#   - GROQ_API_KEY: For Groq models
-#   - PERPLEXITY_API_KEY: For research capabilities
+#   - TOGETHER_API_KEY: For Together AI (FREE tier available)
+#   - PERPLEXITY_API_KEY: For research (FREE with PRO subscription)
+#   - GOOGLE_API_KEY: For Gemini models (FREE with PRO subscription)
+#   - GROQ_API_KEY: (Optional) For Groq models (FREE tier available)
+#   - OPENROUTER_API_KEY: (Optional) For OpenRouter (FREE models available)
 
-# Default configuration - Uses Together AI for cost-effective, high-quality inference
+# Default configuration - Uses FREE tier models from Together AI
+# These models are available on Together AI's free tier with generous rate limits
 worker:
   provider: openai_compatible
-  model: deepseek-ai/DeepSeek-V3          # Hypothesis generation / complex reasoning
+  model: meta-llama/Llama-3.2-3B-Instruct-Turbo  # Free tier - Hypothesis generation
   base_url: https://api.together.xyz/v1
-  max_tokens: 16384
+  max_tokens: 8192
   temperature: 0.3
 
 advisor:
   provider: openai_compatible
-  model: Qwen/Qwen2.5-Coder-32B-Instruct  # Severity / validation
+  model: meta-llama/Meta-Llama-3-8B-Instruct-Turbo  # Free tier - Severity / validation
   base_url: https://api.together.xyz/v1
   max_tokens: 4096
   temperature: 0.2
 
 research:
   provider: perplexity
-  model: sonar-medium-online
+  model: sonar  # Free tier model - fast, efficient research
   max_calls_per_run: 20
   max_calls_per_phase: 5
 
@@ -50,67 +58,72 @@ local:
     model: llama3.1:70b
     base_url: http://localhost:11434
 
-# Budget-conscious configuration (faster, cheaper models)
+# Budget-conscious configuration - Even smaller free tier models
 cheap:
   worker:
     provider: openai_compatible
-    model: meta-llama/Llama-3.1-8B-Instruct-Turbo
+    model: meta-llama/Llama-3.2-1B-Instruct-Turbo  # Smallest free tier model
     base_url: https://api.together.xyz/v1
   advisor:
     provider: openai_compatible
-    model: meta-llama/Llama-3.1-8B-Instruct-Turbo
+    model: meta-llama/Llama-3.2-3B-Instruct-Turbo  # Small free tier model
     base_url: https://api.together.xyz/v1
 
-# Premium configuration (highest quality, higher cost)
+# Premium configuration (uses user's PRO subscriptions - FREE for user)
+# Uses Google PRO and larger free tier models
 premium:
   worker:
     provider: openai_compatible
-    model: deepseek-ai/DeepSeek-V3
+    model: meta-llama/Meta-Llama-3-8B-Instruct-Turbo  # Free tier, best quality
     base_url: https://api.together.xyz/v1
   advisor:
     provider: gemini
-    model: gemini-1.5-pro
+    model: gemini-2.0-flash-exp  # FREE with Google PRO subscription
 
 # Alternative provider configurations (uncomment to use)
 
 # OpenAI configuration
+# Note: OpenAI has no free tier, but GitHub Student Developer Pack provides credits
+# If using GitHub Copilot Pro, you may have access to models through that
 # worker:
 #   provider: openai_compatible
-#   model: gpt-4-turbo-preview
+#   model: gpt-4o-mini  # Cheapest OpenAI model if using credits
 #   base_url: https://api.openai.com/v1
 #   max_tokens: 4096
 #   temperature: 0.3
 # advisor:
 #   provider: openai_compatible
-#   model: gpt-4
+#   model: gpt-4o-mini  # Cheapest OpenAI model if using credits
 #   base_url: https://api.openai.com/v1
 #   max_tokens: 2048
 #   temperature: 0.2
 
-# Groq configuration (fast inference, may have spend limits)
+# Groq configuration (FREE tier - fast inference with rate limits)
+# Free tier includes llama-3.2-3b-preview, gemma2-9b-it, and others
 # worker:
 #   provider: openai_compatible
-#   model: llama-3.1-70b-versatile
+#   model: llama-3.2-3b-preview  # FREE tier model
 #   base_url: https://api.groq.com/openai/v1
 #   max_tokens: 8192
 #   temperature: 0.3
 # advisor:
 #   provider: openai_compatible
-#   model: llama-3.1-70b-versatile
+#   model: gemma2-9b-it  # FREE tier model
 #   base_url: https://api.groq.com/openai/v1
 #   max_tokens: 4096
 #   temperature: 0.2
 
-# OpenRouter configuration (access to multiple providers)
+# OpenRouter configuration (FREE tier models available)
+# Use models with :free suffix for free tier access
 # worker:
 #   provider: openai_compatible
-#   model: anthropic/claude-3-5-sonnet
+#   model: meta-llama/llama-3.2-3b-instruct:free  # FREE tier model
 #   base_url: https://openrouter.ai/api/v1
 #   max_tokens: 8192
 #   temperature: 0.3
 # advisor:
 #   provider: openai_compatible
-#   model: anthropic/claude-3-5-sonnet
+#   model: meta-llama/llama-3.1-8b-instruct:free  # FREE tier model
 #   base_url: https://openrouter.ai/api/v1
 #   max_tokens: 4096
 #   temperature: 0.2

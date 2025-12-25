@@ -17,15 +17,16 @@ class OpenWorkerClient(ModelClient):
     Client for open/cheap worker models via OpenAI-compatible APIs.
 
     Supports:
-    - Together AI (Qwen, DeepSeek, etc.)
-    - OpenRouter
+    - Together AI (Free tier: Llama-3.2, Llama-3.1, etc.)
+    - Groq (Free tier with rate limits)
+    - OpenRouter (Free tier models)
     - Local models via Ollama/vLLM
     - Any OpenAI-compatible endpoint
     """
 
     def __init__(
         self,
-        model: str = "deepseek/deepseek-chat",  # Changed to DeepSeek - faster and cheaper
+        model: str = "meta-llama/Llama-3.2-3B-Instruct-Turbo",  # FREE tier model on Together AI
         base_url: str | None = None,
         api_key: str | None = None,
         **kwargs: Any,
