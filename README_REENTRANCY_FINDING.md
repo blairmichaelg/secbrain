@@ -23,7 +23,6 @@
 |---------------|-----------|------|
 | 👔 Executive / Decision Maker | [Executive Summary](./SUMMARY_Reentrancy_Analysis.md) | 5 min |
 | 🔒 Security Engineer | [Technical Analysis](./REENTRANCY_ANALYSIS_TokenholderGovernor.md) | 15 min |
-| 👁️ Visual Learner | [Visual Diagrams](./VISUAL_SECURITY_ANALYSIS.md) | 10 min |
 | 💻 Developer / Auditor | [Test Suite](./targets/thresholdnetwork/instascope/test/TokenholderGovernorReentrancyTest.t.sol) | Code review |
 
 ---
@@ -70,7 +69,7 @@ We created **4 comprehensive documents** totaling **49 KB** of analysis:
 | [INDEX_Reentrancy_Analysis.md](./INDEX_Reentrancy_Analysis.md) | Navigation guide | 8 KB |
 | [SUMMARY_Reentrancy_Analysis.md](./SUMMARY_Reentrancy_Analysis.md) | Executive summary | 9 KB |
 | [REENTRANCY_ANALYSIS_TokenholderGovernor.md](./REENTRANCY_ANALYSIS_TokenholderGovernor.md) | Technical deep dive | 14 KB |
-| [VISUAL_SECURITY_ANALYSIS.md](./VISUAL_SECURITY_ANALYSIS.md) | Diagrams & charts | 17 KB |
+
 | [TokenholderGovernorReentrancyTest.t.sol](./targets/thresholdnetwork/instascope/test/TokenholderGovernorReentrancyTest.t.sol) | Test suite | 9 KB |
 
 ---

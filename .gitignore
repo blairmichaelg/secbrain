@@ -91,6 +91,8 @@ build/
 targets/**/insights/
 **/insights-dashboard.json
 targets/**/run-live-*
+insights_report_*.md
+insights_report_*.html
 
 # Target workspace directories (runtime generated)
 # Allow critical summary files but ignore most runtime artifacts
@@ -99,3 +101,11 @@ targets/**/workspace/*
 !targets/**/workspace/phases/
 !targets/**/workspace/findings/
 !targets/**/workspace/.gitkeep
+
+# Agent-generated temporary/task-specific documentation  
+# (These are generated during specific tasks and become obsolete)
+IMPLEMENTATION_COMPLETE.md
+INVESTIGATION_COMPLETE.md
+FUNCTIONALITY_VERIFICATION.md
+READY_TO_USE.md
+VISUAL_SECURITY_ANALYSIS.md

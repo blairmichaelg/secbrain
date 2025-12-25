@@ -23,12 +23,8 @@
 - ~15 minute read
 
 ### For Visual Learners
-👉 **Start here:** [VISUAL_SECURITY_ANALYSIS.md](./VISUAL_SECURITY_ANALYSIS.md)
-- Execution flow diagrams
-- Security layer visualization
-- State transition diagrams
-- Threat model charts
-- ~10 minute read
+See the comprehensive technical analysis which includes diagrams and visualizations:
+- [REENTRANCY_ANALYSIS_TokenholderGovernor.md](./REENTRANCY_ANALYSIS_TokenholderGovernor.md)
 
 ### For Developers & Auditors
 👉 **Start here:** [test/TokenholderGovernorReentrancyTest.t.sol](./targets/thresholdnetwork/instascope/test/TokenholderGovernorReentrancyTest.t.sol)
@@ -45,7 +41,7 @@
 |----------|------|---------|----------|
 | [SUMMARY_Reentrancy_Analysis.md](./SUMMARY_Reentrancy_Analysis.md) | 9 KB | Executive summary & recommendations | Management, Decision makers |
 | [REENTRANCY_ANALYSIS_TokenholderGovernor.md](./REENTRANCY_ANALYSIS_TokenholderGovernor.md) | 14 KB | Deep technical analysis | Security engineers, Auditors |
-| [VISUAL_SECURITY_ANALYSIS.md](./VISUAL_SECURITY_ANALYSIS.md) | 17 KB | Diagrams & visualizations | Technical & non-technical |
+
 | [TokenholderGovernorReentrancyTest.t.sol](./targets/thresholdnetwork/instascope/test/TokenholderGovernorReentrancyTest.t.sol) | 9 KB | Test suite & verification | Developers, Auditors |
 | **This file** | 3 KB | Navigation index | All audiences |
 
@@ -257,7 +253,7 @@ The provided Proof of Concept is fundamentally flawed and demonstrates no actual
 ## Navigation
 
 - 📄 [Executive Summary](./SUMMARY_Reentrancy_Analysis.md)
-- 📊 [Visual Analysis](./VISUAL_SECURITY_ANALYSIS.md)
+
 - 🔬 [Technical Deep Dive](./REENTRANCY_ANALYSIS_TokenholderGovernor.md)
 - 🧪 [Test Suite](./targets/thresholdnetwork/instascope/test/TokenholderGovernorReentrancyTest.t.sol)
 - 📑 **You are here:** Index
