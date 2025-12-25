@@ -107,7 +107,7 @@ async def test_ttl_caching():
     print(f"✓ Second call cached: {result2.get('cached', False)} (expected: True)")
     print(f"✓ Cache age: {result2.get('cache_age_hours', 0):.4f} hours")
     
-    return result1.get('cached') == False and result2.get('cached') == True
+    return not result1.get('cached') and result2.get('cached')
 
 
 async def test_specialized_methods():

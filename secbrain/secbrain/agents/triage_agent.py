@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 from typing import Any
 
@@ -52,10 +53,8 @@ class EconomicAnalyzer:
             max_profit_usd = max(max_profit_usd, profit_usd)
 
             if attempt.get("eth_price_usd"):
-                try:
+                with contextlib.suppress(TypeError, ValueError):
                     eth_price = float(attempt["eth_price_usd"])
-                except (TypeError, ValueError):
-                    pass
 
         gas_cost_usd = self._estimate_gas_cost(gas_info, eth_price)
         net_usd = max_profit_usd - gas_cost_usd

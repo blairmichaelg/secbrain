@@ -356,19 +356,19 @@ class RunContext:
                         continue
                     rpm = cfg.get("requests_per_minute")
                     if isinstance(rpm, float):
-                        cfg["requests_per_minute"] = int(round(rpm))
+                        cfg["requests_per_minute"] = round(rpm)
                     burst = cfg.get("burst")
                     if isinstance(burst, float):
-                        cfg["burst"] = int(round(burst))
+                        cfg["burst"] = round(burst)
 
             global_rl = data.get("global_rate_limit")
             if isinstance(global_rl, dict):
                 rpm = global_rl.get("requests_per_minute")
                 if isinstance(rpm, float):
-                    global_rl["requests_per_minute"] = int(round(rpm))
+                    global_rl["requests_per_minute"] = round(rpm)
                 burst = global_rl.get("burst")
                 if isinstance(burst, float):
-                    global_rl["burst"] = int(round(burst))
+                    global_rl["burst"] = round(burst)
             return ToolsConfig(**data)
         return ToolsConfig()
 
@@ -465,10 +465,7 @@ class RunContext:
 
         # Check call counts
         current_calls = self.session.tool_call_counts.get(tool_name, 0)
-        if current_calls >= acl.max_calls_per_run:
-            return False
-
-        return True
+        return not current_calls >= acl.max_calls_per_run
 
     def requires_approval(self, tool_name: str) -> bool:
         """Check if a tool requires human approval."""

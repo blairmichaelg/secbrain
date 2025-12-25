@@ -246,11 +246,11 @@ class InsightsReporter:
     <div class="container">
         <h1>{title}</h1>
         <div class="timestamp">Generated: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')}</div>
-        
+
         <div class="summary">
             <h2>Executive Summary</h2>
             <div class="summary-item">
-                <strong>Status:</strong> 
+                <strong>Status:</strong>
                 <span class="status">{results.summary.get('status', 'unknown').replace('_', ' ').title()}</span>
             </div>
             <div class="summary-item">

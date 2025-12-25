@@ -180,15 +180,15 @@ class MetaLearningAgent(BaseAgent):
         findings: list[dict[str, Any]],
     ) -> dict[str, dict[str, Any]]:
         """Track which hypothesis types yield confirmed findings.
-        
+
         This method provides detailed statistics on hypothesis generation
         effectiveness, helping identify which vulnerability types have the
         highest success rates and should be prioritized in future runs.
-        
+
         Args:
             hypotheses: All generated hypotheses
             findings: Confirmed findings from exploitation
-        
+
         Returns:
             Dictionary mapping vuln_type to stats including generated count,
             confirmed count, and success rate.

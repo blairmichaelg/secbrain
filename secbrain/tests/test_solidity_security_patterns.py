@@ -110,7 +110,7 @@ class TestSoliditySecurityPatterns:
             function flashLoan(uint256 amount) external {
                 // Flash loan logic
             }
-            
+
             function getPrice() public view returns (uint256) {
                 return spotPrice;
             }
@@ -258,7 +258,7 @@ class TestSecurityPatternIntegration:
         """Test that all patterns have required fields."""
         all_patterns = SoliditySecurityPatterns.get_all_patterns()
 
-        for key, pattern in all_patterns.items():
+        for _key, pattern in all_patterns.items():
             assert isinstance(pattern, SecurityPattern)
             assert pattern.pattern_type is not None
             assert pattern.severity in ["critical", "high", "medium", "low"]
@@ -277,7 +277,7 @@ class TestSecurityPatternIntegration:
         """Test that pattern references are valid."""
         all_patterns = SoliditySecurityPatterns.get_all_patterns()
 
-        for key, pattern in all_patterns.items():
+        for _key, pattern in all_patterns.items():
             for ref in pattern.references:
                 assert isinstance(ref, str)
                 assert len(ref) > 0
@@ -300,7 +300,7 @@ class TestSecurityPatternIntegration:
         enum_values = {p.value for p in VulnerabilityPattern}
 
         # Check that all patterns in the database are in the enum
-        for key, pattern in all_patterns.items():
+        for _key, pattern in all_patterns.items():
             assert pattern.pattern_type.value in enum_values
 
     def test_mitigation_code_has_solidity_keywords(self):

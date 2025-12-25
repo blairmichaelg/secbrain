@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import os
 import signal
@@ -370,10 +371,8 @@ async def _shutdown_model_client(client: ModelClient | None) -> None:
         return
     maybe_coro = close_coro()
     if asyncio.iscoroutine(maybe_coro):
-        try:
+        with contextlib.suppress(Exception):
             await maybe_coro
-        except Exception:
-            pass
 
 
 def _display_results(result: dict) -> None:

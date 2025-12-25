@@ -142,7 +142,7 @@ class NucleiScanner:
                 stderr=asyncio.subprocess.PIPE,
             )
 
-            stdout, stderr = await asyncio.wait_for(
+            stdout, _stderr = await asyncio.wait_for(
                 process.communicate(),
                 timeout=timeout,
             )
@@ -277,7 +277,7 @@ class SemgrepScanner:
                 stderr=asyncio.subprocess.PIPE,
             )
 
-            stdout, stderr = await asyncio.wait_for(
+            stdout, _stderr = await asyncio.wait_for(
                 process.communicate(),
                 timeout=timeout,
             )

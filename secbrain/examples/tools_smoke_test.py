@@ -125,7 +125,7 @@ async def test_rate_limits(run_context) -> bool:
     print(f"    Allowed: {allowed}")
 
     # Consume some capacity
-    for i in range(5):
+    for _i in range(5):
         run_context.record_tool_call("http_client")
 
     # Check again

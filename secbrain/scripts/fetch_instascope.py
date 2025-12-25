@@ -35,30 +35,25 @@ def download_source(source: str, download_dir: Path) -> Path:
 
     download_dir.mkdir(parents=True, exist_ok=True)
     target = download_dir / "instascope_bundle"
-    print(f"Downloading {source} -> {target}")
     urlretrieve(source, target)
     return target
 
 
 def unpack_bundle(bundle_path: Path, dest_dir: Path) -> None:
     dest_dir.mkdir(parents=True, exist_ok=True)
-    print(f"Unpacking {bundle_path} -> {dest_dir}")
     shutil.unpack_archive(str(bundle_path), str(dest_dir))
 
 
 def run_build(dest_dir: Path) -> None:
     build_script = dest_dir / "build.sh"
     if not build_script.exists():
-        print("No build.sh found; skipping build.")
         return
 
-    print(f"Running build.sh in {dest_dir}")
     try:
         subprocess.check_call(["bash", str(build_script)], cwd=dest_dir)
     except FileNotFoundError:
-        print("bash not found; skipping build. Install bash/WSL or run manually.")
+        pass
     except subprocess.CalledProcessError as exc:
-        print(f"build.sh failed with exit code {exc.returncode}")
         raise
 
 
@@ -88,9 +83,7 @@ def main() -> int:
 
     if dest_dir.exists():
         if not args.force:
-            print(f"Destination {dest_dir} exists. Use --force to overwrite.")
             return 1
-        print(f"--force specified; removing existing {dest_dir}")
         shutil.rmtree(dest_dir)
 
     with tempfile.TemporaryDirectory() as tmpdir_str:
@@ -101,7 +94,6 @@ def main() -> int:
     if args.build:
         run_build(dest_dir)
 
-    print(f"Done. Bundle available at {dest_dir}")
     return 0
 
 

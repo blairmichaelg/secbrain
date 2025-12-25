@@ -77,7 +77,7 @@ class FoundryRunner:
                             solc = str(cfg.get("solc") or "")
                             if not solc:
                                 continue
-                            if solc.startswith("0.8") or solc.startswith("0.9"):
+                            if solc.startswith(("0.8", "0.9")):
                                 self._fallback_profile = str(profile_name)
                                 break
         except Exception:
@@ -547,15 +547,15 @@ class FoundryRunner:
 
     def _sanitize_attack_body(self, text: str) -> str:
         """Remove markdown/code fences and backticks that break Solidity compilation.
-        
+
         This prevents compilation errors from injected markdown fences like:
         ```solidity
         // code here
         ```
-        
+
         Args:
             text: Raw attack body that may contain markdown fences
-            
+
         Returns:
             Sanitized text with all markdown fences and backticks removed
         """

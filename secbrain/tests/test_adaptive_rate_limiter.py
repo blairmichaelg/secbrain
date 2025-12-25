@@ -122,7 +122,7 @@ async def test_adaptive_rate_limiter_concurrency_limit():
 async def test_adaptive_rate_limiter_no_race_condition_on_resize():
     """
     Test that semaphore resizing doesn't cause race conditions.
-    
+
     This is a regression test for the critical bug where swapping out
     the semaphore was unsynchronized, potentially allowing concurrency
     limits to be exceeded.
@@ -182,7 +182,7 @@ async def test_adaptive_rate_limiter_no_race_condition_on_resize():
 async def test_adaptive_rate_limiter_hammer_test():
     """
     Hammer test: stress test with many concurrent operations.
-    
+
     This test runs many tasks concurrently and frequently triggers
     resize operations to ensure the lock-based synchronization
     prevents any race conditions.
@@ -239,7 +239,7 @@ async def test_adaptive_rate_limiter_hammer_test():
 async def test_adaptive_rate_limiter_resize_during_acquire():
     """
     Test that resize operations don't interfere with pending acquires.
-    
+
     This specifically tests the scenario where:
     1. Task A acquires the semaphore
     2. Task B is waiting to acquire
@@ -308,7 +308,7 @@ async def test_adaptive_rate_limiter_resize_during_acquire():
 async def test_adaptive_rate_limiter_concurrent_resizes():
     """
     Test that multiple concurrent resize operations are safe.
-    
+
     This tests the scenario where multiple tasks exit at the same time,
     each potentially triggering a resize operation.
     """

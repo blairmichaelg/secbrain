@@ -44,14 +44,13 @@ class TestContractRecon:
             platform="Test"
         )
 
-        context = RunContext(
+        return RunContext(
             workspace_path=Path("/tmp/test_workspace"),
             dry_run=True,
             scope=scope,
             program=program
         )
 
-        return context
 
     @pytest.fixture
     def recon_agent(self, mock_run_context):
@@ -60,12 +59,11 @@ class TestContractRecon:
         mock_storage = MagicMock()
         mock_storage.save_asset = AsyncMock()
 
-        agent = ReconAgent(
+        return ReconAgent(
             run_context=mock_run_context,
             storage=mock_storage,
             research_client=MagicMock()
         )
-        return agent
 
     def test_contract_recon_dry_run(self, recon_agent, mock_run_context):
         """Test contract reconnaissance in dry-run mode."""

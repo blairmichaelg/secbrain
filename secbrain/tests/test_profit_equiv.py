@@ -58,7 +58,7 @@ def test_compute_profit_eth_equiv_uses_price_cache():
         {"symbol": "WETH", "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", "decimals": 18, "mult_num": 1, "mult_den": 1},
     ]
     price_cache = {"weth": 2000.0}
-    eth_equiv, breakdown, profit_usd = agent._compute_profit_eth_equiv(
+    eth_equiv, _breakdown, profit_usd = agent._compute_profit_eth_equiv(
         attempt,
         chain_id=1,
         scope_profit_tokens=scope_tokens,

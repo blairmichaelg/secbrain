@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import os
 import shutil
@@ -348,10 +349,8 @@ class ReconAgent(BaseAgent):
         # Clean SecBrain-generated tests so they don't break `forge build` in subsequent runs.
         secbrain_test_dir = foundry_root_path / "test" / "secbrain"
         if secbrain_test_dir.exists():
-            try:
+            with contextlib.suppress(Exception):
                 shutil.rmtree(secbrain_test_dir, ignore_errors=True)
-            except Exception:
-                pass
 
         foundry_toml = {}
         try:
@@ -592,7 +591,7 @@ class ReconAgent(BaseAgent):
         approval_funcs = [fn for fn in lower_functions if "approve" in fn or "permit" in fn]
         delegatecall_funcs = [fn for fn in lower_functions if "delegatecall" in fn]
 
-        classification = {
+        return {
             "protocol_type": protocol_type,
             "indicators": indicators,
             "function_count": len(functions),
@@ -601,4 +600,3 @@ class ReconAgent(BaseAgent):
             "approval_functions": approval_funcs,
             "delegatecall_functions": delegatecall_funcs,
         }
-        return classification

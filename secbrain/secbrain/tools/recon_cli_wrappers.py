@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import shutil
 import tempfile
@@ -279,10 +280,8 @@ class ReconToolRunner:
                 parsed = []
                 for line in result.output.strip().split("\n"):
                     if line.strip():
-                        try:
+                        with contextlib.suppress(json.JSONDecodeError):
                             parsed.append(json.loads(line))
-                        except json.JSONDecodeError:
-                            pass
                 result.parsed_data = parsed
 
             return result

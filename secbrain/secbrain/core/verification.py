@@ -57,10 +57,7 @@ class ResponseFingerprint:
             body = getattr(response, "content", b"")
         if body is None:
             body = b""
-        if isinstance(body, str):
-            body_bytes = body.encode("utf-8", errors="replace")
-        else:
-            body_bytes = body
+        body_bytes = body.encode("utf-8", errors="replace") if isinstance(body, str) else body
 
         try:
             text = response.text

@@ -131,9 +131,9 @@ def main():
     # Check foundry.toml exists
     foundry_config = repo_root / "foundry.toml"
     if foundry_config.exists():
-        print(f"  ✅ foundry.toml")
+        print("  ✅ foundry.toml")
     else:
-        warnings.append(f"⚠️  foundry.toml not found (optional)")
+        warnings.append("⚠️  foundry.toml not found (optional)")
     
     # Check documentation
     print("\n📚 Checking Documentation...")

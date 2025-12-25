@@ -37,10 +37,7 @@ def parse_foundry_profiles(toml_path: Path) -> list[dict[str, str]]:
 
             # Extract contract name from profile name
             name_parts = profile_name.split('_')
-            if len(name_parts) >= 3:
-                contract_name = '_'.join(name_parts[1:-1])
-            else:
-                contract_name = profile_name
+            contract_name = '_'.join(name_parts[1:-1]) if len(name_parts) >= 3 else profile_name
 
             # Get source path from profile config
             src = profile_config.get('src', '')
@@ -81,7 +78,6 @@ def generate_scope_yaml(contracts: list[dict[str, str]], output_path: Path) -> N
     with open(output_path, 'w') as f:
         yaml.dump(scope_data, f, default_flow_style=False, sort_keys=False)
 
-    print(f"Generated {output_path} with {len(contracts)} contracts")
 
 def main():
     """Main function to parse foundry.toml and generate scope configuration."""
@@ -90,11 +86,9 @@ def main():
     output_path = root_dir / 'secbrain' / 'examples' / 'enzyme_scope.yaml'
 
     if not toml_path.exists():
-        print(f"Error: {toml_path} not found")
         return
 
     contracts = parse_foundry_profiles(toml_path)
-    print(f"Found {len(contracts)} contract profiles")
 
     # Save contracts list for reference
     contracts_path = root_dir / 'secbrain' / 'examples' / 'enzyme_contracts.json'

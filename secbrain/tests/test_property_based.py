@@ -192,7 +192,7 @@ def test_entropy_bounded(text: str) -> None:
     assert entropy >= 0
     # For non-empty strings, entropy should be finite
     if text:
-        assert not (entropy != entropy)  # Not NaN
+        assert entropy == entropy  # Not NaN
         # Entropy upper bound is log2(n) where n is the length
         # But practically, it should be reasonable
         assert entropy <= 20.0  # Reasonable upper bound for text

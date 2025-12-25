@@ -64,7 +64,7 @@ class MultiStepHTTPWorkflow:
 
         # Persist artifact
         serialized = []
-        for step, resp in zip(steps, result.responses):
+        for step, resp in zip(steps, result.responses, strict=False):
             serialized.append(
                 {
                     "step": {

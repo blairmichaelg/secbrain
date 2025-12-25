@@ -296,7 +296,7 @@ class VulnHypothesisAgent(BaseAgent):
             ]
             batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
 
-            for contract, result in zip(batch, batch_results):
+            for contract, result in zip(batch, batch_results, strict=False):
                 if isinstance(result, Exception):
                     self._log_error(
                         "batch_hypothesis_failed",
@@ -673,7 +673,7 @@ Additional note: The contract contains functions that may be vulnerable to preci
 
         def _extract_json_array(text: str) -> list[dict[str, Any]]:
             """Extract JSON array from LLM response with multiple fallback strategies.
-            
+
             Handles:
             - Plain JSON arrays
             - Markdown code blocks with ```json or ```
@@ -683,7 +683,7 @@ Additional note: The contract contains functions that may be vulnerable to preci
             if not text:
                 raise json.JSONDecodeError("empty", text, 0)
             s = text.strip()
-            
+
             # Strategy 1: Try extracting from markdown code blocks
             if "```" in s:
                 # Handle multiple code blocks by trying each one
@@ -700,7 +700,7 @@ Additional note: The contract contains functions that may be vulnerable to preci
                         data = json.loads(block)
                         if isinstance(data, list):
                             return [item for item in data if isinstance(item, dict)]
-                        elif isinstance(data, dict):
+                        if isinstance(data, dict):
                             # Single hypothesis wrapped in object, convert to list
                             return [data]
                     except (json.JSONDecodeError, ValueError):
@@ -714,7 +714,7 @@ Additional note: The contract contains functions that may be vulnerable to preci
                                     return [item for item in data if isinstance(item, dict)]
                             except (json.JSONDecodeError, ValueError):
                                 continue
-            
+
             # Strategy 2: Find JSON array boundaries in the entire text
             start = s.find("[")
             end = s.rfind("]")
@@ -730,17 +730,17 @@ Additional note: The contract contains functions that may be vulnerable to preci
                             return out
                 except (json.JSONDecodeError, ValueError):
                     pass
-            
+
             # Strategy 3: Try parsing the entire text as-is
             try:
                 data = json.loads(s)
                 if isinstance(data, list):
                     return [item for item in data if isinstance(item, dict)]
-                elif isinstance(data, dict):
+                if isinstance(data, dict):
                     return [data]
             except (json.JSONDecodeError, ValueError):
                 pass
-            
+
             # All strategies failed
             raise json.JSONDecodeError(
                 "Could not extract valid JSON array from response",

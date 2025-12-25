@@ -29,7 +29,7 @@ class OracleManipulationDetector:
         oracle_functions: list[str] = []
         for func in functions or []:
             fn_lower = func.lower()
-            for pattern in self.ORACLE_FUNCTION_PATTERNS.keys():
+            for pattern in self.ORACLE_FUNCTION_PATTERNS:
                 if pattern.lower() in fn_lower:
                     oracle_functions.append(func)
                     break
@@ -40,7 +40,7 @@ class OracleManipulationDetector:
                 if not isinstance(item, dict) or item.get("type") != "function":
                     continue
                 name = str(item.get("name") or "").lower()
-                for pattern in self.ORACLE_FUNCTION_PATTERNS.keys():
+                for pattern in self.ORACLE_FUNCTION_PATTERNS:
                     if pattern.lower() in name:
                         sig = name
                         try:

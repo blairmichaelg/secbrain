@@ -233,7 +233,7 @@ class WorkspaceStorage:
 
         assets = []
         for row in rows:
-            asset = dict(zip(columns, row))
+            asset = dict(zip(columns, row, strict=False))
             asset["technologies"] = json.loads(asset.get("technologies", "[]"))
             asset["metadata"] = json.loads(asset.get("metadata", "{}"))
             assets.append(asset)
@@ -284,7 +284,7 @@ class WorkspaceStorage:
 
         hypotheses = []
         for row in rows:
-            hyp = dict(zip(columns, row))
+            hyp = dict(zip(columns, row, strict=False))
             hyp["result"] = json.loads(hyp.get("result", "{}"))
             hypotheses.append(hyp)
 
@@ -335,7 +335,7 @@ class WorkspaceStorage:
 
         findings = []
         for row in rows:
-            finding = dict(zip(columns, row))
+            finding = dict(zip(columns, row, strict=False))
             finding["evidence"] = json.loads(finding.get("evidence", "[]"))
             findings.append(finding)
 

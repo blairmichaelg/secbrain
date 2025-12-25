@@ -28,7 +28,7 @@ def test_eth_hash_backend():
         if not is_address(test_address):
             print(f"❌ is_address({test_address}) returned False")
             return False
-        print(f"✅ is_address validation works")
+        print("✅ is_address validation works")
         
         # Test to_checksum_address
         checksum = to_checksum_address(test_address)
@@ -39,8 +39,8 @@ def test_eth_hash_backend():
         
     except Exception as e:
         print(f"❌ Error during testing: {e}")
-        print(f"   This likely means eth-hash backend is not installed")
-        print(f"   Install with: pip install 'eth-hash[pycryptodome]'")
+        print("   This likely means eth-hash backend is not installed")
+        print("   Install with: pip install 'eth-hash[pycryptodome]'")
         return False
     
     print("\n✅ All tests passed! eth-hash backend is working correctly.")
