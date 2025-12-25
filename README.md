@@ -427,3 +427,7 @@ MIT
 ---
 
 **Need help?** Check the [documentation](docs/README.md) or open an issue!
+
+---
+
+*Last updated: December 25, 2024*

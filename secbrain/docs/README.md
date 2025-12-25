@@ -47,4 +47,4 @@ secbrain/                           # Repository root
 
 ---
 
-**Last updated**: December 2024
+**Last updated**: December 2024 (Current as of December 25, 2024)

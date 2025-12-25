@@ -362,3 +362,7 @@ If you encounter an issue not covered here:
    - Steps to reproduce
 
 For security-sensitive issues, email the maintainers instead of opening a public issue.
+
+---
+
+*Last updated: December 25, 2024*
