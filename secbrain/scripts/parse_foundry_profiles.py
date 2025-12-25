@@ -41,11 +41,7 @@ def parse_foundry_profiles(toml_path: Path) -> list[dict[str, str]]:
 
             # Get source path from profile config
             src = profile_config.get('src', '')
-            if src:
-                # Convert relative path to absolute
-                source_path = toml_path.parent / src
-            else:
-                source_path = None
+            source_path = toml_path.parent / src if src else None
 
             contracts.append({
                 'name': contract_name,

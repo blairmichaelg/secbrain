@@ -198,12 +198,11 @@ class ReconAgent(BaseAgent):
 
         for domain in domains:
             # Skip wildcard prefix
-            if domain.startswith("*."):
-                domain = domain[2:]
+            domain_clean = domain[2:] if domain.startswith("*.") else domain
 
-            self._log("enumerating_subdomains", domain=domain)
+            self._log("enumerating_subdomains", domain=domain_clean)
 
-            result = await runner.run_subfinder(domain)
+            result = await runner.run_subfinder(domain_clean)
 
             if result.success:
                 for item in result.parsed_data:

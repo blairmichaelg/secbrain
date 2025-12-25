@@ -537,15 +537,13 @@ Always return a pure JSON array of such objects. Focus on {protocol_type}-specif
                 has_swap = any("swap" in fn for fn in lower_functions)
                 has_pool = any("pair" in fn or "pool" in fn for fn in lower_functions)
                 has_price = any(any(pk in fn for pk in price_keywords) for fn in lower_functions)
-                if has_swap and has_pool and has_price and any(any(k in fn for k in mev_keywords) for fn in lower_functions):
-                    if has_deposit or has_withdraw or has_share:
-                        prompt += f"""
+                if has_swap and has_pool and has_price and any(any(k in fn for k in mev_keywords) for fn in lower_functions) and (has_deposit or has_withdraw or has_share):
+                    prompt += f"""
 
 Additional note: The contract contains functions that may be vulnerable to precision errors, such as {', '.join(precision_keywords)}. Please consider this when generating hypotheses."""
 
-            if "precision_error" not in existing_types:
-                if has_deposit or has_withdraw or has_share:
-                    prompt += f"""
+            if "precision_error" not in existing_types and (has_deposit or has_withdraw or has_share):
+                prompt += f"""
 
 Additional note: The contract contains functions that may be vulnerable to precision errors, such as {', '.join(precision_keywords)}. Please consider this when generating hypotheses."""
 
@@ -1133,20 +1131,17 @@ Fix and return ONLY a JSON array matching the schema and using function signatur
 
         # Advanced access control patterns
         role_keywords = ["role", "permission", "grant", "revoke"]
-        if any(any(k in f for k in admin_keywords) for f in funcs_lower):
-            if not any(any(k in f for k in role_keywords) for f in funcs_lower):
-                add("role_based_access_needed", "Admin functions without role-based access control", 0.65)
+        if any(any(k in f for k in admin_keywords) for f in funcs_lower) and not any(any(k in f for k in role_keywords) for f in funcs_lower):
+            add("role_based_access_needed", "Admin functions without role-based access control", 0.65)
 
         # Front-running vulnerabilities
         frontrun_keywords = ["bid", "auction", "vote", "random", "lottery", "commit", "reveal"]
-        if any(any(k in f for k in frontrun_keywords) for f in funcs_lower):
-            if not any("commit" in f and "reveal" in f for f in funcs_lower):
-                add("missing_commit_reveal", "Front-running vulnerable functions without commit-reveal", 0.6)
+        if any(any(k in f for k in frontrun_keywords) for f in funcs_lower) and not any("commit" in f and "reveal" in f for f in funcs_lower):
+            add("missing_commit_reveal", "Front-running vulnerable functions without commit-reveal", 0.6)
 
         # EIP-712 signature protection
-        if any(any(k in f for k in sig_keywords) for f in funcs_lower):
-            if not any("eip712" in f or "typehash" in f for f in funcs_lower):
-                add("missing_eip712_signature", "Signatures without EIP-712 protection", 0.55)
+        if any(any(k in f for k in sig_keywords) for f in funcs_lower) and not any("eip712" in f or "typehash" in f for f in funcs_lower):
+            add("missing_eip712_signature", "Signatures without EIP-712 protection", 0.55)
 
         # Oracle security patterns
         oracle_keywords = ["oracle", "price", "feed", "chainlink", "aggregator"]
@@ -1173,9 +1168,9 @@ Fix and return ONLY a JSON array matching the schema and using function signatur
     def _validate_hypothesis(self, hyp: dict[str, Any]) -> bool:
         """Validate hypothesis has required fields and valid data."""
         required_fields = ["vuln_type", "confidence", "contract_address", "function_signature"]
-        for field in required_fields:
-            if field not in hyp or not hyp[field]:
-                logger.debug("Hypothesis missing required field '%s'", field)
+        for required_field in required_fields:
+            if required_field not in hyp or not hyp[required_field]:
+                logger.debug("Hypothesis missing required field '%s'", required_field)
                 return False
 
         try:

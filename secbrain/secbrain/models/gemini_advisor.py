@@ -51,11 +51,11 @@ class GeminiAdvisorClient(ModelClient):
 
                 genai.configure(api_key=self.api_key)  # type: ignore[attr-defined]
                 self._client = genai.GenerativeModel(self.model)  # type: ignore[attr-defined, assignment]
-            except ImportError:
+            except ImportError as e:
                 raise ImportError(
                     "google-generativeai is required for Gemini. "
                     "Install it with: pip install google-generativeai"
-                )
+                ) from e
         return self._client
 
     async def generate(

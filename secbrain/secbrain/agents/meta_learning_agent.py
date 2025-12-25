@@ -230,7 +230,7 @@ class MetaLearningAgent(BaseAgent):
                     by_type[vtype]["finding_ids"].append(finding.get("id"))
 
         # Calculate success rates and average confidence
-        for vtype, stats in by_type.items():
+        for _vtype, stats in by_type.items():
             if stats["generated"] > 0:
                 stats["success_rate"] = round(
                     stats["confirmed"] / stats["generated"], 3
