@@ -144,6 +144,7 @@ class ReconAgent(BaseAgent):
         all_assets.extend(subdomains)
 
         # Run HTTP probing
+        live_hosts = []
         if subdomains:
             live_hosts = await self._probe_http([a["value"] for a in subdomains])
             all_assets.extend(live_hosts)
@@ -152,6 +153,15 @@ class ReconAgent(BaseAgent):
             for host in live_hosts:
                 techs = host.get("metadata", {}).get("technologies", [])
                 technologies.extend(techs)
+
+        # Run Nuclei vulnerability scanning on live hosts
+        nuclei_findings = []
+        if live_hosts:
+            nuclei_findings = await self._scan_with_nuclei(
+                [host["value"] for host in live_hosts]
+            )
+            # Add nuclei findings as assets
+            all_assets.extend(nuclei_findings)
 
         # Research: understand the technology stack
         tech_research = {}
@@ -165,11 +175,12 @@ class ReconAgent(BaseAgent):
                 await self.storage.save_asset(asset)
 
         return self._success(
-            message=f"Recon complete: {len(all_assets)} assets discovered",
+            message=f"Recon complete: {len(all_assets)} assets discovered ({len(nuclei_findings)} vulnerabilities)",
             data={
                 "assets": all_assets,
                 "subdomains_count": len(subdomains),
                 "live_hosts_count": len([a for a in all_assets if a.get("type") == "live_host"]),
+                "nuclei_findings_count": len(nuclei_findings),
                 "technologies": list(set(technologies)),
                 "tech_research": tech_research,
             },
@@ -266,6 +277,84 @@ class ReconAgent(BaseAgent):
             }
 
         return research_results
+
+    async def _scan_with_nuclei(
+        self,
+        targets: list[str],
+    ) -> list[dict[str, Any]]:
+        """
+        Run Nuclei vulnerability scanner on targets.
+
+        Args:
+            targets: List of URLs to scan
+
+        Returns:
+            List of finding assets discovered by Nuclei
+        """
+        # Import here to avoid hard dependency
+        try:
+            from secbrain.tools.scanners import NucleiScanner
+        except ImportError:
+            self._log("nuclei_scanner_unavailable", reason="import_error")
+            return []
+
+        scanner = NucleiScanner(self.run_context)
+
+        # Check if nuclei is available
+        if not scanner._find_nuclei():
+            self._log(
+                "nuclei_scanner_unavailable",
+                reason="not_installed",
+                hint="Install with: go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest",
+            )
+            return []
+
+        self._log("scanning_with_nuclei", target_count=len(targets))
+
+        # Run nuclei scan with focus on critical/high severity
+        result = await scanner.scan(
+            targets=targets[:50],  # Limit to 50 targets for safety
+            severity=["critical", "high", "medium"],
+            tags=["cve", "exposure", "config", "misconfig"],
+            exclude_tags=["dos", "fuzzing"],  # Exclude noisy/dangerous templates
+            rate_limit=100,
+            timeout=600,  # 10 minutes max
+        )
+
+        findings: list[dict[str, Any]] = []
+
+        if result.success:
+            self._log(
+                "nuclei_scan_complete",
+                findings_count=len(result.findings),
+                duration_ms=result.duration_ms,
+            )
+
+            for item in result.findings:
+                # Convert Nuclei finding to asset format
+                findings.append({
+                    "id": f"nuclei-{uuid.uuid4().hex[:8]}",
+                    "type": "vulnerability",
+                    "value": item.get("matched-at", ""),
+                    "metadata": {
+                        "source": "nuclei",
+                        "template": item.get("template-id", ""),
+                        "name": item.get("info", {}).get("name", ""),
+                        "severity": item.get("info", {}).get("severity", ""),
+                        "description": item.get("info", {}).get("description", ""),
+                        "tags": item.get("info", {}).get("tags", []),
+                        "reference": item.get("info", {}).get("reference", []),
+                        "cvss_score": item.get("info", {}).get("classification", {}).get("cvss-score"),
+                        "cve_id": item.get("info", {}).get("classification", {}).get("cve-id"),
+                    },
+                })
+        else:
+            self._log(
+                "nuclei_scan_failed",
+                error=result.error,
+            )
+
+        return findings
 
     def _extract_contract_metadata(
         self,

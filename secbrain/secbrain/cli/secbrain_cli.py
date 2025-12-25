@@ -201,6 +201,37 @@ async def _run_workflow(
     from secbrain.core.logging import setup_logging
     from secbrain.workflows.bug_bounty_run import run_bug_bounty
 
+    # Set up logging first
+    logger = setup_logging(
+        workspace_path=workspace_path,
+        run_id=None,  # Will be set by RunContext
+    )
+
+    # Check tool availability
+    try:
+        from secbrain.utils.tool_checker import check_tools_on_startup
+
+        console.print("[dim]Checking tool availability...[/]")
+        tool_checker = check_tools_on_startup(logger)
+
+        # Check for missing required tools
+        missing_report = tool_checker.get_missing_tools_report()
+        if "REQUIRED TOOLS MISSING" in missing_report:
+            console.print(f"\n{missing_report}")
+            console.print("[bold red]Cannot proceed: required tools are missing[/]")
+            raise RuntimeError("Required tools are not installed")
+        elif "RECOMMENDED TOOLS MISSING" in missing_report:
+            console.print(f"\n[dim]{missing_report}[/]")
+            console.print(
+                "[yellow]⚠ Some recommended tools are missing. "
+                "Workflow will continue but functionality may be limited.[/]\n"
+            )
+        else:
+            console.print("[dim]✓ All tools available[/]\n")
+    except ImportError:
+        # Tool checker not available, skip check
+        logger.warning("tool_checker_unavailable", reason="import_error")
+
     # Load scope config
     with open(scope_path) as f:
         scope_data = yaml.safe_load(f)

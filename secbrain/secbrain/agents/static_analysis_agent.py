@@ -32,6 +32,15 @@ class StaticAnalysisAgent(BaseAgent):
         source_path = kwargs.get("source_path")
         exploit_data = kwargs.get("exploit_data", {})
 
+        # Try to auto-detect source code if not provided
+        if not source_path:
+            source_path = self._auto_detect_source_code()
+            if source_path:
+                self._log(
+                    "source_code_auto_detected",
+                    path=str(source_path),
+                )
+
         # Static analysis requires source code
         if not source_path:
             return self._success(
@@ -69,9 +78,48 @@ class StaticAnalysisAgent(BaseAgent):
                 "findings": findings,
                 "correlations": correlations,
                 "scanner": "semgrep",
+                "source_path": str(source_path),
+                "auto_detected": not kwargs.get("source_path"),
             },
             next_actions=["triage"],
         )
+
+    def _auto_detect_source_code(self) -> Path | None:
+        """
+        Auto-detect source code in common locations.
+
+        Checks for:
+        1. {workspace}/instascope/src
+        2. {workspace}/instascope
+        3. {workspace}/src
+        4. {workspace}/contracts
+
+        Returns:
+            Path to source code directory or None
+        """
+        workspace = self.run_context.workspace_path
+
+        # Check common source locations
+        candidates = [
+            workspace / "instascope" / "src",
+            workspace / "instascope",
+            workspace / "src",
+            workspace / "contracts",
+        ]
+
+        for candidate in candidates:
+            if candidate.exists() and candidate.is_dir():
+                # Check if it contains Solidity files
+                sol_files = list(candidate.glob("**/*.sol"))
+                if sol_files:
+                    self._log(
+                        "source_code_found",
+                        path=str(candidate),
+                        sol_files_count=len(sol_files),
+                    )
+                    return candidate
+
+        return None
 
     async def _run_semgrep(self, source_path: Path) -> list[dict[str, Any]]:
         """Run semgrep scanner on source code."""
