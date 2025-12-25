@@ -2,7 +2,7 @@
 # Run bounty hunting workflows for Threshold Network
 # This script provides easy access to trigger the bounty hunting workflows
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
@@ -59,7 +59,7 @@ case $choice in
         
         echo ""
         echo "Scope type:"
-        echo "  1) Full (all 39 contracts)"
+        echo "  1) Full (all contracts)"
         echo "  2) Critical (high-value contracts only)"
         read -p "Select scope (1-2): " scope_choice
         

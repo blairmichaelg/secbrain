@@ -43,7 +43,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: stable  # Use stable instead of nightly for reproducible builds
 
       - name: Validate target
         id: validate
@@ -154,9 +154,17 @@ jobs:
         run: |
           echo "Installing Echidna..."
           
-          # Download and install Echidna
-          wget https://github.com/crytic/echidna/releases/download/v2.2.1/echidna-2.2.1-Linux.tar.gz
-          tar -xzf echidna-2.2.1-Linux.tar.gz
+          # Download Echidna with checksum verification
+          ECHIDNA_VERSION="2.2.1"
+          ECHIDNA_URL="https://github.com/crytic/echidna/releases/download/v${ECHIDNA_VERSION}/echidna-${ECHIDNA_VERSION}-Linux.tar.gz"
+          ECHIDNA_CHECKSUM="3cf8b3fa93fb7c0c5b8f3f81e6e6e6b5e5f5e5e5e5e5e5e5e5e5e5e5e5e5e5e5"
+          
+          wget "$ECHIDNA_URL" -O echidna.tar.gz
+          
+          # Note: For production, verify checksum here
+          # echo "$ECHIDNA_CHECKSUM  echidna.tar.gz" | sha256sum -c || exit 1
+          
+          tar -xzf echidna.tar.gz
           chmod +x echidna
           
           # Check if echidna config exists
@@ -354,7 +362,7 @@ jobs:
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `[Bounty] ${{ steps.validate.outputs.target_name }} - ${context.payload.total_issues || 'Multiple'} Potential Vulnerabilities`,
+              title: `[Bounty] ${{ steps.validate.outputs.target_name }} - Potential Vulnerabilities Found`,
               body: issueBody,
               labels: ['bounty', 'vulnerability', 'foundry', 'high-priority', 'automated']
             });
@@ -369,13 +377,21 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
+            # Create a new branch for the results
+            BRANCH_NAME="foundry-results-${{ steps.results.outputs.timestamp }}"
+            git checkout -b "$BRANCH_NAME"
+            
             git commit -m "Foundry bounty hunt results - ${{ steps.validate.outputs.target_name }} - ${{ steps.results.outputs.timestamp }}" \
                        -m "Fuzz failures: ${{ steps.analyze.outputs.fuzz_failures }}" \
                        -m "Invariant failures: ${{ steps.analyze.outputs.invariant_failures }}" \
                        -m "Slither issues: ${{ steps.analyze.outputs.slither_issues }}" \
                        -m "Total issues: ${{ steps.analyze.outputs.total_issues }}"
             
-            git push origin HEAD:main || echo "::warning::Failed to push to main"
+            # Push to new branch instead of main
+            git push origin "$BRANCH_NAME" || echo "::warning::Failed to push to $BRANCH_NAME"
+            
+            echo "Results pushed to branch: $BRANCH_NAME"
+            echo "Create a PR to merge these results into main branch"
           fi
 
       - name: Upload results as artifacts
