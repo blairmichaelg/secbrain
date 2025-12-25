@@ -1,0 +1,122 @@
+contracts:
+  # Core tBTC Contracts - Highest Priority
+  - name: TBTC
+    address: "0x18084fbA666a33d37592fA2633fD49a74DD93a88"
+    chain_id: 1
+    foundry_profile: "contract_TBTC_1808"
+    verified: true
+  - name: TBTCVault
+    address: "0x9C070027cdC9dc8F82416B2e5314E11DFb4FE3CD"
+    chain_id: 1
+    foundry_profile: "contract_TBTCVault_9c07"
+    verified: true
+  - name: Bridge
+    address: "0x8d014903bf7867260584d714e11809fea5293234"
+    chain_id: 1
+    foundry_profile: "contract_Bridge_8d01"
+    verified: true
+  - name: BridgeGovernance
+    address: "0xA94DD662E2A247493fACCeab9f2459AAF90778Ee"
+    chain_id: 1
+    foundry_profile: "contract_BridgeGovernance_a94d"
+    verified: true
+  
+  # Token and Staking - High Priority
+  - name: T
+    address: "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5"
+    chain_id: 1
+    foundry_profile: "contract_T_cdf7"
+    verified: true
+  - name: TokenStaking
+    address: "0xf5a2ccfea213cb3ff0799e0c33ea2fa3da7cbb65"
+    chain_id: 1
+    foundry_profile: "contract_TokenStaking_f5a2"
+    verified: true
+  - name: RebateStaking
+    address: "0xe490c802f8455ea1f0df96a7b5043536a41e2535"
+    chain_id: 1
+    foundry_profile: "contract_RebateStaking_e490"
+    verified: true
+  
+  # Wallet Registry - High Priority
+  - name: WalletRegistry
+    address: "0xfbae130e06bbc8ca198861beecae6e2b830398fb"
+    chain_id: 1
+    foundry_profile: "contract_WalletRegistry_fbae"
+    verified: true
+  - name: WalletRegistryGovernance
+    address: "0x6aed6cC30D1b2770771052555d257Da86eD47fe8"
+    chain_id: 1
+    foundry_profile: "contract_WalletRegistryGovernance_6aed"
+    verified: true
+  
+  # Governance - High Priority
+  - name: TokenholderGovernor
+    address: "0xd101f2b25bcbf992bdf55db67c104fe7646f5447"
+    chain_id: 1
+    foundry_profile: "contract_TokenholderGovernor_d101"
+    verified: true
+  
+  # Bank and Vaults - Medium-High Priority
+  - name: Bank
+    address: "0x65Fbae61ad2C8836fFbFB502A0dA41b0789D9Fc6"
+    chain_id: 1
+    foundry_profile: "contract_Bank_65fb"
+    verified: true
+  - name: DonationVault
+    address: "0xa544b70dC6af906862f68eb8e68c27bb7150e672"
+    chain_id: 1
+    foundry_profile: "contract_DonationVault_a544"
+    verified: true
+  
+  # Cross-Chain Bridges - Medium-High Priority
+  - name: StarknetTokenBridge
+    address: "0xf39d314c5ad7dc88958116dfa7d5ac095d563aff"
+    chain_id: 1
+    foundry_profile: "contract_StarknetTokenBridge_f39d"
+    verified: true
+  - name: L1BitcoinDepositor
+    address: "0x3ffee7d7be970201a33d17e318e2421a06ad69f8"
+    chain_id: 1
+    foundry_profile: "contract_L1BitcoinDepositor_3ffe"
+    verified: true
+  - name: BTCDepositorWormhole
+    address: "0x9a5250c7bea10f7472eb9d50bb757b83d67fb5ed"
+    chain_id: 1
+    foundry_profile: "contract_BTCDepositorWormhole_9a52"
+    verified: true
+
+domains: []
+ips: []
+urls: []
+excluded_paths: []
+allowed_methods:
+  - GET
+  - POST
+  - PUT
+  - HEAD
+  - OPTIONS
+max_depth: 3
+notes: "Threshold Network (Immunefi) - Critical contracts only. Focus on tBTC bridge, staking, and governance. Use forked execution; do not test on mainnet directly."
+foundry_root: /home/runner/work/secbrain/secbrain/targets/thresholdnetwork/instascope
+max_requests_per_second: 10
+respect_robots_txt: true
+
+rpc_urls:
+  - "https://ethereum.publicnode.com"
+  - "https://eth.llamarpc.com"
+  - "https://rpc.ankr.com/eth"
+
+profit_tokens:
+  - symbol: "TBTC"
+    address: "0x18084fbA666a33d37592fA2633fD49a74DD93a88"
+    decimals: 18
+  - symbol: "T"
+    address: "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5"
+    decimals: 18
+  - symbol: "WETH"
+    address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    decimals: 18
+  - symbol: "USDC"
+    address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    decimals: 6
