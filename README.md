@@ -133,6 +133,11 @@ secbrain insights --workspace ./targets/protocol1 --format html --open
 - 🧪 [Invariant Testing Guide](docs/INVARIANT-TESTING-GUIDE.md) - Property-based testing for smart contracts
 - 🔧 [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
 
+### Workflow Optimization & Analysis 🚀
+- 📈 [**Bounty Workflow Analysis**](BOUNTY_WORKFLOW_ANALYSIS.md) - **Complete workflow analysis, tool inventory, and optimization roadmap**
+- ⚡ [**Workflow Optimization Guide**](WORKFLOW_OPTIMIZATION_GUIDE.md) - **Optimization features, tool usage, and best practices**
+- 📋 [Run Analysis Guidance](RUN_ANALYSIS_GUIDANCE.md) - Debugging zero-finding runs
+
 ### Contributing & Quality
 - 🤝 [Contributing Guide](CONTRIBUTING.md) - How to contribute
 - 🌿 [Branch Strategy](BRANCH-STRATEGY.md) - Simple single-branch workflow
