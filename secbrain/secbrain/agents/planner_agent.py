@@ -1,4 +1,11 @@
-"""Planner agent - creates phased execution plans."""
+"""Planner agent - creates phased execution plans.
+
+This module orchestrates the planning phase including:
+- Multi-phase execution plan generation (recon → mapping → tests → triage → reporting)
+- Integration with worker model and Perplexity research
+- Advisor (Gemini) review and validation
+- Strategic approach determination
+"""
 
 from __future__ import annotations
 

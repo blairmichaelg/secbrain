@@ -1,4 +1,12 @@
-"""Centralized configuration constants for SecBrain."""
+"""Centralized configuration constants for SecBrain.
+
+This module provides configuration classes for various SecBrain subsystems:
+- LLM client settings (timeouts, retries, concurrency)
+- Hypothesis generation parameters
+- Exploit execution thresholds
+- Rate limiting and pricing configuration
+- Tool-specific defaults
+"""
 
 from dataclasses import dataclass
 from typing import ClassVar

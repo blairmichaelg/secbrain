@@ -1,4 +1,11 @@
-"""Reporting agent - creates bug bounty reports."""
+"""Reporting agent - creates bug bounty reports.
+
+This module generates professional bug bounty reports including:
+- Templated markdown reports with proof-of-concept code
+- CWE and impact reference integration via research
+- Platform-specific formatting for submission
+- Evidence collection and documentation
+"""
 
 from __future__ import annotations
 

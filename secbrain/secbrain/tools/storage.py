@@ -1,4 +1,12 @@
-"""Storage layer for SecBrain (JSON/SQLite)."""
+"""Storage layer for SecBrain (JSON/SQLite).
+
+This module provides persistent storage for SecBrain workflow data including:
+- Recon results and asset discovery data
+- Vulnerability hypotheses
+- Findings and exploit attempts
+- Run metadata and session information
+- Optional SQLite backend for structured queries
+"""
 
 from __future__ import annotations
 

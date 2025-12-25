@@ -1,4 +1,11 @@
-"""Identity and session abstractions for multi-context testing."""
+"""Identity and session abstractions for multi-context testing.
+
+This module provides identity management for security testing including:
+- Multiple identity contexts (attacker, victim, admin, etc.)
+- Session state management (headers, cookies, tokens)
+- Identity registry for tracking multiple sessions
+- Request context switching
+"""
 
 from __future__ import annotations
 

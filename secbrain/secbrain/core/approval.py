@@ -1,3 +1,12 @@
+"""Approval system for risky operations in SecBrain.
+
+This module provides a human-in-the-loop approval mechanism for:
+- Out-of-scope HTTP requests
+- High-risk tool executions
+- Sensitive operations requiring confirmation
+- Audit trail and decision logging
+"""
+
 from __future__ import annotations
 
 import json
