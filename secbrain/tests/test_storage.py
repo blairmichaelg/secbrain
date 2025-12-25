@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import tempfile
 from pathlib import Path
 
@@ -31,7 +32,6 @@ async def fetch_one(storage, cursor):
     """Helper to fetch one row from cursor, handling both aiosqlite and sqlite3."""
     if storage._sqlite_backend == "aiosqlite":
         return await cursor.fetchone()
-    import asyncio
     return await asyncio.to_thread(cursor.fetchone)
 
 

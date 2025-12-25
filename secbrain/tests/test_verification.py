@@ -2,7 +2,14 @@
 
 import pytest
 
-from secbrain.verification import EvidenceBundle, VerificationResult
+from secbrain.verification import (
+    BasicSQLiVerifier,
+    EvidenceBundle,
+    ReflectedXSSVerifier,
+    VerificationResult,
+    _sha256_text,
+    get_default_verifier,
+)
 
 
 class TestEvidenceBundle:
@@ -182,15 +189,11 @@ class TestReflectedXSSVerifier:
 
     def test_name_attribute(self) -> None:
         """Test verifier has correct name."""
-        from secbrain.verification import ReflectedXSSVerifier
-        
         verifier = ReflectedXSSVerifier()
         assert verifier.name == "reflected_xss"
 
     def test_verify_no_reflected_payload(self) -> None:
         """Test verification when no payload is reflected."""
-        from secbrain.verification import ReflectedXSSVerifier
-        
         verifier = ReflectedXSSVerifier()
         results = [
             {"contains_payload": False, "response_snippet": "normal response"},
@@ -210,17 +213,15 @@ class TestReflectedXSSVerifier:
 
     def test_verify_with_reflected_payload(self) -> None:
         """Test verification when payload is reflected."""
-        from secbrain.verification import ReflectedXSSVerifier
-        
         verifier = ReflectedXSSVerifier()
         results = [
             {
-                "contains_payload": True,
-                "payload": "<script>alert(1)</script>",
-                "status_code": 200,
-                "response_length": 1500,
-                "duration_ms": 120,
-                "response_snippet": "Found: <script>alert(1)</script>"
+        "contains_payload": True,
+        "payload": "<script>alert(1)</script>",
+        "status_code": 200,
+        "response_length": 1500,
+        "duration_ms": 120,
+        "response_snippet": "Found: <script>alert(1)</script>"
             }
         ]
         
@@ -240,41 +241,39 @@ class TestReflectedXSSVerifier:
 
     def test_verify_multiple_reflections(self) -> None:
         """Test verification with multiple reflected payloads."""
-        from secbrain.verification import ReflectedXSSVerifier
-        
         verifier = ReflectedXSSVerifier()
         results = [
             {
-                "contains_payload": True,
-                "payload": "<script>1</script>",
-                "status_code": 200,
-                "response_length": 1000,
-                "duration_ms": 100,
-                "response_snippet": "Test 1"
+        "contains_payload": True,
+        "payload": "<script>1</script>",
+        "status_code": 200,
+        "response_length": 1000,
+        "duration_ms": 100,
+        "response_snippet": "Test 1"
             },
             {
-                "contains_payload": True,
-                "payload": "<img src=x>",
-                "status_code": 200,
-                "response_length": 1100,
-                "duration_ms": 105,
-                "response_snippet": "Test 2"
+        "contains_payload": True,
+        "payload": "<img src=x>",
+        "status_code": 200,
+        "response_length": 1100,
+        "duration_ms": 105,
+        "response_snippet": "Test 2"
             },
             {
-                "contains_payload": True,
-                "payload": "alert(1)",
-                "status_code": 200,
-                "response_length": 1200,
-                "duration_ms": 110,
-                "response_snippet": "Test 3"
+        "contains_payload": True,
+        "payload": "alert(1)",
+        "status_code": 200,
+        "response_length": 1200,
+        "duration_ms": 110,
+        "response_snippet": "Test 3"
             },
             {
-                "contains_payload": True,
-                "payload": "test4",
-                "status_code": 200,
-                "response_length": 1300,
-                "duration_ms": 115,
-                "response_snippet": "Test 4"
+        "contains_payload": True,
+        "payload": "test4",
+        "status_code": 200,
+        "response_length": 1300,
+        "duration_ms": 115,
+        "response_snippet": "Test 4"
             }
         ]
         
@@ -290,17 +289,15 @@ class TestReflectedXSSVerifier:
 
     def test_verify_observations_include_required_fields(self) -> None:
         """Test that observations include all required fields."""
-        from secbrain.verification import ReflectedXSSVerifier
-        
         verifier = ReflectedXSSVerifier()
         results = [
             {
-                "contains_payload": True,
-                "payload": "test",
-                "status_code": 200,
-                "response_length": 500,
-                "duration_ms": 50,
-                "response_snippet": "test response"
+        "contains_payload": True,
+        "payload": "test",
+        "status_code": 200,
+        "response_length": 500,
+        "duration_ms": 50,
+        "response_snippet": "test response"
             }
         ]
         
@@ -319,8 +316,6 @@ class TestReflectedXSSVerifier:
 
     def test_verify_empty_results(self) -> None:
         """Test verification with empty results."""
-        from secbrain.verification import ReflectedXSSVerifier
-        
         verifier = ReflectedXSSVerifier()
         result = verifier.verify(
             vuln_type="xss",
@@ -337,22 +332,18 @@ class TestBasicSQLiVerifier:
 
     def test_name_attribute(self) -> None:
         """Test verifier has correct name."""
-        from secbrain.verification import BasicSQLiVerifier
-        
         verifier = BasicSQLiVerifier()
         assert verifier.name == "basic_sqli"
 
     def test_verify_no_sql_indicators(self) -> None:
         """Test verification when no SQL indicators present."""
-        from secbrain.verification import BasicSQLiVerifier
-        
         verifier = BasicSQLiVerifier()
         results = [
             {
-                "payload": "' OR 1=1--",
-                "status_code": 200,
-                "response_snippet": "normal response",
-                "duration_ms": 100
+        "payload": "' OR 1=1--",
+        "status_code": 200,
+        "response_snippet": "normal response",
+        "duration_ms": 100
             }
         ]
         
@@ -369,16 +360,14 @@ class TestBasicSQLiVerifier:
 
     def test_verify_sql_error_detected(self) -> None:
         """Test verification when SQL error is detected."""
-        from secbrain.verification import BasicSQLiVerifier
-        
         verifier = BasicSQLiVerifier()
         results = [
             {
-                "payload": "' OR 1=1--",
-                "status_code": 500,
-                "response_snippet": "You have an error in your SQL syntax",
-                "response_length": 800,
-                "duration_ms": 150
+        "payload": "' OR 1=1--",
+        "status_code": 500,
+        "response_snippet": "You have an error in your SQL syntax",
+        "response_length": 800,
+        "duration_ms": 150
             }
         ]
         
@@ -397,15 +386,13 @@ class TestBasicSQLiVerifier:
 
     def test_verify_mysql_error(self) -> None:
         """Test detection of MySQL error."""
-        from secbrain.verification import BasicSQLiVerifier
-        
         verifier = BasicSQLiVerifier()
         results = [
             {
-                "payload": "test'",
-                "status_code": 500,
-                "response_snippet": "Warning: mysql_fetch_array(): supplied argument",
-                "duration_ms": 120
+        "payload": "test'",
+        "status_code": 500,
+        "response_snippet": "Warning: mysql_fetch_array(): supplied argument",
+        "duration_ms": 120
             }
         ]
         
@@ -420,15 +407,13 @@ class TestBasicSQLiVerifier:
 
     def test_verify_time_delay(self) -> None:
         """Test detection of time-based SQL injection."""
-        from secbrain.verification import BasicSQLiVerifier
-        
         verifier = BasicSQLiVerifier()
         results = [
             {
-                "payload": "1' AND SLEEP(5)--",
-                "status_code": 200,
-                "response_snippet": "Loading...",
-                "duration_ms": 5200
+        "payload": "1' AND SLEEP(5)--",
+        "status_code": 200,
+        "response_snippet": "Loading...",
+        "duration_ms": 5200
             }
         ]
         
@@ -444,15 +429,13 @@ class TestBasicSQLiVerifier:
 
     def test_verify_waitfor_delay(self) -> None:
         """Test detection of WAITFOR DELAY SQL injection."""
-        from secbrain.verification import BasicSQLiVerifier
-        
         verifier = BasicSQLiVerifier()
         results = [
             {
-                "payload": "1'; WAITFOR DELAY '00:00:05'--",
-                "status_code": 200,
-                "response_snippet": "Processing...",
-                "duration_ms": 5100
+        "payload": "1'; WAITFOR DELAY '00:00:05'--",
+        "status_code": 200,
+        "response_snippet": "Processing...",
+        "duration_ms": 5100
             }
         ]
         
@@ -467,27 +450,25 @@ class TestBasicSQLiVerifier:
 
     def test_verify_multiple_indicators(self) -> None:
         """Test verification with multiple SQL injection indicators."""
-        from secbrain.verification import BasicSQLiVerifier
-        
         verifier = BasicSQLiVerifier()
         results = [
             {
-                "payload": "1'",
-                "status_code": 500,
-                "response_snippet": "SQL syntax error near '1''",
-                "duration_ms": 100
+        "payload": "1'",
+        "status_code": 500,
+        "response_snippet": "SQL syntax error near '1''",
+        "duration_ms": 100
             },
             {
-                "payload": "1' OR 1=1--",
-                "status_code": 200,
-                "response_snippet": "postgres error: syntax error",
-                "duration_ms": 110
+        "payload": "1' OR 1=1--",
+        "status_code": 200,
+        "response_snippet": "postgres error: syntax error",
+        "duration_ms": 110
             },
             {
-                "payload": "1' UNION SELECT NULL--",
-                "status_code": 500,
-                "response_snippet": "ODBC Driver error",
-                "duration_ms": 105
+        "payload": "1' UNION SELECT NULL--",
+        "status_code": 500,
+        "response_snippet": "ODBC Driver error",
+        "duration_ms": 105
             }
         ]
         
@@ -503,15 +484,13 @@ class TestBasicSQLiVerifier:
 
     def test_verify_limits_observations_to_five(self) -> None:
         """Test that observations are limited to 5."""
-        from secbrain.verification import BasicSQLiVerifier
-        
         verifier = BasicSQLiVerifier()
         results = [
             {
-                "payload": f"test{i}",
-                "status_code": 500,
-                "response_snippet": f"SQL syntax error {i}",
-                "duration_ms": 100 + i
+        "payload": f"test{i}",
+        "status_code": 500,
+        "response_snippet": f"SQL syntax error {i}",
+        "duration_ms": 100 + i
             }
             for i in range(10)
         ]
@@ -528,15 +507,13 @@ class TestBasicSQLiVerifier:
 
     def test_verify_case_insensitive_detection(self) -> None:
         """Test that error detection is case insensitive."""
-        from secbrain.verification import BasicSQLiVerifier
-        
         verifier = BasicSQLiVerifier()
         results = [
             {
-                "payload": "test",
-                "status_code": 500,
-                "response_snippet": "MYSQL ERROR: SYNTAX",
-                "duration_ms": 100
+        "payload": "test",
+        "status_code": 500,
+        "response_snippet": "MYSQL ERROR: SYNTAX",
+        "duration_ms": 100
             }
         ]
         
@@ -550,15 +527,13 @@ class TestBasicSQLiVerifier:
 
     def test_verify_time_delay_insufficient(self) -> None:
         """Test that short delays are not flagged."""
-        from secbrain.verification import BasicSQLiVerifier
-        
         verifier = BasicSQLiVerifier()
         results = [
             {
-                "payload": "1' AND SLEEP(5)--",
-                "status_code": 200,
-                "response_snippet": "Fast response",
-                "duration_ms": 500  # Less than 4000ms threshold
+        "payload": "1' AND SLEEP(5)--",
+        "status_code": 200,
+        "response_snippet": "Fast response",
+        "duration_ms": 500  # Less than 4000ms threshold
             }
         ]
         
@@ -576,15 +551,11 @@ class TestGetDefaultVerifier:
 
     def test_get_xss_verifier(self) -> None:
         """Test getting XSS verifier."""
-        from secbrain.verification import get_default_verifier, ReflectedXSSVerifier
-        
         verifier = get_default_verifier("xss")
         assert isinstance(verifier, ReflectedXSSVerifier)
 
     def test_get_xss_verifier_case_insensitive(self) -> None:
         """Test XSS verifier retrieval is case insensitive."""
-        from secbrain.verification import get_default_verifier, ReflectedXSSVerifier
-        
         verifier = get_default_verifier("XSS")
         assert isinstance(verifier, ReflectedXSSVerifier)
         
@@ -593,15 +564,11 @@ class TestGetDefaultVerifier:
 
     def test_get_sqli_verifier(self) -> None:
         """Test getting SQLi verifier."""
-        from secbrain.verification import get_default_verifier, BasicSQLiVerifier
-        
         verifier = get_default_verifier("sqli")
         assert isinstance(verifier, BasicSQLiVerifier)
 
     def test_get_sqli_verifier_variations(self) -> None:
         """Test SQLi verifier with various inputs."""
-        from secbrain.verification import get_default_verifier, BasicSQLiVerifier
-        
         assert isinstance(get_default_verifier("sqli"), BasicSQLiVerifier)
         assert isinstance(get_default_verifier("SQLI"), BasicSQLiVerifier)
         assert isinstance(get_default_verifier("sql"), BasicSQLiVerifier)
@@ -609,22 +576,16 @@ class TestGetDefaultVerifier:
 
     def test_get_unknown_verifier(self) -> None:
         """Test getting verifier for unknown type."""
-        from secbrain.verification import get_default_verifier
-        
         verifier = get_default_verifier("unknown_vuln")
         assert verifier is None
 
     def test_get_verifier_empty_string(self) -> None:
         """Test getting verifier with empty string."""
-        from secbrain.verification import get_default_verifier
-        
         verifier = get_default_verifier("")
         assert verifier is None
 
     def test_get_verifier_none(self) -> None:
         """Test getting verifier with None."""
-        from secbrain.verification import get_default_verifier
-        
         verifier = get_default_verifier(None)  # type: ignore
         assert verifier is None
 
@@ -634,40 +595,30 @@ class TestSha256Text:
 
     def test_sha256_basic(self) -> None:
         """Test basic SHA256 hashing."""
-        from secbrain.verification import _sha256_text
-        
         result = _sha256_text("test")
         assert isinstance(result, str)
         assert len(result) == 64  # SHA256 produces 64 hex characters
 
     def test_sha256_consistent(self) -> None:
         """Test that same input produces same hash."""
-        from secbrain.verification import _sha256_text
-        
         hash1 = _sha256_text("test string")
         hash2 = _sha256_text("test string")
         assert hash1 == hash2
 
     def test_sha256_different_inputs(self) -> None:
         """Test that different inputs produce different hashes."""
-        from secbrain.verification import _sha256_text
-        
         hash1 = _sha256_text("test1")
         hash2 = _sha256_text("test2")
         assert hash1 != hash2
 
     def test_sha256_empty_string(self) -> None:
         """Test hashing empty string."""
-        from secbrain.verification import _sha256_text
-        
         result = _sha256_text("")
         assert isinstance(result, str)
         assert len(result) == 64
 
     def test_sha256_unicode(self) -> None:
         """Test hashing unicode strings."""
-        from secbrain.verification import _sha256_text
-        
         result = _sha256_text("Hello 世界 🔒")
         assert isinstance(result, str)
         assert len(result) == 64
