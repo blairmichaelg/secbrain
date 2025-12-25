@@ -474,8 +474,9 @@ class FoundryRunner:
         token_profit_logs_block = _indent_block(token_profit_logs)
         profit_assert_block = _indent_block(profit_assert) if profit_assert else ""
 
-        attack_block = attack_body or "// TODO: add exploit logic"
-        attack_block = _indent_block(attack_block)
+        # Sanitize attack_body to remove markdown fences that break Solidity compilation
+        sanitized_attack_body = self._sanitize_attack_body(attack_body or "// TODO: add exploit logic")
+        attack_block = _indent_block(sanitized_attack_body)
 
         success_suffix = ""
         if not is_forked:
@@ -543,6 +544,28 @@ class FoundryRunner:
         test_rel_path = self.test_root_rel / test_filename
         (self.project_root / test_rel_path).write_text(exploit_test)
         return test_rel_path
+
+    def _sanitize_attack_body(self, text: str) -> str:
+        """Remove markdown/code fences and backticks that break Solidity compilation.
+        
+        This prevents compilation errors from injected markdown fences like:
+        ```solidity
+        // code here
+        ```
+        
+        Args:
+            text: Raw attack body that may contain markdown fences
+            
+        Returns:
+            Sanitized text with all markdown fences and backticks removed
+        """
+        if not text:
+            return ""
+        # Strip fenced code blocks like ```solidity ... ``` and standalone backticks
+        body = re.sub(r"```[\w-]*", "", text)
+        body = body.replace("```", "")
+        body = body.replace("`", "")
+        return body.strip()
 
     def _normalize_address(self, addr: Any) -> str | None:
         if not addr:

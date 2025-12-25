@@ -672,27 +672,81 @@ Additional note: The contract contains functions that may be vulnerable to preci
         """Parse hypothesis JSON with schema validation and corrective prompting."""
 
         def _extract_json_array(text: str) -> list[dict[str, Any]]:
+            """Extract JSON array from LLM response with multiple fallback strategies.
+            
+            Handles:
+            - Plain JSON arrays
+            - Markdown code blocks with ```json or ```
+            - JSON embedded in explanatory text
+            - Malformed markdown fences
+            """
             if not text:
                 raise json.JSONDecodeError("empty", text, 0)
             s = text.strip()
+            
+            # Strategy 1: Try extracting from markdown code blocks
             if "```" in s:
+                # Handle multiple code blocks by trying each one
                 parts = s.split("```")
-                if len(parts) >= 2:
-                    s = parts[1].strip()
-                    if s.startswith("json"):
-                        s = s[4:].strip()
+                for i in range(1, len(parts), 2):  # Odd indices are content between fences
+                    block = parts[i].strip()
+                    # Remove language identifier if present
+                    if block.startswith("json"):
+                        block = block[4:].strip()
+                    elif block.startswith("javascript"):
+                        block = block[10:].strip()
+                    # Try to parse this block
+                    try:
+                        data = json.loads(block)
+                        if isinstance(data, list):
+                            return [item for item in data if isinstance(item, dict)]
+                        elif isinstance(data, dict):
+                            # Single hypothesis wrapped in object, convert to list
+                            return [data]
+                    except (json.JSONDecodeError, ValueError):
+                        # Try finding JSON array in this block
+                        start = block.find("[")
+                        end = block.rfind("]")
+                        if start != -1 and end != -1 and end > start:
+                            try:
+                                data = json.loads(block[start : end + 1])
+                                if isinstance(data, list):
+                                    return [item for item in data if isinstance(item, dict)]
+                            except (json.JSONDecodeError, ValueError):
+                                continue
+            
+            # Strategy 2: Find JSON array boundaries in the entire text
             start = s.find("[")
             end = s.rfind("]")
             if start != -1 and end != -1 and end > start:
-                s = s[start : end + 1]
-            data = json.loads(s)
-            if not isinstance(data, list):
-                raise ValueError("expected list")
-            out: list[dict[str, Any]] = []
-            for item in data:
-                if isinstance(item, dict):
-                    out.append(item)
-            return out
+                try:
+                    data = json.loads(s[start : end + 1])
+                    if isinstance(data, list):
+                        out: list[dict[str, Any]] = []
+                        for item in data:
+                            if isinstance(item, dict):
+                                out.append(item)
+                        if out:  # Only return if we found valid dict items
+                            return out
+                except (json.JSONDecodeError, ValueError):
+                    pass
+            
+            # Strategy 3: Try parsing the entire text as-is
+            try:
+                data = json.loads(s)
+                if isinstance(data, list):
+                    return [item for item in data if isinstance(item, dict)]
+                elif isinstance(data, dict):
+                    return [data]
+            except (json.JSONDecodeError, ValueError):
+                pass
+            
+            # All strategies failed
+            raise json.JSONDecodeError(
+                "Could not extract valid JSON array from response",
+                text,
+                0
+            )
 
         parsed: list[dict[str, Any]] = []
 
