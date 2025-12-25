@@ -1,0 +1,954 @@
+name: 🔒 Comprehensive Security Analysis
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_repo:
+        description: 'Target repository URL (e.g., https://github.com/owner/repo)'
+        required: true
+        type: string
+      target_type:
+        description: 'Target project type'
+        required: true
+        type: choice
+        options:
+          - smart-contract
+          - python
+          - mixed
+        default: 'mixed'
+      analysis_depth:
+        description: 'Analysis depth level'
+        required: true
+        type: choice
+        options:
+          - quick
+          - standard
+          - deep
+        default: 'standard'
+      enable_ai_analysis:
+        description: 'Enable AI-powered analysis with SecBrain agents'
+        required: false
+        type: boolean
+        default: true
+      enable_fuzzing:
+        description: 'Enable fuzzing (Echidna, Foundry)'
+        required: false
+        type: boolean
+        default: true
+      immunefi_program:
+        description: 'Immunefi program name (optional, for context)'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  issues: write
+  security-events: write
+  pull-requests: write
+
+env:
+  ANALYSIS_DIR: /tmp/target-analysis
+  RESULTS_DIR: /tmp/analysis-results
+
+jobs:
+  # ========================================================================
+  # Phase 1: Setup and Reconnaissance
+  # ========================================================================
+  setup-and-recon:
+    name: 🎯 Setup & Initial Reconnaissance
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      has_solidity: ${{ steps.detect.outputs.has_solidity }}
+      has_python: ${{ steps.detect.outputs.has_python }}
+      has_foundry: ${{ steps.detect.outputs.has_foundry }}
+      has_hardhat: ${{ steps.detect.outputs.has_hardhat }}
+      project_complexity: ${{ steps.detect.outputs.complexity }}
+      target_name: ${{ steps.detect.outputs.target_name }}
+      has_instascope: ${{ steps.detect.outputs.has_instascope }}
+      analysis_root: ${{ steps.detect.outputs.analysis_root }}
+    
+    steps:
+      - name: Checkout SecBrain
+        uses: actions/checkout@v6
+        with:
+          path: secbrain
+      
+      - name: Clone target repository
+        run: |
+          mkdir -p ${{ env.ANALYSIS_DIR }}
+          cd ${{ env.ANALYSIS_DIR }}
+          git clone --depth 1 ${{ inputs.target_repo }} target || {
+            echo "::error::Failed to clone target repository"
+            exit 1
+          }
+      
+      - name: Detect project characteristics
+        id: detect
+        run: |
+          cd ${{ env.ANALYSIS_DIR }}/target
+          
+          # Extract repository name
+          TARGET_NAME=$(basename ${{ inputs.target_repo }} .git)
+          echo "target_name=${TARGET_NAME}" >> $GITHUB_OUTPUT
+          
+          # Detect instascope directory (Immunefi downloads)
+          if [ -d "instascope" ]; then
+            echo "has_instascope=true" >> $GITHUB_OUTPUT
+            echo "✅ Instascope directory detected (Immunefi download)"
+            # Set instascope as the analysis root
+            ANALYSIS_ROOT="instascope"
+          else
+            echo "has_instascope=false" >> $GITHUB_OUTPUT
+            ANALYSIS_ROOT="."
+          fi
+          echo "analysis_root=${ANALYSIS_ROOT}" >> $GITHUB_OUTPUT
+          
+          # Detect Solidity files (check in analysis root)
+          if find ${ANALYSIS_ROOT} -name "*.sol" -type f 2>/dev/null | grep -q .; then
+            echo "has_solidity=true" >> $GITHUB_OUTPUT
+            echo "✅ Solidity contracts detected"
+          else
+            echo "has_solidity=false" >> $GITHUB_OUTPUT
+            echo "❌ No Solidity contracts found"
+          fi
+          
+          # Detect Python files (check in analysis root)
+          if find ${ANALYSIS_ROOT} -name "*.py" -type f 2>/dev/null | grep -q .; then
+            echo "has_python=true" >> $GITHUB_OUTPUT
+            echo "✅ Python code detected"
+          else
+            echo "has_python=false" >> $GITHUB_OUTPUT
+            echo "❌ No Python code found"
+          fi
+          
+          # Detect Foundry (check in analysis root)
+          if [ -f "${ANALYSIS_ROOT}/foundry.toml" ]; then
+            echo "has_foundry=true" >> $GITHUB_OUTPUT
+            echo "✅ Foundry project detected"
+          else
+            echo "has_foundry=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Detect Hardhat (check in analysis root)
+          if [ -f "${ANALYSIS_ROOT}/hardhat.config.js" ] || [ -f "${ANALYSIS_ROOT}/hardhat.config.ts" ]; then
+            echo "has_hardhat=true" >> $GITHUB_OUTPUT
+            echo "✅ Hardhat project detected"
+          else
+            echo "has_hardhat=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Estimate complexity
+          TOTAL_FILES=$(find ${ANALYSIS_ROOT} -type f \( -name "*.sol" -o -name "*.py" \) 2>/dev/null | wc -l)
+          if [ "$TOTAL_FILES" -lt 10 ]; then
+            COMPLEXITY="low"
+          elif [ "$TOTAL_FILES" -lt 50 ]; then
+            COMPLEXITY="medium"
+          else
+            COMPLEXITY="high"
+          fi
+          echo "complexity=${COMPLEXITY}" >> $GITHUB_OUTPUT
+          
+          echo "📊 Detected $TOTAL_FILES files (complexity: ${COMPLEXITY})"
+      
+      - name: Upload target repository
+        uses: actions/upload-artifact@v6
+        with:
+          name: target-repository
+          path: ${{ env.ANALYSIS_DIR }}/target
+          retention-days: 7
+
+  # ========================================================================
+  # Phase 2: Static Analysis (Parallel Execution)
+  # ========================================================================
+  
+  # Python Static Analysis
+  python-static-analysis:
+    name: 🐍 Python Static Analysis
+    runs-on: ubuntu-latest
+    needs: setup-and-recon
+    if: needs.setup-and-recon.outputs.has_python == 'true' || inputs.target_type == 'python' || inputs.target_type == 'mixed'
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout SecBrain
+        uses: actions/checkout@v6
+      
+      - name: Download target repository
+        uses: actions/download-artifact@v6
+        with:
+          name: target-repository
+          path: ${{ env.ANALYSIS_DIR }}/target
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install Python security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit[toml] safety pip-audit semgrep
+      
+      - name: Run Bandit
+        continue-on-error: true
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}
+          cd ${{ env.ANALYSIS_DIR }}/target
+          bandit -r . -f json -o ${{ env.RESULTS_DIR }}/bandit-results.json || true
+          bandit -r . -ll | tee ${{ env.RESULTS_DIR }}/bandit-output.txt || true
+      
+      - name: Run Safety check
+        continue-on-error: true
+        run: |
+          cd ${{ env.ANALYSIS_DIR }}/target
+          if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+            safety check --json --output ${{ env.RESULTS_DIR }}/safety-results.json || true
+            safety check | tee ${{ env.RESULTS_DIR }}/safety-output.txt || true
+          fi
+      
+      - name: Run pip-audit
+        continue-on-error: true
+        run: |
+          cd ${{ env.ANALYSIS_DIR }}/target
+          if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+            pip-audit --format json --output ${{ env.RESULTS_DIR }}/pip-audit-results.json || true
+            pip-audit | tee ${{ env.RESULTS_DIR }}/pip-audit-output.txt || true
+          fi
+      
+      - name: Run Semgrep
+        continue-on-error: true
+        run: |
+          cd ${{ env.ANALYSIS_DIR }}/target
+          # Run with auto rules
+          semgrep --config=auto --json --output ${{ env.RESULTS_DIR }}/semgrep-results.json . || true
+          semgrep --config=auto . | tee ${{ env.RESULTS_DIR }}/semgrep-output.txt || true
+      
+      - name: Upload Python analysis results
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-static-analysis
+          path: ${{ env.RESULTS_DIR }}
+          retention-days: 30
+
+  # Solidity Static Analysis
+  solidity-static-analysis:
+    name: ⚡ Solidity Static Analysis
+    runs-on: ubuntu-latest
+    needs: setup-and-recon
+    if: needs.setup-and-recon.outputs.has_solidity == 'true' || inputs.target_type == 'smart-contract' || inputs.target_type == 'mixed'
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout SecBrain
+        uses: actions/checkout@v6
+      
+      - name: Download target repository
+        uses: actions/download-artifact@v6
+        with:
+          name: target-repository
+          path: ${{ env.ANALYSIS_DIR }}/target
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+      
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      
+      - name: Install Solidity tools
+        run: |
+          npm install -g solhint prettier prettier-plugin-solidity
+          pip install slither-analyzer
+      
+      - name: Build contracts
+        continue-on-error: true
+        run: |
+          cd ${{ env.ANALYSIS_DIR }}/target
+          ANALYSIS_ROOT="${{ needs.setup-and-recon.outputs.analysis_root }}"
+          if [ -f "${ANALYSIS_ROOT}/foundry.toml" ]; then
+            cd "${ANALYSIS_ROOT}"
+            forge build || echo "::warning::Forge build failed"
+          fi
+      
+      - name: Run Solhint
+        continue-on-error: true
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}
+          cd ${{ env.ANALYSIS_DIR }}/target
+          ANALYSIS_ROOT="${{ needs.setup-and-recon.outputs.analysis_root }}"
+          find "${ANALYSIS_ROOT}" -name "*.sol" ! -path "*/node_modules/*" -type f > sol_files.txt
+          if [ -s sol_files.txt ]; then
+            solhint $(cat sol_files.txt) --format json > ${{ env.RESULTS_DIR }}/solhint-results.json || true
+            solhint $(cat sol_files.txt) | tee ${{ env.RESULTS_DIR }}/solhint-output.txt || true
+          fi
+      
+      - name: Run Slither
+        continue-on-error: true
+        run: |
+          cd ${{ env.ANALYSIS_DIR }}/target
+          ANALYSIS_ROOT="${{ needs.setup-and-recon.outputs.analysis_root }}"
+          cd "${ANALYSIS_ROOT}"
+          slither . --json ${{ env.RESULTS_DIR }}/slither-results.json || true
+          slither . --exclude-low --exclude-informational | tee ${{ env.RESULTS_DIR }}/slither-output.txt || true
+      
+      - name: Upload Solidity analysis results
+        uses: actions/upload-artifact@v6
+        with:
+          name: solidity-static-analysis
+          path: ${{ env.RESULTS_DIR }}
+          retention-days: 30
+
+  # Mythril Symbolic Execution (Deep Analysis Only)
+  mythril-analysis:
+    name: 🔮 Mythril Symbolic Execution
+    runs-on: ubuntu-latest
+    needs: setup-and-recon
+    if: |
+      inputs.analysis_depth == 'deep' && 
+      (needs.setup-and-recon.outputs.has_solidity == 'true' || inputs.target_type == 'smart-contract')
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout SecBrain
+        uses: actions/checkout@v6
+      
+      - name: Download target repository
+        uses: actions/download-artifact@v6
+        with:
+          name: target-repository
+          path: ${{ env.ANALYSIS_DIR }}/target
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      
+      - name: Install Mythril
+        run: pip install mythril
+      
+      - name: Run Mythril analysis
+        continue-on-error: true
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}
+          cd ${{ env.ANALYSIS_DIR }}/target
+          
+          # Analyze each Solidity file
+          find . -name "*.sol" ! -path "*/node_modules/*" -type f | head -10 | while read file; do
+            echo "Analyzing $file with Mythril..."
+            myth analyze "$file" -o json > ${{ env.RESULTS_DIR }}/mythril-$(basename $file .sol).json 2>&1 || true
+            myth analyze "$file" 2>&1 | tee -a ${{ env.RESULTS_DIR }}/mythril-output.txt || true
+          done
+      
+      - name: Upload Mythril results
+        uses: actions/upload-artifact@v6
+        with:
+          name: mythril-analysis
+          path: ${{ env.RESULTS_DIR }}
+          retention-days: 30
+
+  # ========================================================================
+  # Phase 3: Dynamic Analysis & Fuzzing
+  # ========================================================================
+  
+  # Foundry Fuzzing
+  foundry-fuzzing:
+    name: 🎲 Foundry Fuzzing
+    runs-on: ubuntu-latest
+    needs: setup-and-recon
+    if: |
+      inputs.enable_fuzzing && 
+      needs.setup-and-recon.outputs.has_foundry == 'true'
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout SecBrain
+        uses: actions/checkout@v6
+      
+      - name: Download target repository
+        uses: actions/download-artifact@v6
+        with:
+          name: target-repository
+          path: ${{ env.ANALYSIS_DIR }}/target
+      
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      
+      - name: Determine fuzz runs
+        id: fuzz-config
+        run: |
+          case "${{ inputs.analysis_depth }}" in
+            quick)
+              echo "runs=256" >> $GITHUB_OUTPUT
+              ;;
+            standard)
+              echo "runs=10000" >> $GITHUB_OUTPUT
+              ;;
+            deep)
+              echo "runs=50000" >> $GITHUB_OUTPUT
+              ;;
+          esac
+      
+      - name: Run Foundry tests with fuzzing
+        continue-on-error: true
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}
+          cd ${{ env.ANALYSIS_DIR }}/target
+          ANALYSIS_ROOT="${{ needs.setup-and-recon.outputs.analysis_root }}"
+          
+          # Navigate to analysis root if instascope exists
+          if [ "${ANALYSIS_ROOT}" != "." ]; then
+            cd "${ANALYSIS_ROOT}"
+          fi
+          
+          # Build first
+          forge build || echo "::warning::Build issues detected"
+          
+          # Run fuzz tests
+          forge test --fuzz-runs ${{ steps.fuzz-config.outputs.runs }} -vvv 2>&1 | tee ${{ env.RESULTS_DIR }}/foundry-fuzz-output.txt || {
+            echo "::notice::Fuzzing found potential issues"
+          }
+      
+      - name: Upload fuzzing results
+        uses: actions/upload-artifact@v6
+        with:
+          name: foundry-fuzzing
+          path: ${{ env.RESULTS_DIR }}
+          retention-days: 30
+
+  # Echidna Property-Based Fuzzing
+  echidna-fuzzing:
+    name: 🦇 Echidna Property Fuzzing
+    runs-on: ubuntu-latest
+    needs: setup-and-recon
+    if: |
+      inputs.enable_fuzzing && 
+      inputs.analysis_depth == 'deep' &&
+      needs.setup-and-recon.outputs.has_solidity == 'true'
+    timeout-minutes: 90
+    
+    steps:
+      - name: Checkout SecBrain
+        uses: actions/checkout@v6
+      
+      - name: Download target repository
+        uses: actions/download-artifact@v6
+        with:
+          name: target-repository
+          path: ${{ env.ANALYSIS_DIR }}/target
+      
+      - name: Install Echidna
+        run: |
+          # Install Echidna via Docker (most reliable method)
+          docker pull trailofbits/eth-security-toolbox
+      
+      - name: Create Echidna config
+        run: |
+          cat > ${{ env.ANALYSIS_DIR }}/target/echidna.yaml << 'EOF'
+          testMode: assertion
+          testLimit: 10000
+          shrinkLimit: 5000
+          seqLen: 100
+          contractAddr: "0x00a329c0648769A73afAc7F9381E08FB43dBEA72"
+          deployer: "0x00a329c0648769a73afac7f9381e08fb43dbea70"
+          sender: ["0x00a329c0648769a73afac7f9381e08fb43dbea71"]
+          balanceAddr: 0xffffffff
+          EOF
+      
+      - name: Run Echidna
+        continue-on-error: true
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}
+          cd ${{ env.ANALYSIS_DIR }}/target
+          
+          # Find test contracts
+          find . -name "*Test*.sol" -o -name "*test*.sol" | head -5 | while read file; do
+            echo "Running Echidna on $file..."
+            docker run -v $(pwd):/src trailofbits/eth-security-toolbox \
+              echidna /src/$(basename $file) --config /src/echidna.yaml 2>&1 | \
+              tee -a ${{ env.RESULTS_DIR }}/echidna-output.txt || true
+          done
+      
+      - name: Upload Echidna results
+        uses: actions/upload-artifact@v6
+        with:
+          name: echidna-fuzzing
+          path: ${{ env.RESULTS_DIR }}
+          retention-days: 30
+
+  # ========================================================================
+  # Phase 4: AI-Powered Analysis
+  # ========================================================================
+  
+  ai-engineer-analysis:
+    name: 🤖 AI Engineer Analysis
+    runs-on: ubuntu-latest
+    needs: [setup-and-recon, python-static-analysis, solidity-static-analysis]
+    if: inputs.enable_ai_analysis && !cancelled()
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout SecBrain
+        uses: actions/checkout@v6
+      
+      - name: Download target repository
+        uses: actions/download-artifact@v6
+        with:
+          name: target-repository
+          path: ${{ env.ANALYSIS_DIR }}/target
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install SecBrain
+        run: |
+          python -m pip install --upgrade pip
+          cd secbrain
+          pip install -e ".[dev]"
+      
+      - name: Run AI Engineer Analysis
+        continue-on-error: true
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}
+          cd ${{ env.ANALYSIS_DIR }}/target
+          python $GITHUB_WORKSPACE/scripts/ai_engineer_analysis.py . > ${{ env.RESULTS_DIR }}/ai-analysis.json || true
+      
+      - name: Upload AI analysis results
+        uses: actions/upload-artifact@v6
+        with:
+          name: ai-engineer-analysis
+          path: ${{ env.RESULTS_DIR }}
+          retention-days: 30
+
+  security-intelligence:
+    name: 🧠 Security Intelligence
+    runs-on: ubuntu-latest
+    needs: setup-and-recon
+    if: inputs.enable_ai_analysis && !cancelled()
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout SecBrain
+        uses: actions/checkout@v6
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      
+      - name: Run Security Intelligence gathering
+        continue-on-error: true
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}
+          python scripts/security_intelligence.py > ${{ env.RESULTS_DIR }}/security-intel.json || true
+      
+      - name: Upload intelligence results
+        uses: actions/upload-artifact@v6
+        with:
+          name: security-intelligence
+          path: ${{ env.RESULTS_DIR }}
+          retention-days: 30
+
+  generate-recommendations:
+    name: 💡 Generate Recommendations
+    runs-on: ubuntu-latest
+    needs: [ai-engineer-analysis, security-intelligence]
+    if: inputs.enable_ai_analysis && !cancelled()
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout SecBrain
+        uses: actions/checkout@v6
+      
+      - name: Download AI analysis
+        uses: actions/download-artifact@v6
+        with:
+          name: ai-engineer-analysis
+          path: ${{ env.RESULTS_DIR }}/ai
+        continue-on-error: true
+      
+      - name: Download security intelligence
+        uses: actions/download-artifact@v6
+        with:
+          name: security-intelligence
+          path: ${{ env.RESULTS_DIR }}/intel
+        continue-on-error: true
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      
+      - name: Generate recommendations
+        continue-on-error: true
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}/recommendations
+          
+          # Prepare input files
+          AI_ANALYSIS="${{ env.RESULTS_DIR }}/ai/ai-analysis.json"
+          SECURITY_INTEL="${{ env.RESULTS_DIR }}/intel/security-intel.json"
+          
+          # Use empty JSON if files don't exist
+          [ ! -f "$AI_ANALYSIS" ] && echo '{}' > "$AI_ANALYSIS"
+          [ ! -f "$SECURITY_INTEL" ] && echo '{}' > "$SECURITY_INTEL"
+          
+          # Generate recommendations
+          python scripts/generate_recommendations.py \
+            "$AI_ANALYSIS" \
+            "$SECURITY_INTEL" > ${{ env.RESULTS_DIR }}/recommendations/recommendations.json || true
+      
+      - name: Upload recommendations
+        uses: actions/upload-artifact@v6
+        with:
+          name: recommendations
+          path: ${{ env.RESULTS_DIR }}/recommendations
+          retention-days: 30
+
+  # SecBrain Multi-Agent Analysis
+  secbrain-agents:
+    name: 🧬 SecBrain Multi-Agent Analysis
+    runs-on: ubuntu-latest
+    needs: setup-and-recon
+    if: |
+      inputs.enable_ai_analysis && 
+      (inputs.analysis_depth == 'standard' || inputs.analysis_depth == 'deep')
+    timeout-minutes: 90
+    
+    steps:
+      - name: Checkout SecBrain
+        uses: actions/checkout@v6
+      
+      - name: Download target repository
+        uses: actions/download-artifact@v6
+        with:
+          name: target-repository
+          path: ${{ env.ANALYSIS_DIR }}/target
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install SecBrain
+        run: |
+          python -m pip install --upgrade pip
+          cd secbrain
+          if [ -f requirements.lock ]; then
+            pip install --require-hashes -r requirements.lock
+            pip install -e ".[dev]" --no-deps
+          else
+            echo "requirements.lock not found; installing SecBrain without hash-locked dependencies."
+            pip install -e ".[dev]"
+          fi
+      
+      - name: Run SecBrain agents
+        continue-on-error: true
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}
+          cd secbrain
+          
+          # Create minimal config for analysis
+          cat > /tmp/secbrain-config.json << EOF
+          {
+            "target": "${{ needs.setup-and-recon.outputs.target_name }}",
+            "scope": "${{ inputs.target_repo }}",
+            "immunefi_program": "${{ inputs.immunefi_program }}",
+            "analysis_mode": "automated"
+          }
+          EOF
+          
+          # Run reconnaissance and hypothesis generation
+          echo "🔍 Running reconnaissance phase..."
+          python -m secbrain.cli recon \
+            --target "${{ needs.setup-and-recon.outputs.target_name }}" \
+            --scope "${{ inputs.target_repo }}" 2>&1 | tee ${{ env.RESULTS_DIR }}/secbrain-recon.log || true
+          
+          echo "🧠 Running hypothesis generation..."
+          python -m secbrain.cli hypothesis \
+            --target "${{ needs.setup-and-recon.outputs.target_name }}" 2>&1 | tee ${{ env.RESULTS_DIR }}/secbrain-hypothesis.log || true
+      
+      - name: Collect SecBrain artifacts
+        continue-on-error: true
+        run: |
+          # Copy any generated reports or findings
+          if [ -d "secbrain/output" ]; then
+            cp -r secbrain/output/* ${{ env.RESULTS_DIR }}/ || true
+          fi
+      
+      - name: Upload SecBrain analysis
+        uses: actions/upload-artifact@v6
+        with:
+          name: secbrain-agents
+          path: ${{ env.RESULTS_DIR }}
+          retention-days: 90
+
+  # ========================================================================
+  # Phase 5: Results Aggregation & Reporting
+  # ========================================================================
+  
+  aggregate-findings:
+    name: 📊 Aggregate All Findings
+    runs-on: ubuntu-latest
+    needs: 
+      - setup-and-recon
+      - python-static-analysis
+      - solidity-static-analysis
+      - foundry-fuzzing
+      - ai-engineer-analysis
+    if: always() && !cancelled()
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout SecBrain
+        uses: actions/checkout@v6
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v6
+        with:
+          path: ${{ env.RESULTS_DIR }}/all-artifacts
+        continue-on-error: true
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      
+      - name: Install jq for JSON processing
+        run: sudo apt-get update && sudo apt-get install -y jq
+      
+      - name: Aggregate findings
+        run: |
+          mkdir -p ${{ env.RESULTS_DIR }}/aggregated
+          
+          cat > ${{ env.RESULTS_DIR }}/aggregated/findings.json << 'EOF'
+          {
+            "metadata": {
+              "target": "${{ inputs.target_repo }}",
+              "target_name": "${{ needs.setup-and-recon.outputs.target_name }}",
+              "target_type": "${{ inputs.target_type }}",
+              "analysis_depth": "${{ inputs.analysis_depth }}",
+              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+              "workflow_run": "${{ github.run_number }}",
+              "run_id": "${{ github.run_id }}"
+            },
+            "project_info": {
+              "has_solidity": "${{ needs.setup-and-recon.outputs.has_solidity }}",
+              "has_python": "${{ needs.setup-and-recon.outputs.has_python }}",
+              "has_foundry": "${{ needs.setup-and-recon.outputs.has_foundry }}",
+              "has_hardhat": "${{ needs.setup-and-recon.outputs.has_hardhat }}",
+              "complexity": "${{ needs.setup-and-recon.outputs.project_complexity }}"
+            },
+            "findings": {
+              "python_security": {},
+              "solidity_security": {},
+              "fuzzing": {},
+              "ai_analysis": {},
+              "recommendations": []
+            }
+          }
+          EOF
+          
+          # Count findings from various tools
+          BANDIT_HIGH=0
+          BANDIT_MEDIUM=0
+          SLITHER_HIGH=0
+          SLITHER_MEDIUM=0
+          
+          # Parse Bandit results if available
+          if [ -f "${{ env.RESULTS_DIR }}/all-artifacts/python-static-analysis/bandit-results.json" ]; then
+            BANDIT_HIGH=$(jq '[.results[] | select(.issue_severity == "HIGH")] | length' \
+              ${{ env.RESULTS_DIR }}/all-artifacts/python-static-analysis/bandit-results.json || echo 0)
+            BANDIT_MEDIUM=$(jq '[.results[] | select(.issue_severity == "MEDIUM")] | length' \
+              ${{ env.RESULTS_DIR }}/all-artifacts/python-static-analysis/bandit-results.json || echo 0)
+          fi
+          
+          # Parse Slither results if available
+          if [ -f "${{ env.RESULTS_DIR }}/all-artifacts/solidity-static-analysis/slither-results.json" ]; then
+            SLITHER_HIGH=$(jq '[.results.detectors[] | select(.impact == "High")] | length' \
+              ${{ env.RESULTS_DIR }}/all-artifacts/solidity-static-analysis/slither-results.json || echo 0)
+            SLITHER_MEDIUM=$(jq '[.results.detectors[] | select(.impact == "Medium")] | length' \
+              ${{ env.RESULTS_DIR }}/all-artifacts/solidity-static-analysis/slither-results.json || echo 0)
+          fi
+          
+          # Create summary
+          cat > ${{ env.RESULTS_DIR }}/aggregated/summary.json << EOF
+          {
+            "total_findings": {
+              "bandit_high": ${BANDIT_HIGH},
+              "bandit_medium": ${BANDIT_MEDIUM},
+              "slither_high": ${SLITHER_HIGH},
+              "slither_medium": ${SLITHER_MEDIUM}
+            },
+            "analysis_completed": {
+              "python_static": "${{ needs.python-static-analysis.result }}",
+              "solidity_static": "${{ needs.solidity-static-analysis.result }}",
+              "fuzzing": "unknown",
+              "ai_analysis": "unknown"
+            }
+          }
+          EOF
+      
+      - name: Generate markdown report
+        run: |
+          cat > ${{ env.RESULTS_DIR }}/aggregated/REPORT.md << EOF
+          # 🔒 Comprehensive Security Analysis Report
+          
+          **Target:** ${{ inputs.target_repo }}  
+          **Analysis Depth:** ${{ inputs.analysis_depth }}  
+          **Date:** \$(date -u +"%Y-%m-%d %H:%M:%S UTC")  
+          **Workflow Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
+          ---
+          
+          ## 📋 Executive Summary
+          
+          This comprehensive security analysis was performed on the target repository using multiple static analysis tools, dynamic fuzzing, and AI-powered vulnerability detection.
+          
+          ### Project Characteristics
+          
+          - **Project Type:** ${{ inputs.target_type }}
+          - **Has Solidity:** ${{ needs.setup-and-recon.outputs.has_solidity }}
+          - **Has Python:** ${{ needs.setup-and-recon.outputs.has_python }}
+          - **Has Foundry:** ${{ needs.setup-and-recon.outputs.has_foundry }}
+          - **Complexity:** ${{ needs.setup-and-recon.outputs.project_complexity }}
+          
+          ### Analysis Coverage
+          
+          - ✅ Python Static Analysis (Bandit, Safety, pip-audit, Semgrep)
+          - ✅ Solidity Static Analysis (Slither, Solhint)
+          - ${{ inputs.enable_fuzzing && '✅' || '⏭️' }} Fuzzing (Foundry, Echidna)
+          - ${{ inputs.analysis_depth == 'deep' && '✅' || '⏭️' }} Symbolic Execution (Mythril)
+          - ${{ inputs.enable_ai_analysis && '✅' || '⏭️' }} AI-Powered Analysis (SecBrain)
+          
+          ---
+          
+          ## 🔍 Detailed Findings
+          
+          ### Python Security
+          
+          Refer to artifacts: \`python-static-analysis\`
+          
+          ### Solidity Security
+          
+          Refer to artifacts: \`solidity-static-analysis\`
+          
+          ### Fuzzing Results
+          
+          Refer to artifacts: \`foundry-fuzzing\`, \`echidna-fuzzing\`
+          
+          ### AI Analysis
+          
+          Refer to artifacts: \`ai-engineer-analysis\`, \`recommendations\`, \`secbrain-agents\`
+          
+          ---
+          
+          ## 📦 Artifacts
+          
+          All analysis results are available as workflow artifacts:
+          
+          1. **python-static-analysis** - Bandit, Safety, pip-audit, Semgrep results
+          2. **solidity-static-analysis** - Slither, Solhint results
+          3. **foundry-fuzzing** - Foundry fuzz test results
+          4. **echidna-fuzzing** - Echidna property-based fuzzing results (deep only)
+          5. **mythril-analysis** - Symbolic execution results (deep only)
+          6. **ai-engineer-analysis** - AI-powered code analysis
+          7. **security-intelligence** - Security advisory intelligence
+          8. **recommendations** - AI-generated recommendations
+          9. **secbrain-agents** - Multi-agent analysis results
+          
+          Download artifacts from the [workflow run page](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+          
+          ---
+          
+          ## 🎯 Recommendations
+          
+          1. **High Priority:** Review and address all HIGH severity findings
+          2. **Medium Priority:** Investigate MEDIUM severity issues
+          3. **Code Quality:** Follow AI-generated recommendations
+          4. **Fuzzing:** Investigate any failed fuzz tests for potential bugs
+          5. **Dependencies:** Update any packages with known vulnerabilities
+          
+          ---
+          
+          ## 📈 Next Steps
+          
+          1. Review this report and all artifacts
+          2. Prioritize findings by severity and impact
+          3. Create issues for confirmed vulnerabilities
+          4. Implement fixes and re-run analysis
+          5. Update security documentation
+          
+          ---
+          
+          *Generated by SecBrain Comprehensive Security Analysis*  
+          *Workflow Version: 1.0*
+          EOF
+      
+      - name: Upload aggregated results
+        uses: actions/upload-artifact@v6
+        with:
+          name: comprehensive-analysis-report
+          path: ${{ env.RESULTS_DIR }}/aggregated
+          retention-days: 90
+
+  create-issue-report:
+    name: 📝 Create Issue Report
+    runs-on: ubuntu-latest
+    needs: [setup-and-recon, aggregate-findings]
+    if: always() && !cancelled()
+    timeout-minutes: 10
+    permissions:
+      issues: write
+    
+    steps:
+      - name: Download aggregated results
+        uses: actions/download-artifact@v6
+        with:
+          name: comprehensive-analysis-report
+          path: ${{ env.RESULTS_DIR }}/report
+        continue-on-error: true
+      
+      - name: Create or update issue
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read the markdown report
+            let reportContent = '';
+            try {
+              reportContent = fs.readFileSync('${{ env.RESULTS_DIR }}/report/REPORT.md', 'utf8');
+            } catch (e) {
+              reportContent = `# Security Analysis Report\n\nAnalysis completed but report generation failed.\n\nView artifacts: ${context.payload.repository.html_url}/actions/runs/${context.runId}`;
+            }
+            
+            const issueTitle = `🔒 Security Analysis: ${{ needs.setup-and-recon.outputs.target_name }} - ${new Date().toISOString().split('T')[0]}`;
+            
+            const issueBody = reportContent + `\n\n---\n\n**Auto-generated by [Workflow Run #${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})**`;
+            
+            // Create new issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['security-analysis', 'automated']
+            });

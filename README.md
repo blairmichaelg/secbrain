@@ -36,7 +36,32 @@ SecBrain is a CLI-first Python project that automates bug bounty workflows using
 
 ## Quick Start
 
-### New: Quick Bounty Hunt Workflow
+### 🚀 NEW: Comprehensive Security Analysis Workflow
+
+Analyze ANY public repository with 12+ security tools and AI-powered insights:
+
+```bash
+# Run a comprehensive security analysis via GitHub Actions
+gh workflow run comprehensive-security-analysis.yml \
+  -f target_repo=https://github.com/owner/repo \
+  -f target_type=mixed \
+  -f analysis_depth=standard \
+  -f enable_ai_analysis=true \
+  -f enable_fuzzing=true
+
+# Or via GitHub UI: Actions → "🔒 Comprehensive Security Analysis" → Run workflow
+```
+
+**Features:**
+- 🔍 Static analysis (Slither, Semgrep, Bandit, Solhint)
+- 🎲 Fuzzing (Foundry, Echidna)
+- 🔮 Symbolic execution (Mythril)
+- 🤖 AI-powered analysis (SecBrain agents)
+- 📊 Automated reporting with GitHub issues
+
+See [Comprehensive Security Analysis Guide](.github/workflows/COMPREHENSIVE_SECURITY_ANALYSIS_README.md) for full documentation.
+
+### Quick Bounty Hunt Workflow
 
 Want to start hunting bugs on Immunefi right away? Try this:
 
