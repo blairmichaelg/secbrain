@@ -5,6 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+# Quality scoring thresholds
+RATIONALE_LENGTH_SHORT = 100
+RATIONALE_LENGTH_LONG = 200
+MIN_RATIONALE_SCORE = 0.5
+
 
 @dataclass
 class QualityScore:
@@ -73,46 +78,46 @@ class HypothesisQualityFilter:
 
         # 3. Specificity score (has concrete target details)
         specificity_factors = []
-        
+
         has_contract = bool(hypothesis.get("contract_address"))
         specificity_factors.append(has_contract)
         if self.require_contract_address and not has_contract:
             reasons.append("No contract address specified")
-        
+
         has_function = bool(hypothesis.get("function_signature"))
         specificity_factors.append(has_function)
         if self.require_function_signature and not has_function:
             reasons.append("No function signature specified")
-        
+
         has_params = bool(hypothesis.get("function_params"))
         specificity_factors.append(has_params)
-        
+
         has_exploit_steps = bool(hypothesis.get("exploit_steps"))
         specificity_factors.append(has_exploit_steps)
-        
+
         specificity_score = sum(specificity_factors) / len(specificity_factors)
 
         # 4. Rationale quality (detailed explanation)
         rationale = str(hypothesis.get("rationale", ""))
         rationale_score = 0.0
-        
-        if len(rationale) > 100:
+
+        if len(rationale) > RATIONALE_LENGTH_SHORT:
             rationale_score += 0.3
-        if len(rationale) > 200:
+        if len(rationale) > RATIONALE_LENGTH_LONG:
             rationale_score += 0.2
-        
+
         # Check for technical terms
         technical_terms = ["reentrancy", "overflow", "oracle", "manipulation", "bypass", "exploit"]
         if any(term in rationale.lower() for term in technical_terms):
             rationale_score += 0.3
-        
+
         # Check for code references
         if "0x" in rationale or "function" in rationale.lower():
             rationale_score += 0.2
-        
+
         rationale_score = min(rationale_score, 1.0)
-        
-        if rationale_score < 0.5:
+
+        if rationale_score < MIN_RATIONALE_SCORE:
             reasons.append("Weak rationale (too short or vague)")
 
         # Calculate overall score (weighted average)
@@ -122,7 +127,7 @@ class HypothesisQualityFilter:
             "specificity": 0.25,
             "rationale": 0.15,
         }
-        
+
         overall_score = (
             confidence_score * weights["confidence"]
             + completeness_score * weights["completeness"]
@@ -160,7 +165,7 @@ class HypothesisQualityFilter:
 
         for hyp in hypotheses:
             score = self.evaluate_hypothesis(hyp)
-            
+
             # Attach score to hypothesis for logging/debugging
             hyp["quality_score"] = {
                 "overall": score.overall_score,
@@ -206,5 +211,4 @@ class HypothesisQualityFilter:
             scored.append((score.overall_score, hyp))
 
         # Sort by score (descending)
-        sorted_hypotheses = [hyp for _, hyp in sorted(scored, key=lambda x: x[0], reverse=True)]
-        return sorted_hypotheses
+        return [hyp for _, hyp in sorted(scored, key=lambda x: x[0], reverse=True)]

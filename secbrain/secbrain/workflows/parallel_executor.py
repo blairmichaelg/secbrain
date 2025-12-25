@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Coroutine
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import structlog
@@ -113,7 +114,7 @@ class ParallelExecutor:
         timeout_seconds: float | None,
     ) -> TaskResult:
         """Execute a single task with semaphore and timeout."""
-        start_time = datetime.now()
+        start_time = datetime.now(UTC)
 
         async with self._semaphore:
             try:
@@ -127,7 +128,7 @@ class ParallelExecutor:
                 else:
                     data = await task_func()
 
-                duration = (datetime.now() - start_time).total_seconds()
+                duration = (datetime.now(UTC) - start_time).total_seconds()
                 self._log("task_completed", task_id=task_id, duration=duration)
 
                 return TaskResult(
@@ -137,8 +138,8 @@ class ParallelExecutor:
                     duration_seconds=duration,
                 )
 
-            except asyncio.TimeoutError:
-                duration = (datetime.now() - start_time).total_seconds()
+            except TimeoutError:
+                duration = (datetime.now(UTC) - start_time).total_seconds()
                 self._log("task_timeout", task_id=task_id, timeout=timeout_seconds)
                 return TaskResult(
                     task_id=task_id,
@@ -148,7 +149,7 @@ class ParallelExecutor:
                 )
 
             except Exception as e:
-                duration = (datetime.now() - start_time).total_seconds()
+                duration = (datetime.now(UTC) - start_time).total_seconds()
                 self._log("task_failed", task_id=task_id, error=str(e))
                 return TaskResult(
                     task_id=task_id,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -79,7 +79,7 @@ class CheckpointManager:
             current_phase=current_phase,
             completed_phases=completed_phases,
             phase_data=phase_data,
-            timestamp=datetime.now().isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             metadata=metadata or {},
         )
 
@@ -87,7 +87,7 @@ class CheckpointManager:
         checkpoint_file.write_text(json.dumps(checkpoint.to_dict(), indent=2))
 
         # Also save timestamped version for history
-        timestamped_file = self.checkpoint_dir / f"{run_id}_{current_phase}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        timestamped_file = self.checkpoint_dir / f"{run_id}_{current_phase}_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.json"
         timestamped_file.write_text(json.dumps(checkpoint.to_dict(), indent=2))
 
         return checkpoint_file
@@ -134,7 +134,7 @@ class CheckpointManager:
             Number of checkpoints deleted
         """
         deleted = 0
-        cutoff = datetime.now().timestamp() - (max_age_days * 86400)
+        cutoff = datetime.now(UTC).timestamp() - (max_age_days * 86400)
 
         for checkpoint_file in self.checkpoint_dir.glob("*.json"):
             if checkpoint_file.stat().st_mtime < cutoff:
