@@ -29,6 +29,14 @@ class CompilationError(SecBrainError):
         self.stdout = stdout
         self.stderr = stderr
 
+    def __repr__(self) -> str:
+        """Return detailed representation for debugging."""
+        return (
+            f"{self.__class__.__name__}("
+            f"message={self.message!r}, "
+            f"contract={self.contract!r})"
+        )
+
 
 class RateLimitError(SecBrainError):
     """Raised when rate limit is exceeded."""
@@ -36,6 +44,14 @@ class RateLimitError(SecBrainError):
     def __init__(self, message: str, *, retry_after: float = 0.0) -> None:
         super().__init__(message)
         self.retry_after = retry_after
+
+    def __repr__(self) -> str:
+        """Return detailed representation for debugging."""
+        return (
+            f"{self.__class__.__name__}("
+            f"message={self.message!r}, "
+            f"retry_after={self.retry_after})"
+        )
 
 
 class InsufficientProfitError(SecBrainError):
@@ -51,3 +67,12 @@ class InsufficientProfitError(SecBrainError):
         super().__init__(message)
         self.actual_profit = actual_profit
         self.threshold = threshold
+
+    def __repr__(self) -> str:
+        """Return detailed representation for debugging."""
+        return (
+            f"{self.__class__.__name__}("
+            f"message={self.message!r}, "
+            f"actual_profit={self.actual_profit}, "
+            f"threshold={self.threshold})"
+        )

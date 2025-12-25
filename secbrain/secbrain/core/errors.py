@@ -52,6 +52,15 @@ class SecBrainError(Exception):
         self.details = details or {}
         self.cause = cause
 
+    def __repr__(self) -> str:
+        """Return detailed representation for debugging."""
+        return (
+            f"{self.__class__.__name__}("
+            f"message={self.message!r}, "
+            f"category={self.category.value}, "
+            f"severity={self.severity.value})"
+        )
+
     def to_dict(self) -> dict[str, Any]:
         """Convert error to dictionary for logging."""
         return {

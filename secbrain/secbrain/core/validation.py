@@ -22,13 +22,29 @@ class ValidationError(Exception):
 
 
 def _load_yaml_or_json(path: Path) -> dict:
+    """Load configuration from YAML or JSON file.
+    
+    Args:
+        path: Path to the configuration file
+        
+    Returns:
+        Dictionary containing the configuration data
+        
+    Raises:
+        ValidationError: If file doesn't exist or cannot be parsed
+    """
     if not path.exists():
         raise ValidationError(f"File not found: {path}")
-    if path.suffix.lower() == ".json":
+    
+    try:
+        if path.suffix.lower() == ".json":
+            with path.open(encoding="utf-8") as f:
+                return json.load(f)
         with path.open(encoding="utf-8") as f:
-            return json.load(f)
-    with path.open(encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
+            data = yaml.safe_load(f)
+            return data if data is not None else {}
+    except (json.JSONDecodeError, yaml.YAMLError) as e:
+        raise ValidationError(f"Failed to parse {path}: {e}") from e
 
 
 def validate_scope_file(path: Path) -> ScopeConfig:

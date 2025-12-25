@@ -33,7 +33,11 @@ def extract_json_from_response(
     Raises:
         json.JSONDecodeError: If parsing fails
         ValueError: If type doesn't match expected_type
+        TypeError: If response is not a string
     """
+    if not isinstance(response, str):
+        raise TypeError(f"Response must be a string, got {type(response).__name__}")
+    
     if not response:
         raise json.JSONDecodeError("empty response", response, 0)
 
@@ -60,7 +64,12 @@ def extract_json_from_response(
         text = text[start : end + 1]
 
     # Parse and validate
-    data: Any = json.loads(text)
+    try:
+        data: Any = json.loads(text)
+    except json.JSONDecodeError as e:
+        raise json.JSONDecodeError(
+            f"Failed to parse JSON: {e.msg}", text, e.pos
+        ) from e
 
     if not isinstance(data, expected_type):
         raise TypeError(f"Expected {expected_type.__name__}, got {type(data).__name__}")
