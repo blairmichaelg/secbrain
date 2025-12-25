@@ -579,5 +579,431 @@ def insights(
         raise typer.Exit(code=1)
 
 
+@app.command()
+def immunefi(
+    action: str = typer.Argument(
+        ...,
+        help="Action to perform: list, show, trends, or intelligence",
+    ),
+    program_id: str | None = typer.Option(
+        None,
+        "--program",
+        "-p",
+        help="Program ID for 'show' or 'intelligence' actions",
+    ),
+    min_bounty: int = typer.Option(
+        500_000,
+        "--min-bounty",
+        "-m",
+        help="Minimum bounty amount for filtering programs",
+    ),
+    limit: int = typer.Option(
+        10,
+        "--limit",
+        "-l",
+        help="Maximum number of results to show",
+    ),
+) -> None:
+    """Interact with Immunefi platform intelligence.
+    
+    Actions:
+      list        - List high-value bounty programs
+      show        - Show details for a specific program
+      trends      - Show trending vulnerability patterns
+      intelligence - Get comprehensive intelligence for a program
+    """
+    console.print("[bold blue]SecBrain Immunefi Intelligence[/]")
+    
+    async def _run_action():
+        from secbrain.tools.immunefi_client import ImmunefiClient, get_immunefi_intelligence
+        
+        client = ImmunefiClient()
+        try:
+            if action == "list":
+                programs = await client.get_high_value_programs(
+                    min_bounty=min_bounty,
+                    limit=limit,
+                )
+                
+                table = Table(title=f"High-Value Programs (≥${min_bounty:,})")
+                table.add_column("Program", style="cyan")
+                table.add_column("Max Bounty", justify="right", style="green")
+                table.add_column("Priority", justify="right", style="yellow")
+                table.add_column("Blockchain", style="blue")
+                
+                for prog in programs:
+                    table.add_row(
+                        prog.name,
+                        f"${prog.max_bounty:,}",
+                        f"{prog.get_priority_score():.1f}",
+                        ", ".join(prog.blockchain[:2]),
+                    )
+                
+                console.print(table)
+                
+            elif action == "show":
+                if not program_id:
+                    console.print("[red]Error: --program required for 'show' action[/]")
+                    raise typer.Exit(code=1)
+                
+                program = await client.get_program_by_id(program_id)
+                if not program:
+                    console.print(f"[red]Program '{program_id}' not found[/]")
+                    raise typer.Exit(code=1)
+                
+                console.print(f"\n[bold]{program.name}[/]")
+                console.print(f"Platform: Immunefi")
+                console.print(f"Max Bounty: [green]${program.max_bounty:,}[/]")
+                console.print(f"Priority Score: [yellow]{program.get_priority_score():.1f}/100[/]")
+                console.print(f"Blockchain: {', '.join(program.blockchain)}")
+                console.print(f"Language: {', '.join(program.language)}")
+                console.print(f"\nCritical Reward: ${program.critical_reward[0]:,} - ${program.critical_reward[1]:,}")
+                console.print(f"High Reward: ${program.high_reward[0]:,} - ${program.high_reward[1]:,}")
+                
+                if program.assets_in_scope:
+                    console.print(f"\n[bold]In Scope:[/]")
+                    for asset in program.assets_in_scope:
+                        console.print(f"  • {asset}")
+                
+            elif action == "trends":
+                trends = await client.get_trending_vulnerabilities(days=90)
+                
+                table = Table(title="Trending Vulnerabilities (Last 90 Days)")
+                table.add_column("Vulnerability Type", style="cyan")
+                table.add_column("Severity", style="red")
+                table.add_column("Count", justify="right", style="yellow")
+                table.add_column("Avg Bounty", justify="right", style="green")
+                
+                for trend in trends[:limit]:
+                    table.add_row(
+                        trend.vulnerability_type,
+                        trend.severity.upper(),
+                        str(trend.occurrences),
+                        f"${trend.avg_bounty:,.0f}",
+                    )
+                
+                console.print(table)
+                
+            elif action == "intelligence":
+                if not program_id:
+                    console.print("[red]Error: --program required for 'intelligence' action[/]")
+                    raise typer.Exit(code=1)
+                
+                intel = await client.get_program_intelligence(program_id)
+                
+                if "error" in intel:
+                    console.print(f"[red]{intel['error']}[/]")
+                    raise typer.Exit(code=1)
+                
+                console.print(f"\n[bold]{intel['program']['name']}[/]")
+                console.print(f"Priority Score: [yellow]{intel['program']['priority_score']:.1f}/100[/]")
+                
+                console.print(f"\n[bold]Statistics:[/]")
+                stats = intel['statistics']
+                console.print(f"  Total Paid: ${stats['total_paid']:,}")
+                console.print(f"  Submissions: {stats['submission_count']}")
+                console.print(f"  Avg Bounty: ${stats['avg_bounty']:,.0f}")
+                
+                if intel['recommended_focus_areas']:
+                    console.print(f"\n[bold]Recommended Focus Areas:[/]")
+                    for area in intel['recommended_focus_areas'][:5]:
+                        console.print(f"  • {area}")
+                
+                if intel['relevant_trends']:
+                    console.print(f"\n[bold]Relevant Vulnerabilities:[/]")
+                    for trend in intel['relevant_trends'][:3]:
+                        console.print(f"  • {trend['type']} ({trend['severity']}) - ${trend['avg_bounty']:,.0f}")
+                
+            else:
+                console.print(f"[red]Unknown action: {action}[/]")
+                console.print("Valid actions: list, show, trends, intelligence")
+                raise typer.Exit(code=1)
+                
+        finally:
+            await client.close()
+    
+    asyncio.run(_run_action())
+
+
+@app.command()
+def research(
+    protocol: str | None = typer.Option(
+        None,
+        "--protocol",
+        "-p",
+        help="Protocol name to research",
+    ),
+    contracts: str | None = typer.Option(
+        None,
+        "--contracts",
+        "-c",
+        help="Comma-separated list of contract names",
+    ),
+    timeframe: int = typer.Option(
+        90,
+        "--timeframe",
+        "-t",
+        help="Days to look back for emerging patterns",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Output file for research findings (JSON)",
+    ),
+) -> None:
+    """Conduct advanced vulnerability research using cutting-edge techniques.
+    
+    This command analyzes emerging vulnerability patterns, protocol-specific
+    risks, and generates novel vulnerability hypotheses based on the latest
+    security research.
+    """
+    console.print("[bold blue]SecBrain Advanced Research[/]")
+    
+    async def _run_research():
+        from secbrain.agents.advanced_research_agent import AdvancedResearchAgent
+        from secbrain.core.context import RunContext, ScopeConfig, ProgramConfig
+        
+        # Create minimal context for research
+        workspace = Path.cwd() / "research_output"
+        workspace.mkdir(exist_ok=True)
+        
+        scope_config = ScopeConfig(
+            in_scope_domains=[],
+            in_scope_ips=[],
+            out_of_scope_domains=[],
+        )
+        
+        program_config = ProgramConfig(
+            name=protocol or "research",
+            platform="research",
+            focus_areas=[],
+            rules=[],
+            rewards={},
+        )
+        
+        run_context = RunContext(
+            scope=scope_config,
+            program=program_config,
+            workspace_path=workspace,
+            dry_run=True,
+        )
+        
+        agent = AdvancedResearchAgent(
+            run_context=run_context,
+            research_client=None,  # Will use curated data
+        )
+        
+        results = {
+            "emerging_patterns": [],
+            "protocol_findings": [],
+            "novel_hypotheses": [],
+        }
+        
+        # Research emerging patterns
+        console.print(f"🔍 Researching emerging patterns (last {timeframe} days)...")
+        emerging = await agent.research_emerging_patterns(timeframe_days=timeframe)
+        results["emerging_patterns"] = [
+            {
+                "title": f.title,
+                "severity": f.severity,
+                "confidence": f.confidence,
+                "description": f.description,
+                "attack_vectors": f.attack_vectors,
+            }
+            for f in emerging
+        ]
+        console.print(f"  ✓ Found {len(emerging)} emerging patterns")
+        
+        # Protocol-specific research
+        if protocol:
+            console.print(f"🔍 Analyzing {protocol}...")
+            protocol_findings = await agent.analyze_protocol_specific(
+                protocol_name=protocol,
+                blockchain="Ethereum",
+            )
+            results["protocol_findings"] = [
+                {
+                    "title": f.title,
+                    "description": f.description,
+                    "severity": f.severity,
+                }
+                for f in protocol_findings
+            ]
+            console.print(f"  ✓ Generated {len(protocol_findings)} protocol-specific findings")
+        
+        # Generate novel hypotheses
+        if contracts:
+            contract_list = [c.strip() for c in contracts.split(",")]
+            console.print(f"🔍 Generating hypotheses for {len(contract_list)} contracts...")
+            hypotheses = await agent.generate_novel_hypotheses(
+                target_contracts=contract_list,
+                context=f"Analyzing {protocol}" if protocol else "",
+            )
+            results["novel_hypotheses"] = hypotheses
+            console.print(f"  ✓ Generated {len(hypotheses)} novel hypotheses")
+        
+        # Display summary
+        console.print("\n[bold]Research Summary:[/]")
+        console.print(f"  Emerging Patterns: {len(results['emerging_patterns'])}")
+        console.print(f"  Protocol Findings: {len(results['protocol_findings'])}")
+        console.print(f"  Novel Hypotheses: {len(results['novel_hypotheses'])}")
+        
+        # Show top findings
+        if results["emerging_patterns"]:
+            console.print("\n[bold]Top Emerging Patterns:[/]")
+            for pattern in results["emerging_patterns"][:3]:
+                console.print(f"  • [{pattern['severity'].upper()}] {pattern['title']}")
+        
+        # Save to file if requested
+        if output:
+            with open(output, 'w') as f:
+                json.dump(results, f, indent=2)
+            console.print(f"\n✓ Saved results to {output}")
+    
+    asyncio.run(_run_research())
+
+
+@app.command()
+def metrics(
+    action: str = typer.Argument(
+        ...,
+        help="Action: summary, programs, patterns, or record",
+    ),
+    workspace: Path = typer.Option(
+        Path.cwd() / "metrics",
+        "--workspace",
+        "-w",
+        help="Metrics workspace directory",
+    ),
+    program: str | None = typer.Option(
+        None,
+        "--program",
+        help="Program name for filtering",
+    ),
+    platform: str | None = typer.Option(
+        None,
+        "--platform",
+        help="Platform name (e.g., immunefi)",
+    ),
+) -> None:
+    """Track and analyze bug bounty success metrics.
+    
+    Actions:
+      summary  - Show overall success metrics
+      programs - Show per-program statistics
+      patterns - Show vulnerability pattern effectiveness
+      insights - Get learning insights for improvement
+    """
+    from secbrain.tools.bounty_metrics import BountyMetricsTracker
+    
+    console.print("[bold blue]SecBrain Bounty Metrics[/]")
+    
+    tracker = BountyMetricsTracker(workspace)
+    
+    if action == "summary":
+        metrics = tracker.get_overall_metrics()
+        
+        if metrics.get("total_submissions", 0) == 0:
+            console.print("\n[yellow]No submissions recorded yet.[/]")
+            console.print("Use 'secbrain metrics record' to add submissions.")
+            return
+        
+        console.print("\n[bold]Overall Metrics:[/]")
+        console.print(f"  Total Submissions: {metrics['total_submissions']}")
+        console.print(f"  Accepted: [green]{metrics['accepted']}[/]")
+        console.print(f"  Rejected: [red]{metrics['rejected']}[/]")
+        console.print(f"  Duplicates: [yellow]{metrics['duplicates']}[/]")
+        console.print(f"  Acceptance Rate: [cyan]{metrics['acceptance_rate']:.1%}[/]")
+        console.print(f"  Total Earned: [green]${metrics['total_earned']:,.2f}[/]")
+        console.print(f"  Avg Bounty: [green]${metrics['avg_bounty']:,.2f}[/]")
+        console.print(f"  Programs: {metrics['programs_participated']}")
+        
+    elif action == "programs":
+        programs = tracker.get_top_performing_programs(limit=10)
+        
+        if not programs:
+            console.print("\n[yellow]No program data available.[/]")
+            return
+        
+        table = Table(title="Top Performing Programs")
+        table.add_column("Program", style="cyan")
+        table.add_column("Platform", style="blue")
+        table.add_column("Submissions", justify="right")
+        table.add_column("Accepted", justify="right", style="green")
+        table.add_column("Rate", justify="right")
+        table.add_column("Total Earned", justify="right", style="green")
+        
+        for prog in programs:
+            table.add_row(
+                prog.program,
+                prog.platform,
+                str(prog.total_submissions),
+                str(prog.accepted_submissions),
+                f"{prog.acceptance_rate:.1%}",
+                f"${prog.total_earned:,.0f}",
+            )
+        
+        console.print(table)
+        
+    elif action == "patterns":
+        patterns = tracker.get_most_effective_patterns(limit=10)
+        
+        if not patterns:
+            console.print("\n[yellow]No pattern data available.[/]")
+            return
+        
+        table = Table(title="Most Effective Vulnerability Patterns")
+        table.add_column("Pattern", style="cyan")
+        table.add_column("Submitted", justify="right")
+        table.add_column("Accepted", justify="right", style="green")
+        table.add_column("Effectiveness", justify="right", style="yellow")
+        table.add_column("Avg Bounty", justify="right", style="green")
+        
+        for pattern in patterns:
+            table.add_row(
+                pattern.pattern_name,
+                str(pattern.times_submitted),
+                str(pattern.times_accepted),
+                f"{pattern.detection_effectiveness:.1%}",
+                f"${pattern.avg_bounty:,.0f}",
+            )
+        
+        console.print(table)
+        
+    elif action == "insights":
+        insights = tracker.get_learning_insights()
+        
+        console.print("\n[bold]Learning Insights:[/]")
+        
+        if insights["high_value_patterns"]:
+            console.print("\n[bold green]High-Value Patterns (Focus Here!):[/]")
+            for pattern in insights["high_value_patterns"][:5]:
+                console.print(
+                    f"  • {pattern['pattern']} - "
+                    f"{pattern['effectiveness']:.1%} success, "
+                    f"${pattern['avg_bounty']:,.0f} avg"
+                )
+        
+        if insights["low_confidence_patterns"]:
+            console.print("\n[bold red]Low-Confidence Patterns (Avoid/Improve):[/]")
+            for pattern in insights["low_confidence_patterns"][:5]:
+                console.print(
+                    f"  • {pattern['pattern']} - "
+                    f"{pattern['effectiveness']:.1%} success, "
+                    f"{pattern['times_submitted']} submissions"
+                )
+        
+        if insights["recommended_focus_areas"]:
+            console.print("\n[bold yellow]Recommended Focus Areas:[/]")
+            for area in insights["recommended_focus_areas"][:5]:
+                console.print(f"  • {area['pattern']}: {area['reason']}")
+    
+    else:
+        console.print(f"[red]Unknown action: {action}[/]")
+        console.print("Valid actions: summary, programs, patterns, insights")
+        raise typer.Exit(code=1)
+
+
 if __name__ == "__main__":
     app()
