@@ -943,7 +943,7 @@ Fix and return ONLY a JSON array matching the schema and using function signatur
         if not address:
             raise ValueError("cannot be None or empty")
         if not isinstance(address, str):
-            raise ValueError(f"Address must be string, got {type(address).__name__}")
+            raise TypeError(f"Address must be string, got {type(address).__name__}")
 
         addr = address.strip()
         if not addr.startswith("0x"):
