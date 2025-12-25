@@ -8,9 +8,10 @@ import os
 import shutil
 import tomllib
 import uuid
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Awaitable, Callable, TypeVar
+from typing import Any, TypeVar
 
 from secbrain.agents.base import AgentResult, BaseAgent
 from secbrain.tools.recon_cli_wrappers import ReconToolRunner
@@ -410,7 +411,7 @@ class ReconAgent(BaseAgent):
 
                     try:
                         stdout_bytes, stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=300)
-                    except asyncio.TimeoutError as exc:
+                    except TimeoutError as exc:
                         raise TimeoutError("Forge build timeout after 300s") from exc
 
                     stdout = stdout_bytes.decode()

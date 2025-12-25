@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import json
 import shutil
 import tempfile
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -133,7 +132,7 @@ class ReconToolRunner:
                     tool_name=tool_name,
                     operation=f"{tool_name} {' '.join(args)}",
                     risk_level="high",
-                    timestamp=datetime.now(timezone.utc),
+                    timestamp=datetime.now(UTC),
                 )
             )
             if not approval.approved:
@@ -264,7 +263,6 @@ class ReconToolRunner:
     ) -> ToolResult:
         """Run httpx for HTTP probing."""
         # Create a temp file with targets
-        import tempfile
 
         targets_file: str | None = None
         try:

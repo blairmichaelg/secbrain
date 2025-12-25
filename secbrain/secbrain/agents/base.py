@@ -205,7 +205,6 @@ class BaseAgent(ABC):
         Returns:
             AgentResult with success status and data
         """
-        pass
 
     def _success(
         self,
@@ -268,12 +267,12 @@ class BaseAgent(ABC):
         """Health check result."""
 
         component: str
-        status: "BaseAgent.HealthStatus"
+        status: BaseAgent.HealthStatus
         timestamp: datetime
         message: str = ""
         metrics: dict[str, Any] | None = None
 
-    async def health_check(self) -> "BaseAgent.HealthCheck":
+    async def health_check(self) -> BaseAgent.HealthCheck:
         """Perform health check on agent (models, storage, kill switch)."""
         checks: list[tuple[str, BaseAgent.HealthStatus, str]] = []
 
@@ -289,7 +288,7 @@ class BaseAgent(ABC):
                     timeout=5.0,
                 )
                 checks.append(("worker_model", BaseAgent.HealthStatus.HEALTHY, ""))
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 checks.append(("worker_model", BaseAgent.HealthStatus.DEGRADED, "Slow response"))
             except Exception as exc:  # pragma: no cover - external service
                 checks.append(("worker_model", BaseAgent.HealthStatus.UNHEALTHY, str(exc)))

@@ -131,7 +131,7 @@ class MinimalModel:
         return Response()
 
 
-@pytest.fixture()
+@pytest.fixture
 def hypothesis_agent():
     return VulnHypothesisAgent(
         run_context=MinimalContext(),

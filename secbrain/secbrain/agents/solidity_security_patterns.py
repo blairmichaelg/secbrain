@@ -553,27 +553,27 @@ contract Secure {
         """Detect security patterns in contract code."""
         detected = []
         all_patterns = cls.get_all_patterns()
-        
+
         code_lower = contract_code.lower()
-        
+
         for pattern_key, pattern in all_patterns.items():
             # Check if any detection heuristics match
             for heuristic in pattern.detection_heuristics:
                 if heuristic.lower() in code_lower:
                     detected.append(pattern)
                     break
-        
+
         return detected
 
     @classmethod
     def get_mitigation_for_pattern(cls, pattern_type: VulnerabilityPattern) -> str:
         """Get mitigation code for a specific pattern."""
         all_patterns = cls.get_all_patterns()
-        
+
         for pattern in all_patterns.values():
             if pattern.pattern_type == pattern_type:
                 return pattern.mitigation_code
-        
+
         return ""
 
 
@@ -584,7 +584,7 @@ class FormalVerificationPatterns:
     def generate_natspec_invariants(function_name: str, invariants: list[str]) -> str:
         """Generate NatSpec annotations for invariants."""
         invariant_docs = "\n".join([f"    /// @invariant {inv}" for inv in invariants])
-        
+
         return f'''
     /// @notice {function_name}
 {invariant_docs}
@@ -598,7 +598,7 @@ class FormalVerificationPatterns:
             f"assertTrue({inv}, \"Invariant failed: {inv}\");"
             for inv in invariants
         ])
-        
+
         return f'''
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;

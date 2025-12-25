@@ -145,7 +145,7 @@ class TestInsightsAggregator:
         """Test aggregate with empty workspace."""
         aggregator = InsightsAggregator(tmp_path)
         data = aggregator.aggregate()
-        
+
         assert isinstance(data, WorkspaceData)
         assert data.workspace_path == tmp_path
         assert data.run_summaries == []
@@ -158,10 +158,10 @@ class TestInsightsAggregator:
         run_summary = {"id": "run-1", "success": True, "duration": 300}
         run_summary_path = tmp_path / "run_summary.json"
         run_summary_path.write_text(json.dumps(run_summary))
-        
+
         aggregator = InsightsAggregator(tmp_path)
         data = aggregator.aggregate()
-        
+
         assert len(data.run_summaries) == 1
         assert data.run_summaries[0] == run_summary
 
@@ -169,16 +169,16 @@ class TestInsightsAggregator:
         """Test aggregate with learnings directory."""
         learnings_dir = tmp_path / "learnings"
         learnings_dir.mkdir()
-        
+
         learning1 = {"type": "pattern", "value": "reentrancy"}
         learning2 = {"type": "tool", "value": "slither"}
-        
+
         (learnings_dir / "learning1.json").write_text(json.dumps(learning1))
         (learnings_dir / "learning2.json").write_text(json.dumps(learning2))
-        
+
         aggregator = InsightsAggregator(tmp_path)
         data = aggregator.aggregate()
-        
+
         assert len(data.learnings) == 2
         assert learning1 in data.learnings
         assert learning2 in data.learnings
@@ -187,15 +187,15 @@ class TestInsightsAggregator:
         """Test aggregate with meta metrics file."""
         metric1 = {"hypotheses_count": 5, "attempts_count": 10}
         metric2 = {"hypotheses_count": 3, "attempts_count": 7}
-        
+
         meta_path = tmp_path / "meta_metrics.jsonl"
         meta_path.write_text(
             json.dumps(metric1) + "\n" + json.dumps(metric2) + "\n"
         )
-        
+
         aggregator = InsightsAggregator(tmp_path)
         data = aggregator.aggregate()
-        
+
         assert len(data.meta_metrics) == 2
         assert metric1 in data.meta_metrics
         assert metric2 in data.meta_metrics
@@ -204,19 +204,19 @@ class TestInsightsAggregator:
         """Test aggregate with exploit attempts directory."""
         attempts_dir = tmp_path / "exploit_attempts"
         attempts_dir.mkdir()
-        
+
         # Create nested structure: exploit_attempts/hyp1/attempt1/result.json
         hyp_dir = attempts_dir / "hyp1"
         hyp_dir.mkdir()
         attempt_dir = hyp_dir / "attempt1"
         attempt_dir.mkdir()
-        
+
         attempt1 = {"id": 1, "status": "success", "profit": 1.5}
         (attempt_dir / "result.json").write_text(json.dumps(attempt1))
-        
+
         aggregator = InsightsAggregator(tmp_path)
         data = aggregator.aggregate()
-        
+
         assert len(data.exploit_attempts) == 1
         assert data.exploit_attempts[0]["id"] == 1
         assert data.exploit_attempts[0]["status"] == "success"
@@ -227,15 +227,15 @@ class TestInsightsAggregator:
         # Create run summary
         run_summary = {"id": "run-1", "success": True}
         (tmp_path / "run_summary.json").write_text(json.dumps(run_summary))
-        
+
         # Create learnings
         learnings_dir = tmp_path / "learnings"
         learnings_dir.mkdir()
         (learnings_dir / "learning1.json").write_text(json.dumps({"type": "test"}))
-        
+
         # Create meta metrics
         (tmp_path / "meta_metrics.jsonl").write_text(json.dumps({"hypotheses_count": 5}) + "\n")
-        
+
         # Create exploit attempts
         attempts_dir = tmp_path / "exploit_attempts"
         attempts_dir.mkdir()
@@ -244,10 +244,10 @@ class TestInsightsAggregator:
         attempt_dir = hyp_dir / "attempt1"
         attempt_dir.mkdir()
         (attempt_dir / "result.json").write_text(json.dumps({"id": 1}))
-        
+
         aggregator = InsightsAggregator(tmp_path)
         data = aggregator.aggregate()
-        
+
         assert len(data.run_summaries) == 1
         assert len(data.learnings) == 1
         assert len(data.meta_metrics) == 1
@@ -260,16 +260,16 @@ class TestInsightsAggregator:
         """Test aggregate with phases directory."""
         phases_dir = tmp_path / "phases"
         phases_dir.mkdir()
-        
+
         phase1 = {"name": "recon", "duration": 120}
         phase2 = {"name": "exploit", "duration": 300}
-        
+
         (phases_dir / "recon.json").write_text(json.dumps(phase1))
         (phases_dir / "exploit.json").write_text(json.dumps(phase2))
-        
+
         aggregator = InsightsAggregator(tmp_path)
         data = aggregator.aggregate()
-        
+
         assert len(data.phases) == 2
         assert data.phases["recon"] == phase1
         assert data.phases["exploit"] == phase2
@@ -278,18 +278,18 @@ class TestInsightsAggregator:
         """Test aggregate with logs directory."""
         logs_dir = tmp_path / "logs"
         logs_dir.mkdir()
-        
+
         log_entry1 = {"level": "info", "message": "Starting"}
         log_entry2 = {"level": "debug", "message": "Processing"}
-        
+
         log_path = logs_dir / "run.jsonl"
         log_path.write_text(
             json.dumps(log_entry1) + "\n" + json.dumps(log_entry2) + "\n"
         )
-        
+
         aggregator = InsightsAggregator(tmp_path)
         data = aggregator.aggregate()
-        
+
         assert len(data.logs) == 2
         assert log_entry1 in data.logs
         assert log_entry2 in data.logs
@@ -301,14 +301,14 @@ class TestInsightsAggregator:
         ws1.mkdir()
         ws2 = tmp_path / "workspace2"
         ws2.mkdir()
-        
+
         # Add data to each
         (ws1 / "run_summary.json").write_text(json.dumps({"id": 1, "success": True}))
         (ws2 / "run_summary.json").write_text(json.dumps({"id": 2, "success": False}))
-        
+
         aggregator = InsightsAggregator(ws1)
         results = aggregator.aggregate_multi_workspace([ws1, ws2])
-        
+
         assert len(results) == 2
         assert isinstance(results[0], WorkspaceData)
         assert isinstance(results[1], WorkspaceData)

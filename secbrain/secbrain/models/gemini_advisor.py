@@ -29,7 +29,7 @@ class GeminiAdvisorClient(ModelClient):
     ):
         super().__init__(model, **kwargs)
         self.api_key = api_key or os.environ.get("GOOGLE_API_KEY")
-        
+
         # Validate API key is provided (will be None in dry-run mode)
         if self.api_key is None:
             warnings.warn(
@@ -40,7 +40,7 @@ class GeminiAdvisorClient(ModelClient):
             )
             # Use empty string for compatibility
             self.api_key = ""
-        
+
         self._client = None
 
     def _get_client(self) -> Any:

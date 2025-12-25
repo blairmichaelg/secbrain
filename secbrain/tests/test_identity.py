@@ -28,7 +28,7 @@ class TestIdentitySession:
         headers = {"Authorization": "Bearer token"}
         cookies = {"session": "abc123"}
         tokens = {"csrf": "xyz789"}
-        
+
         session = IdentitySession(
             name="test_user",
             role="custom",
@@ -36,7 +36,7 @@ class TestIdentitySession:
             cookies=cookies,
             tokens=tokens,
         )
-        
+
         assert session.name == "test_user"
         assert session.role == "custom"
         assert session.headers == headers
@@ -47,7 +47,7 @@ class TestIdentitySession:
         """Test adding header to session."""
         session = IdentitySession(name="user1")
         result = session.with_header("Content-Type", "application/json")
-        
+
         assert result is session  # Returns self for chaining
         assert session.headers["Content-Type"] == "application/json"
 
@@ -55,7 +55,7 @@ class TestIdentitySession:
         """Test chaining multiple header additions."""
         session = IdentitySession(name="user1")
         session.with_header("Accept", "text/html").with_header("User-Agent", "TestAgent")
-        
+
         assert session.headers["Accept"] == "text/html"
         assert session.headers["User-Agent"] == "TestAgent"
 
@@ -63,7 +63,7 @@ class TestIdentitySession:
         """Test adding cookie to session."""
         session = IdentitySession(name="user1")
         result = session.with_cookie("sessionid", "123456")
-        
+
         assert result is session  # Returns self for chaining
         assert session.cookies["sessionid"] == "123456"
 
@@ -71,7 +71,7 @@ class TestIdentitySession:
         """Test chaining multiple cookie additions."""
         session = IdentitySession(name="user1")
         session.with_cookie("sessionid", "123").with_cookie("csrftoken", "abc")
-        
+
         assert session.cookies["sessionid"] == "123"
         assert session.cookies["csrftoken"] == "abc"
 
@@ -79,7 +79,7 @@ class TestIdentitySession:
         """Test setting token."""
         session = IdentitySession(name="user1")
         session.set_token("access_token", "token123")
-        
+
         assert session.tokens["access_token"] == "token123"
 
     def test_set_token_multiple(self) -> None:
@@ -87,7 +87,7 @@ class TestIdentitySession:
         session = IdentitySession(name="user1")
         session.set_token("access", "access123")
         session.set_token("refresh", "refresh456")
-        
+
         assert session.tokens["access"] == "access123"
         assert session.tokens["refresh"] == "refresh456"
 
@@ -95,7 +95,7 @@ class TestIdentitySession:
         """Test getting existing token."""
         session = IdentitySession(name="user1")
         session.set_token("key", "value")
-        
+
         assert session.get_token("key") == "value"
 
     def test_get_token_nonexistent(self) -> None:
@@ -108,9 +108,9 @@ class TestIdentitySession:
         session = IdentitySession(name="user1")
         session.with_header("X-Test", "value1")
         session.with_cookie("test", "cookie1")
-        
+
         headers, cookies = session.apply()
-        
+
         assert headers == {"X-Test": "value1"}
         assert cookies == {"test": "cookie1"}
 
@@ -119,12 +119,12 @@ class TestIdentitySession:
         session = IdentitySession(name="user1")
         session.with_header("X-Identity", "user1")
         session.with_cookie("id", "123")
-        
+
         existing_headers = {"Content-Type": "application/json"}
         existing_cookies = {"sessionid": "abc"}
-        
+
         headers, cookies = session.apply(existing_headers, existing_cookies)
-        
+
         # Should have both existing and identity values
         assert headers["Content-Type"] == "application/json"
         assert headers["X-Identity"] == "user1"
@@ -136,12 +136,12 @@ class TestIdentitySession:
         session = IdentitySession(name="user1")
         session.with_header("Accept", "text/html")
         session.with_cookie("sessionid", "new123")
-        
+
         existing_headers = {"Accept": "application/json"}
         existing_cookies = {"sessionid": "old456"}
-        
+
         headers, cookies = session.apply(existing_headers, existing_cookies)
-        
+
         # Identity values should override
         assert headers["Accept"] == "text/html"
         assert cookies["sessionid"] == "new123"
@@ -151,12 +151,12 @@ class TestIdentitySession:
         session = IdentitySession(name="user1")
         session.with_header("X-New", "value")
         session.with_cookie("new", "cookie")
-        
+
         original_headers = {"X-Old": "old"}
         original_cookies = {"old": "cookie"}
-        
+
         session.apply(original_headers, original_cookies)
-        
+
         # Original dictionaries should be unchanged
         assert original_headers == {"X-Old": "old"}
         assert original_cookies == {"old": "cookie"}
@@ -175,9 +175,9 @@ class TestIdentityRegistry:
         """Test registering a single identity."""
         registry = IdentityRegistry()
         session = IdentitySession(name="attacker1")
-        
+
         registry.register(session)
-        
+
         assert "attacker1" in registry._identities
         assert registry.active == "attacker1"
 
@@ -186,10 +186,10 @@ class TestIdentityRegistry:
         registry = IdentityRegistry()
         attacker = IdentitySession(name="attacker", role="attacker")
         victim = IdentitySession(name="victim", role="victim")
-        
+
         registry.register(attacker)
         registry.register(victim)
-        
+
         assert "attacker" in registry._identities
         assert "victim" in registry._identities
 
@@ -198,10 +198,10 @@ class TestIdentityRegistry:
         registry = IdentityRegistry()
         session1 = IdentitySession(name="first")
         session2 = IdentitySession(name="second")
-        
+
         registry.register(session1)
         registry.register(session2)
-        
+
         assert registry.active == "first"
 
     def test_get_by_name(self) -> None:
@@ -209,7 +209,7 @@ class TestIdentityRegistry:
         registry = IdentityRegistry()
         session = IdentitySession(name="test_user")
         registry.register(session)
-        
+
         retrieved = registry.get("test_user")
         assert retrieved is session
 
@@ -218,21 +218,21 @@ class TestIdentityRegistry:
         registry = IdentityRegistry()
         session = IdentitySession(name="active_user")
         registry.register(session)
-        
+
         retrieved = registry.get()
         assert retrieved is session
 
     def test_get_nonexistent_raises(self) -> None:
         """Test that getting nonexistent identity raises KeyError."""
         registry = IdentityRegistry()
-        
+
         with pytest.raises(KeyError, match="Identity 'missing' not registered"):
             registry.get("missing")
 
     def test_get_when_no_active_raises(self) -> None:
         """Test that getting without active identity raises KeyError."""
         registry = IdentityRegistry()
-        
+
         with pytest.raises(KeyError):
             registry.get()
 
@@ -241,12 +241,12 @@ class TestIdentityRegistry:
         registry = IdentityRegistry()
         session1 = IdentitySession(name="user1")
         session2 = IdentitySession(name="user2")
-        
+
         registry.register(session1)
         registry.register(session2)
-        
+
         assert registry.active == "user1"
-        
+
         result = registry.switch("user2")
         assert registry.active == "user2"
         assert result is session2
@@ -256,7 +256,7 @@ class TestIdentityRegistry:
         registry = IdentityRegistry()
         session = IdentitySession(name="target")
         registry.register(session)
-        
+
         result = registry.switch("target")
         assert result is session
 
@@ -270,7 +270,7 @@ class TestIdentityRegistry:
         registry = IdentityRegistry()
         session = IdentitySession(name="user1")
         registry.register(session)
-        
+
         assert registry.list_identities() == ["user1"]
 
     def test_list_identities_multiple(self) -> None:
@@ -279,7 +279,7 @@ class TestIdentityRegistry:
         registry.register(IdentitySession(name="attacker"))
         registry.register(IdentitySession(name="victim"))
         registry.register(IdentitySession(name="admin"))
-        
+
         identities = registry.list_identities()
         assert len(identities) == 3
         assert "attacker" in identities

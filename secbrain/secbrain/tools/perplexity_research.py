@@ -49,7 +49,7 @@ class PerplexityResearch:
         max_calls_per_run: int = 50,  # Increased from 20 for intensive research
     ):
         self.api_key = api_key or os.environ.get("PERPLEXITY_API_KEY")
-        
+
         # Validate API key is provided (will be None in dry-run mode)
         if self.api_key is None:
             warnings.warn(
@@ -60,7 +60,7 @@ class PerplexityResearch:
             )
             # Use empty string for header compatibility
             self.api_key = ""
-        
+
         self.model = model
         self.max_calls_per_run = max_calls_per_run
         self._call_count = 0
@@ -95,18 +95,18 @@ class PerplexityResearch:
         async with self._rate_limit_lock:
             while True:
                 now = time.time()
-                
+
                 # Remove requests older than 60 seconds
                 self._request_times = [
                     t for t in self._request_times
                     if now - t < 60
                 ]
-                
+
                 # If under the limit, record this request and exit
                 if len(self._request_times) < self._rate_limit_per_minute:
                     self._request_times.append(now)
                     break
-                
+
                 # At limit: wait for the oldest request to age out, then re-check
                 wait_time = 60 - (now - self._request_times[0])
                 if wait_time > 0:
@@ -120,14 +120,14 @@ class PerplexityResearch:
         """
         if cache_key not in self._cache_ttl:
             return False
-        
+
         # Check that cached data actually exists in run_context
         cached_data = run_context.get_cached_research(cache_key)
         if not cached_data:
             # TTL exists but data is missing - clean up stale timestamp
             del self._cache_ttl[cache_key]
             return False
-        
+
         cached_time = self._cache_ttl[cache_key]
         age = datetime.now() - cached_time
         return age < timedelta(hours=ttl_hours)
@@ -158,7 +158,7 @@ class PerplexityResearch:
         """
         # Generate cache key
         cache_key = self._cache_key(question, context)
-        
+
         # Check cache with TTL
         cached = run_context.get_cached_research(cache_key)
         if cached and self._is_cache_valid(cache_key, ttl_hours, run_context):
@@ -185,11 +185,11 @@ class PerplexityResearch:
                 "sources": ["dry-run-source"],
                 "cached": False,
             }
-            
+
             # Cache dry-run results for consistency
             run_context.cache_research(cache_key, result)
             self._cache_ttl[cache_key] = datetime.now()
-            
+
             return result
 
         # Enforce rate limiting
@@ -239,7 +239,7 @@ Prioritize data from within the last 6 months (from {datetime.now().strftime('%B
 
         except httpx.HTTPError as e:
             return {
-                "answer": f"[ERROR] Research failed: {str(e)}",
+                "answer": f"[ERROR] Research failed: {e!s}",
                 "sources": [],
                 "cached": False,
                 "error": True,
@@ -269,11 +269,11 @@ Prioritize data from within the last 6 months (from {datetime.now().strftime('%B
         Cache: 168 hours (7 days - severity standards change very slowly)
         """
         from datetime import datetime, timedelta
-        
+
         # Calculate date range for recent data (last 6 months)
         current_date = datetime.now()
         six_months_ago = current_date - timedelta(days=180)
-        
+
         question = f"""
 Current severity assessment for {vuln_type} vulnerabilities in smart contracts (as of {current_date.strftime('%B %Y')}):
 
@@ -291,7 +291,7 @@ Required information:
 
 Provide concrete, data-driven assessment with specific examples and amounts.
 """
-        
+
         return await self.ask_research(
             question=question,
             context=f"Severity research for {vuln_type}",
@@ -318,11 +318,11 @@ Provide concrete, data-driven assessment with specific examples and amounts.
         Cache: 48 hours (attack patterns evolve moderately fast)
         """
         from datetime import datetime, timedelta
-        
+
         # Calculate date range for recent data (last 6 months)
         current_date = datetime.now()
         six_months_ago = current_date - timedelta(days=180)
-        
+
         question = f"""
 Successful attack vectors and exploitation techniques for {vuln_type} vulnerabilities in EVM smart contracts:
 
@@ -342,7 +342,7 @@ For each attack pattern, provide:
 
 Prioritize recent, successful exploits with verified outcomes.
 """
-        
+
         return await self.ask_research(
             question=question,
             context=f"Attack vector research for {vuln_type}",
@@ -383,7 +383,7 @@ For bug bounty hunters evaluating if this is worth pursuing:
 
 Provide actionable intelligence for deciding whether to pursue this bug bounty opportunity.
 """
-        
+
         return await self.ask_research(
             question=question,
             context=f"Market conditions for {target_protocol} {exploit_type}",

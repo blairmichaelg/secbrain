@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -98,4 +99,3 @@ class CircuitBreaker:
 class CircuitBreakerOpen(Exception):
     """Raised when circuit breaker is open."""
 
-    pass

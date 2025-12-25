@@ -42,7 +42,7 @@ class OpenWorkerClient(ModelClient):
             or os.environ.get("OPENROUTER_API_KEY")
             or os.environ.get("OPENAI_API_KEY")
         )
-        
+
         # Validate API key is provided (will be None in dry-run mode)
         if self.api_key is None:
             warnings.warn(

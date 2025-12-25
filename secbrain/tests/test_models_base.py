@@ -97,7 +97,7 @@ class TestModelClient:
         class ConcreteModelClient(ModelClient):
             async def generate(self, prompt, system=None, temperature=0.7, max_tokens=4096, **kwargs):
                 return ModelResponse(content="test", model=self.model)
-            
+
             async def generate_structured(self, prompt, schema, system=None, **kwargs):
                 return {}
 
@@ -141,18 +141,18 @@ class TestModelClient:
                     total_tokens=30,
                     finish_reason="stop",
                 )
-            
+
             async def generate_structured(self, prompt, schema, system=None, **kwargs):
                 return {"result": "structured output"}
 
         client = WorkingClient(model="test-model")
-        
+
         # Test generate
         response = await client.generate("Test prompt")
         assert response.content == "Response to: Test prompt"
         assert response.model == "test-model"
         assert response.total_tokens == 30
-        
+
         # Test generate_structured
         result = await client.generate_structured("Test", {"type": "object"})
         assert result == {"result": "structured output"}

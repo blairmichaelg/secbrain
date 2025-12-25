@@ -14,7 +14,6 @@ except ModuleNotFoundError:  # pragma: no cover
     aiosqlite = None  # type: ignore[assignment]
 
 if TYPE_CHECKING:
-    import sqlite3
 
     from secbrain.core.context import RunContext
 

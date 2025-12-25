@@ -61,7 +61,7 @@ class TokenSpec:
             raise ValueError(f"Negative price: price_usd must be non-negative, got {self.price_usd}")
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "TokenSpec":
+    def from_dict(cls, data: dict[str, Any]) -> TokenSpec:
         """Create a TokenSpec from a dictionary.
 
         Args:

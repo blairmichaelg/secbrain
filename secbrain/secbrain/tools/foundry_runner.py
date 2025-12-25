@@ -283,7 +283,7 @@ class FoundryRunner:
                         and (
                             "could not instantiate forked environment" in last_stdout.lower()
                             or "error sending request" in last_stdout.lower()
-                            or "provider" in last_stdout.lower() and "error" in last_stdout.lower()
+                            or ("provider" in last_stdout.lower() and "error" in last_stdout.lower())
                         )
                         and retry_idx < (max_retries - 1)
                     ):

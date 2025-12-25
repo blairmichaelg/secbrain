@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-import uuid
 import time
+import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -243,7 +243,7 @@ class Session(BaseModel):
     model_config = ConfigDict(strict=True, arbitrary_types_allowed=True)
 
     run_id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
-    start_time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    start_time: datetime = Field(default_factory=lambda: datetime.now(UTC))
     current_phase: str = "init"
     phases_completed: list[str] = Field(default_factory=list)
     tool_call_counts: dict[str, int] = Field(default_factory=dict)
@@ -535,7 +535,7 @@ class RunContext:
         error_dict: SessionErrorDict = {
             "phase": error.get("phase", ""),
             "error": error.get("error", ""),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "agent": error.get("agent", ""),
         }
         self.session.errors.append(error_dict)

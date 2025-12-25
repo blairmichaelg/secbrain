@@ -35,7 +35,7 @@ class TestHTTPWorkflowStep:
         params = {"page": 1}
         json_data = {"key": "value"}
         cookies = {"session": "abc123"}
-        
+
         step = HTTPWorkflowStep(
             method="POST",
             url="https://api.example.com/data",
@@ -47,7 +47,7 @@ class TestHTTPWorkflowStep:
             cookies=cookies,
             label="Create data",
         )
-        
+
         assert step.method == "POST"
         assert step.url == "https://api.example.com/data"
         assert step.headers == headers
@@ -75,14 +75,14 @@ class TestHTTPWorkflowResult:
         """Test HTTPWorkflowResult with data."""
         step = HTTPWorkflowStep(method="GET", url="https://test.com")
         response = Mock(status_code=200, success=True)
-        
+
         result = HTTPWorkflowResult(
             steps=[step],
             responses=[response],
             success=True,
             errors=[],
         )
-        
+
         assert len(result.steps) == 1
         assert len(result.responses) == 1
         assert result.success is True
@@ -93,7 +93,7 @@ class TestHTTPWorkflowResult:
             success=False,
             errors=["Error 1", "Error 2"],
         )
-        
+
         assert result.success is False
         assert len(result.errors) == 2
 
@@ -120,9 +120,9 @@ class TestMultiStepHTTPWorkflow:
         # Setup mocks
         run_context = Mock()
         run_context.logs_path = tmp_path
-        
+
         workflow = MultiStepHTTPWorkflow(run_context)
-        
+
         # Mock successful response
         mock_response = Mock()
         mock_response.success = True
@@ -132,20 +132,20 @@ class TestMultiStepHTTPWorkflow:
         mock_response.body = b"Response body"
         mock_response.error = None
         mock_response.metadata = {}
-        
+
         workflow.client.request = AsyncMock(return_value=mock_response)
-        
+
         # Create and run step
         step = HTTPWorkflowStep(method="GET", url="https://example.com", label="Test")
         result = await workflow.run([step])
-        
+
         # Verify result
         assert result.success is True
         assert len(result.responses) == 1
         assert len(result.errors) == 0
         assert result.artifact_path is not None
         assert result.artifact_path.exists()
-        
+
         # Verify artifact content
         artifact_content = json.loads(result.artifact_path.read_text())
         assert len(artifact_content) == 1
@@ -158,9 +158,9 @@ class TestMultiStepHTTPWorkflow:
         """Test running multiple successful HTTP steps."""
         run_context = Mock()
         run_context.logs_path = tmp_path
-        
+
         workflow = MultiStepHTTPWorkflow(run_context)
-        
+
         # Mock successful responses
         mock_response1 = Mock()
         mock_response1.success = True
@@ -170,7 +170,7 @@ class TestMultiStepHTTPWorkflow:
         mock_response1.body = b"Step 1"
         mock_response1.error = None
         mock_response1.metadata = {}
-        
+
         mock_response2 = Mock()
         mock_response2.success = True
         mock_response2.status_code = 201
@@ -179,14 +179,14 @@ class TestMultiStepHTTPWorkflow:
         mock_response2.body = b"Step 2"
         mock_response2.error = None
         mock_response2.metadata = {}
-        
+
         workflow.client.request = AsyncMock(side_effect=[mock_response1, mock_response2])
-        
+
         # Create and run steps
         step1 = HTTPWorkflowStep(method="GET", url="https://example.com/1")
         step2 = HTTPWorkflowStep(method="POST", url="https://example.com/2")
         result = await workflow.run([step1, step2])
-        
+
         # Verify result
         assert result.success is True
         assert len(result.responses) == 2
@@ -197,9 +197,9 @@ class TestMultiStepHTTPWorkflow:
         """Test running workflow with a failed step."""
         run_context = Mock()
         run_context.logs_path = tmp_path
-        
+
         workflow = MultiStepHTTPWorkflow(run_context)
-        
+
         # Mock failed response
         mock_response = Mock()
         mock_response.success = False
@@ -209,13 +209,13 @@ class TestMultiStepHTTPWorkflow:
         mock_response.body = b"Not found"
         mock_response.error = "Page not found"
         mock_response.metadata = {}
-        
+
         workflow.client.request = AsyncMock(return_value=mock_response)
-        
+
         # Create and run step
         step = HTTPWorkflowStep(method="GET", url="https://example.com/missing")
         result = await workflow.run([step])
-        
+
         # Verify result
         assert result.success is False
         assert len(result.errors) == 1
@@ -226,9 +226,9 @@ class TestMultiStepHTTPWorkflow:
         """Test that workflow continues after a failed step."""
         run_context = Mock()
         run_context.logs_path = tmp_path
-        
+
         workflow = MultiStepHTTPWorkflow(run_context)
-        
+
         # Mock first failed, second successful
         mock_response1 = Mock()
         mock_response1.success = False
@@ -238,7 +238,7 @@ class TestMultiStepHTTPWorkflow:
         mock_response1.body = b"Error"
         mock_response1.error = "Server error"
         mock_response1.metadata = {}
-        
+
         mock_response2 = Mock()
         mock_response2.success = True
         mock_response2.status_code = 200
@@ -247,14 +247,14 @@ class TestMultiStepHTTPWorkflow:
         mock_response2.body = b"OK"
         mock_response2.error = None
         mock_response2.metadata = {}
-        
+
         workflow.client.request = AsyncMock(side_effect=[mock_response1, mock_response2])
-        
+
         # Create and run steps
         step1 = HTTPWorkflowStep(method="POST", url="https://example.com/error")
         step2 = HTTPWorkflowStep(method="GET", url="https://example.com/ok")
         result = await workflow.run([step1, step2])
-        
+
         # Verify result
         assert result.success is False  # Overall failure due to one failed step
         assert len(result.responses) == 2  # But both steps were executed
@@ -265,9 +265,9 @@ class TestMultiStepHTTPWorkflow:
         """Test running workflow with custom artifact name."""
         run_context = Mock()
         run_context.logs_path = tmp_path
-        
+
         workflow = MultiStepHTTPWorkflow(run_context)
-        
+
         mock_response = Mock()
         mock_response.success = True
         mock_response.status_code = 200
@@ -276,13 +276,13 @@ class TestMultiStepHTTPWorkflow:
         mock_response.body = b"OK"
         mock_response.error = None
         mock_response.metadata = {}
-        
+
         workflow.client.request = AsyncMock(return_value=mock_response)
-        
+
         # Run with custom artifact name
         step = HTTPWorkflowStep(method="GET", url="https://example.com")
         result = await workflow.run([step], artifact_name="custom_workflow.json")
-        
+
         # Verify custom artifact name
         assert result.artifact_path is not None
         assert result.artifact_path.name == "custom_workflow.json"
@@ -293,9 +293,9 @@ class TestMultiStepHTTPWorkflow:
         """Test running workflow with all step parameters."""
         run_context = Mock()
         run_context.logs_path = tmp_path
-        
+
         workflow = MultiStepHTTPWorkflow(run_context)
-        
+
         mock_response = Mock()
         mock_response.success = True
         mock_response.status_code = 200
@@ -304,9 +304,9 @@ class TestMultiStepHTTPWorkflow:
         mock_response.body = b"OK"
         mock_response.error = None
         mock_response.metadata = {}
-        
+
         workflow.client.request = AsyncMock(return_value=mock_response)
-        
+
         # Create step with all parameters
         step = HTTPWorkflowStep(
             method="POST",
@@ -319,9 +319,9 @@ class TestMultiStepHTTPWorkflow:
             cookies={"session": "abc"},
             label="API Call",
         )
-        
+
         await workflow.run([step])
-        
+
         # Verify client was called with correct parameters
         workflow.client.request.assert_called_once()
         call_kwargs = workflow.client.request.call_args[1]
@@ -337,9 +337,9 @@ class TestMultiStepHTTPWorkflow:
         """Test that response body is truncated in artifact."""
         run_context = Mock()
         run_context.logs_path = tmp_path
-        
+
         workflow = MultiStepHTTPWorkflow(run_context)
-        
+
         # Create response with long body
         long_body = "x" * 2000
         mock_response = Mock()
@@ -350,12 +350,12 @@ class TestMultiStepHTTPWorkflow:
         mock_response.body = long_body.encode()
         mock_response.error = None
         mock_response.metadata = {}
-        
+
         workflow.client.request = AsyncMock(return_value=mock_response)
-        
+
         step = HTTPWorkflowStep(method="GET", url="https://example.com")
         result = await workflow.run([step])
-        
+
         # Verify body is truncated to 1024 chars
         artifact_content = json.loads(result.artifact_path.read_text())
         assert len(artifact_content[0]["response"]["body_snippet"]) == 1024

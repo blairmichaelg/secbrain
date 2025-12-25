@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from secbrain.tools.hardhat_runner import HardhatRunResult, HardhatRunner
+from secbrain.tools.hardhat_runner import HardhatRunner, HardhatRunResult
 
 
 class TestHardhatRunResult:
@@ -68,7 +68,7 @@ class TestHardhatRunner:
         """Test HardhatRunner initialization."""
         run_context = Mock()
         run_context.workspace_path = str(tmp_path)
-        
+
         runner = HardhatRunner(run_context)
         assert runner.run_context == run_context
         assert runner.logger is None
@@ -80,7 +80,7 @@ class TestHardhatRunner:
         run_context = Mock()
         run_context.workspace_path = str(tmp_path)
         logger = Mock()
-        
+
         runner = HardhatRunner(run_context, logger=logger)
         assert runner.logger == logger
 
@@ -88,10 +88,10 @@ class TestHardhatRunner:
         """Test that workspace directory is created."""
         run_context = Mock()
         run_context.workspace_path = str(tmp_path)
-        
+
         workspace_path = tmp_path / "hardhat_attempts"
         assert not workspace_path.exists()
-        
+
         HardhatRunner(run_context)
         assert workspace_path.exists()
         assert workspace_path.is_dir()
@@ -101,19 +101,19 @@ class TestHardhatRunner:
         """Test that run_exploit_attempt returns not_implemented status."""
         run_context = Mock()
         run_context.workspace_path = str(tmp_path)
-        
+
         runner = HardhatRunner(run_context)
-        
+
         hypothesis = {
             "vuln_type": "reentrancy",
             "confidence": 0.8,
         }
-        
+
         result = await runner.run_exploit_attempt(
             hypothesis=hypothesis,
             rpc_url="http://localhost:8545",
         )
-        
+
         assert isinstance(result, HardhatRunResult)
         assert result.status == "not_implemented"
         assert result.profit_eth is None
@@ -128,9 +128,9 @@ class TestHardhatRunner:
         """Test run_exploit_attempt with all parameters."""
         run_context = Mock()
         run_context.workspace_path = str(tmp_path)
-        
+
         runner = HardhatRunner(run_context)
-        
+
         result = await runner.run_exploit_attempt(
             hypothesis={"vuln_type": "overflow"},
             rpc_url="http://localhost:8545",
@@ -139,7 +139,7 @@ class TestHardhatRunner:
             attempt_index=5,
             attack_body="function attack() {}",
         )
-        
+
         assert result.status == "not_implemented"
         assert result.attempt_index == 5
 
@@ -148,12 +148,12 @@ class TestHardhatRunner:
         """Test that default attempt_index is 1."""
         run_context = Mock()
         run_context.workspace_path = str(tmp_path)
-        
+
         runner = HardhatRunner(run_context)
-        
+
         result = await runner.run_exploit_attempt(
             hypothesis={},
             rpc_url=None,
         )
-        
+
         assert result.attempt_index == 1

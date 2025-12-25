@@ -49,8 +49,7 @@ class EconomicAnalyzer:
             if profit_eth > max_profit_eth:
                 max_profit_eth = profit_eth
                 gas_info = self._extract_gas_info(attempt)
-            if profit_usd > max_profit_usd:
-                max_profit_usd = profit_usd
+            max_profit_usd = max(max_profit_usd, profit_usd)
 
             if attempt.get("eth_price_usd"):
                 try:

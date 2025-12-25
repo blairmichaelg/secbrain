@@ -6,9 +6,9 @@ import asyncio
 import json
 import logging
 import math
+import re
 import uuid
 from dataclasses import dataclass, field
-import re
 from typing import Any, ClassVar
 
 from eth_utils import is_address, to_checksum_address

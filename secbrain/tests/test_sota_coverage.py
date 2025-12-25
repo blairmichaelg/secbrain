@@ -82,7 +82,6 @@ async def test_sota_coverage_workflow():
     """Test the SOTA coverage workflow with a mock target."""
     # This is a placeholder for actual workflow testing
     # In a real test, we would mock the target and verify the workflow execution
-    pass
 
 
 def test_sota_fixtures_exist():

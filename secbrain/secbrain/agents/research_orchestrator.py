@@ -103,8 +103,7 @@ class ResearchOrchestrator:
         if query_hash in self._pending_queries:
             # Update priority if higher
             existing = self._pending_queries[query_hash]
-            if query.priority > existing.priority:
-                existing.priority = query.priority
+            existing.priority = max(existing.priority, query.priority)
             return query_hash
 
         # Add to pending queue

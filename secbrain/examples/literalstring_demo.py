@@ -17,7 +17,6 @@ by other tools and future mypy versions with stricter checking.
 
 from typing import LiteralString
 
-
 # =============================================================================
 # Safe Database Query Pattern
 # =============================================================================

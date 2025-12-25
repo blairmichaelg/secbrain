@@ -1,9 +1,10 @@
 from pathlib import Path
 
+import hypothesis.strategies as st
 import pytest
 from hypothesis import given
-import hypothesis.strategies as st
 
+from secbrain.agents.exploit_agent import validate_function_signature
 from secbrain.core.validation import (
     ValidationError,
     validate_environment,
@@ -11,7 +12,6 @@ from secbrain.core.validation import (
     validate_scope_file,
     validate_tools_on_path,
 )
-from secbrain.agents.exploit_agent import validate_function_signature
 
 
 def test_scope_requires_targets(tmp_path: Path) -> None:

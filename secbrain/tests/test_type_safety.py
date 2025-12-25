@@ -205,14 +205,14 @@ class TestPydanticStrictMode:
     def test_contract_config_strict_mode(self) -> None:
         """ContractConfig enforces strict mode type validation."""
         from secbrain.core.context import ContractConfig
-        
+
         # Valid construction
         config = ContractConfig(
             address="0x742d35Cc6634C0532925a3b844Bc9e7595f8E",
             chain_id=1,
         )
         assert config.chain_id == 1
-        
+
         # Invalid: string for chain_id should fail
         with pytest.raises(ValidationError):
             ContractConfig(
@@ -223,14 +223,14 @@ class TestPydanticStrictMode:
     def test_scope_config_strict_mode(self) -> None:
         """ScopeConfig enforces strict mode type validation."""
         from secbrain.core.context import ScopeConfig
-        
+
         # Valid construction
         config = ScopeConfig(
             domains=["example.com"],
             max_depth=3,
         )
         assert config.max_depth == 3
-        
+
         # Invalid: string for max_depth should fail
         with pytest.raises(ValidationError):
             ScopeConfig(
@@ -241,14 +241,14 @@ class TestPydanticStrictMode:
     def test_rate_limit_config_strict_mode(self) -> None:
         """RateLimitConfig enforces strict mode type validation."""
         from secbrain.core.context import RateLimitConfig
-        
+
         # Valid construction
         config = RateLimitConfig(
             requests_per_minute=60,
             burst=10,
         )
         assert config.burst == 10
-        
+
         # Invalid: string for burst should fail
         with pytest.raises(ValidationError):
             RateLimitConfig(
@@ -420,9 +420,9 @@ class TestLiteralStringSafety:
         # _executescript methods accept LiteralString parameters.
         # The actual type checking happens at mypy time - this just
         # confirms the methods exist and are callable.
-        from secbrain.tools.storage import WorkspaceStorage
-        from pathlib import Path
         import inspect
+
+        from secbrain.tools.storage import WorkspaceStorage
 
         # Check that _execute has LiteralString in its signature
         sig = inspect.signature(WorkspaceStorage._execute)

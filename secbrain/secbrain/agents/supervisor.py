@@ -31,12 +31,11 @@ class SupervisorAgent(BaseAgent):
 
         if action == "pre_phase":
             return await self._pre_phase_check(kwargs.get("phase_name", ""))
-        elif action == "post_phase":
+        if action == "post_phase":
             return await self._post_phase_check(kwargs.get("phase_name", ""), kwargs.get("result"))
-        elif action == "approval":
+        if action == "approval":
             return await self._handle_approval(kwargs.get("request"))
-        else:
-            return await self._status_check()
+        return await self._status_check()
 
     async def _status_check(self) -> AgentResult:
         """Check overall system status."""

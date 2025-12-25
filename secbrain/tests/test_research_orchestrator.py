@@ -147,11 +147,11 @@ async def test_caching():
 
     # Queue same query again
     hash2 = await orch.queue_research(query)
-    
+
     # Should be same hash and already cached
     assert hash2 == query_hash
     assert orch._stats["cached_hits"] == 1
-    
+
     # Get cached result directly
     cached_result = orch.get_cached_result(query_hash)
     assert cached_result is not None

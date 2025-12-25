@@ -12,7 +12,7 @@ class TestLoadFixturesFromFile:
         """Test loading valid JSON list of fixtures."""
         fixture_file = tmp_path / "fixtures.json"
         fixture_file.write_text('[{"name": "test1"}, {"name": "test2"}]')
-        
+
         result = load_fixtures_from_file(fixture_file)
         assert len(result) == 2
         assert result[0]["name"] == "test1"
@@ -22,7 +22,7 @@ class TestLoadFixturesFromFile:
         """Test loading empty JSON list."""
         fixture_file = tmp_path / "empty.json"
         fixture_file.write_text('[]')
-        
+
         result = load_fixtures_from_file(fixture_file)
         assert result == []
 
@@ -35,7 +35,7 @@ class TestLoadFixturesFromFile:
         """Test loading invalid JSON returns empty list."""
         fixture_file = tmp_path / "invalid.json"
         fixture_file.write_text('not valid json')
-        
+
         result = load_fixtures_from_file(fixture_file)
         assert result == []
 
@@ -43,7 +43,7 @@ class TestLoadFixturesFromFile:
         """Test loading JSON dict instead of list returns empty list."""
         fixture_file = tmp_path / "dict.json"
         fixture_file.write_text('{"key": "value"}')
-        
+
         result = load_fixtures_from_file(fixture_file)
         assert result == []
 
@@ -51,7 +51,7 @@ class TestLoadFixturesFromFile:
         """Test loading with string path instead of Path object."""
         fixture_file = tmp_path / "fixtures.json"
         fixture_file.write_text('[{"test": "data"}]')
-        
+
         result = load_fixtures_from_file(str(fixture_file))
         assert len(result) == 1
         assert result[0]["test"] == "data"
@@ -60,7 +60,7 @@ class TestLoadFixturesFromFile:
         """Test that non-dict items are filtered out."""
         fixture_file = tmp_path / "mixed.json"
         fixture_file.write_text('[{"valid": "dict"}, "string", 123, null, {"another": "dict"}]')
-        
+
         result = load_fixtures_from_file(fixture_file)
         assert len(result) == 2
         assert result[0]["valid"] == "dict"

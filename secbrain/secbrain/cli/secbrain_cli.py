@@ -291,7 +291,7 @@ def _initialize_models(dry_run: bool) -> tuple[ModelClient | None, ModelClient |
         )
         return None, None
 
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
 
     profile = os.environ.get("SECBRAIN_MODELS_PROFILE")
