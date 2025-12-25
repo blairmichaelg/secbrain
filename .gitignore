@@ -91,3 +91,7 @@ build/
 targets/**/insights/
 **/insights-dashboard.json
 targets/**/run-live-*
+
+# Target workspace directories (runtime generated)
+targets/**/workspace/
+!targets/**/workspace/.gitkeep
