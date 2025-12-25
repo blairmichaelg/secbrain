@@ -53,16 +53,19 @@ class InsightsAggregator:
     """Aggregates data from a SecBrain workspace."""
 
     def __init__(self, workspace_path: str | Path):
-        """
-        Initialize aggregator.
+        """Initialize aggregator.
 
         Args:
             workspace_path: Path to the workspace directory
+            
+        Raises:
+            ValueError: If workspace path does not exist or is not a directory
         """
         self.workspace_path = Path(workspace_path)
         if not self.workspace_path.exists():
-            msg = f"Workspace path does not exist: {workspace_path}"
-            raise ValueError(msg)
+            raise ValueError(f"Workspace path does not exist: {workspace_path}")
+        if not self.workspace_path.is_dir():
+            raise ValueError(f"Workspace path is not a directory: {workspace_path}")
 
     def aggregate(self) -> WorkspaceData:
         """

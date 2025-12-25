@@ -6,6 +6,8 @@ This module provides configuration classes for various SecBrain subsystems:
 - Exploit execution thresholds
 - Rate limiting and pricing configuration
 - Tool-specific defaults
+
+All configuration classes are frozen dataclasses to prevent accidental modification.
 """
 
 from dataclasses import dataclass
@@ -14,7 +16,11 @@ from typing import ClassVar
 
 @dataclass(frozen=True)
 class LLMConfig:
-    """LLM-related configuration."""
+    """LLM-related configuration.
+    
+    Provides default settings for LLM client operations including
+    timeouts, retry logic, and concurrency limits.
+    """
 
     MAX_CONCURRENT_CALLS: ClassVar[int] = 5
     DEFAULT_TIMEOUT_SECONDS: ClassVar[int] = 30
@@ -24,7 +30,11 @@ class LLMConfig:
 
 @dataclass(frozen=True)
 class HypothesisConfig:
-    """Hypothesis generation configuration."""
+    """Hypothesis generation configuration.
+    
+    Controls parameters for vulnerability hypothesis generation
+    including confidence thresholds and preview limits.
+    """
 
     CONFIDENCE_THRESHOLD: ClassVar[float] = 0.4
     MAX_HYPOTHESES_PER_CONTRACT: ClassVar[int] = 5
@@ -36,7 +46,11 @@ class HypothesisConfig:
 
 @dataclass(frozen=True)
 class ExploitConfig:
-    """Exploitation configuration."""
+    """Exploitation configuration.
+    
+    Defines settings for exploit execution including iteration limits,
+    profit thresholds, and build timeouts.
+    """
 
     DEFAULT_ITERATIONS: ClassVar[int] = 3
     DEFAULT_PROFIT_THRESHOLD_ETH: ClassVar[float] = 0.1
@@ -48,7 +62,11 @@ class ExploitConfig:
 
 @dataclass(frozen=True)
 class RateLimitConfig:
-    """Rate limiting configuration."""
+    """Rate limiting configuration.
+    
+    Configures rate limits for external API calls to prevent
+    abuse and stay within service quotas.
+    """
 
     COINGECKO_REQUESTS_PER_MINUTE: ClassVar[int] = 10
     COINGECKO_MIN_INTERVAL_SECONDS: ClassVar[float] = 6.0
@@ -58,7 +76,10 @@ class RateLimitConfig:
 
 @dataclass(frozen=True)
 class PricingConfig:
-    """Token pricing configuration."""
+    """Token pricing configuration.
+    
+    Defines default prices and thresholds for profitability calculations.
+    """
 
     ETH_PRICE_DEFAULT: ClassVar[float] = 3000.0
     MIN_PROFIT_USD: ClassVar[float] = 300.0
