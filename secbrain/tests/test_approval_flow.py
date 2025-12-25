@@ -55,21 +55,11 @@ def test_approval_manager_deny_mode(tmp_path: Path) -> None:
 
 def test_approval_manager_unknown_mode(tmp_path: Path) -> None:
     """Test approval manager with unknown mode."""
-    manager = ApprovalManager(
-        mode="unknown_mode",
-        audit_log_path=tmp_path / "audit.jsonl",
-    )
-    req = ApprovalRequest(
-        request_id="test-3",
-        tool_name="test_tool",
-        operation="test_op",
-        risk_level="high",
-        timestamp=datetime.now(UTC),
-    )
-
-    resp = __import__("asyncio").run(manager.request_approval(req))
-    assert resp.approved is False
-    assert resp.reason == "unknown_mode:unknown_mode"
+    with pytest.raises(ValueError, match="Invalid approval mode 'unknown_mode'. Must be 'auto', 'deny', or 'ask'"):
+        ApprovalManager(
+            mode="unknown_mode",
+            audit_log_path=tmp_path / "audit.jsonl",
+        )
 
 
 def test_new_request_id() -> None:

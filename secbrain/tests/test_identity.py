@@ -230,10 +230,10 @@ class TestIdentityRegistry:
             registry.get("missing")
 
     def test_get_when_no_active_raises(self) -> None:
-        """Test that getting without active identity raises KeyError."""
+        """Test that getting without active identity raises ValueError."""
         registry = IdentityRegistry()
 
-        with pytest.raises(KeyError):
+        with pytest.raises(ValueError, match="No active identity set and no name provided"):
             registry.get()
 
     def test_switch(self) -> None:
