@@ -381,6 +381,98 @@ class ResearchOrchestrator:
         results = await self.execute_batch(max_queries=1)
         return results[0] if results else None
 
+    async def research_threshold_network_patterns(
+        self,
+        contract_name: str,
+        functions: list[str] | None = None,
+        priority: int = 9,
+    ) -> ResearchResult | None:
+        """Research Threshold Network specific vulnerabilities based on Immunefi bounty program."""
+        context_parts = [
+            f"Threshold Network contract: {contract_name}",
+            "Focus on Immunefi bug bounty critical vulnerabilities:",
+            "- Direct theft of user funds (Bitcoin bridge, tBTC)",
+            "- Permanent freezing of funds",
+            "- Protocol insolvency",
+            "- Threshold cryptography attacks",
+            "- Cross-chain bridge exploits",
+        ]
+
+        if functions:
+            context_parts.append(f"Available functions: {', '.join(functions[:10])}")
+
+        question = (
+            f"What are the highest severity vulnerabilities in Threshold Network's {contract_name} contract? "
+            "Focus on tBTC bridge security, threshold signature schemes, wallet registry attacks, "
+            "cross-chain message forgery, operator collusion, and governance exploits. "
+            "Include recent exploit patterns from similar protocols."
+        )
+
+        query = ResearchQuery(
+            question=question,
+            context=" | ".join(context_parts),
+            priority=priority,
+            phase="hypothesis",
+            metadata={"protocol": "threshold_network", "contract": contract_name},
+            ttl_hours=24,
+        )
+
+        await self.queue_research(query)
+        results = await self.execute_batch(max_queries=1)
+        return results[0] if results else None
+
+    async def research_bridge_vulnerabilities(
+        self,
+        bridge_type: str,
+        priority: int = 9,
+    ) -> ResearchResult | None:
+        """Research bridge-specific vulnerabilities for cross-chain protocols."""
+        question = (
+            f"What are the most critical vulnerabilities in {bridge_type} bridges? "
+            "Include proof verification exploits, message forgery, cross-chain reentrancy, "
+            "relay manipulation, and recent bridge hacks with attack patterns."
+        )
+
+        query = ResearchQuery(
+            question=question,
+            context=f"Cross-chain bridge security for {bridge_type}",
+            priority=priority,
+            phase="hypothesis",
+            tags=["bridge", "cross-chain", bridge_type],
+            ttl_hours=48,
+        )
+
+        await self.queue_research(query)
+        results = await self.execute_batch(max_queries=1)
+        return results[0] if results else None
+
+    async def research_immunefi_severity(
+        self,
+        vulnerability_description: str,
+        impact: str,
+        priority: int = 8,
+    ) -> ResearchResult | None:
+        """Research Immunefi severity classification for a vulnerability."""
+        question = (
+            f"Based on Immunefi Vulnerability Severity Classification System V2.3, "
+            f"what severity level would this vulnerability be? "
+            f"Vulnerability: {vulnerability_description}. Impact: {impact}. "
+            "Provide specific severity (Critical/High/Medium/Low) and expected bounty range."
+        )
+
+        query = ResearchQuery(
+            question=question,
+            context="Immunefi severity classification for bug bounty submission",
+            priority=priority,
+            phase="triage",
+            tags=["immunefi", "severity", "bounty"],
+            ttl_hours=168,  # 7 days - severity criteria don't change often
+        )
+
+        await self.queue_research(query)
+        results = await self.execute_batch(max_queries=1)
+        return results[0] if results else None
+
     def get_results(self) -> list[ResearchResult]:
         """Get all research results collected so far."""
         return self._results.copy()
