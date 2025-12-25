@@ -1,6 +1,38 @@
 # Threshold Network Bug Bounty Target
 
-This directory contains the configuration and setup for running SecBrain against the Threshold Network bug bounty program on Immunefi.
+This directory contains comprehensive resources for hunting bugs in the Threshold Network bug bounty program on Immunefi.
+
+## 📚 Documentation Hub
+
+**Start Here**: New to Threshold Network bounty hunting?
+
+1. **[IMMUNEFI_RESEARCH.md](IMMUNEFI_RESEARCH.md)** ⭐ - Complete Immunefi program research
+   - Program overview and background
+   - Detailed scope analysis
+   - Asset inventory with priorities
+   - Attack surface breakdown
+   - Vulnerability prioritization
+   - Submission requirements
+   - Bug bounty strategy
+
+2. **[ATTACK_SURFACE_GUIDE.md](ATTACK_SURFACE_GUIDE.md)** ⭐ - Systematic testing approach
+   - Testing methodology
+   - Attack surfaces by component
+   - Specific test cases
+   - Common vulnerability patterns
+   - Testing checklist
+
+3. **[POC_TEMPLATES.md](POC_TEMPLATES.md)** ⭐ - Ready-to-use Foundry templates
+   - 7 exploit templates
+   - Helper functions
+   - Running instructions
+
+4. **[TESTING_GUIDE.md](TESTING_GUIDE.md)** ⭐ - Comprehensive testing guide
+   - Phase-by-phase workflow
+   - Automated & manual techniques
+   - Validation procedures
+
+5. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Quick commands and tips
 
 ## Bug Bounty Information
 
@@ -8,96 +40,291 @@ This directory contains the configuration and setup for running SecBrain against
 - **Platform**: Immunefi
 - **Max Bounty**: Up to $1,000,000 USD
 - **Network**: Ethereum Mainnet
-- **Contracts**: 39 smart contracts
+- **Contracts**: 39 smart contracts (6 critical priority)
+- **Program Type**: Smart Contract Security
+- **KYC**: Required only for payouts > $100,000
+- **PoC**: Required for all severity levels
 
-## Quick Start
+## 🚀 Enhanced Bug Bounty Workflow
+
+### Step-by-Step Process
+
+### Step-by-Step Process
+
+#### Phase 1: Setup & Research (Day 1-2)
+
+```bash
+# 1. Read all documentation
+cat IMMUNEFI_RESEARCH.md  # Complete program research
+cat ATTACK_SURFACE_GUIDE.md  # Testing strategies
+cat TESTING_GUIDE.md  # Phase-by-phase workflow
+
+# 2. Install dependencies
+cd /home/runner/work/secbrain/secbrain
+pip install -e ".[dev]"
+
+# 3. Set up API keys
+export PERPLEXITY_API_KEY=pplx-xxxx
+export GOOGLE_API_KEY=AIza-xxxx
+export TOGETHER_API_KEY=your-key
+
+# 4. Set up testing environment
+export ETH_RPC_URL="https://eth.llamarpc.com"
+cd targets/thresholdnetwork
+```
+
+#### Phase 2: Automated Analysis (Day 3)
+
+```bash
+# 1. Dry run (validate setup, $0 cost)
+secbrain run \
+  --scope scope-critical.yaml \
+  --program program.json \
+  --workspace workspace/dry-run \
+  --dry-run
+
+# 2. Critical contracts analysis ($5-15, 1-2 hours)
+secbrain run \
+  --scope scope-critical.yaml \
+  --program program.json \
+  --workspace workspace/critical
+
+# 3. Research emerging patterns
+secbrain research \
+  --protocol "Threshold Network" \
+  --contracts "TBTC,Bridge,TBTCVault" \
+  --timeframe 90 \
+  --output research_findings.json
+
+# 4. Get Immunefi intelligence
+secbrain immunefi intelligence --program thresholdnetwork
+
+# 5. Review generated hypotheses
+cat workspace/critical/hypotheses/hypotheses.json | \
+  jq '[.[] | select(.confidence > 0.7 and .detection_priority >= 8)] | sort_by(-.confidence) | .[0:10]'
+```
+
+#### Phase 3: Priority Testing (Week 2-3)
+
+```bash
+cd instascope
+
+# 1. Set up Foundry
+forge install foundry-rs/forge-std
+
+# 2. Copy PoC templates
+cp ../POC_TEMPLATES.md test/exploits/
+
+# 3. Test critical vulnerabilities (see TESTING_GUIDE.md for details)
+
+# Test 1: SPV Proof Manipulation ($1M potential)
+forge test --match-contract SPVProofExploit -vvvv
+
+# Test 2: Optimistic Mint Exploit ($1M potential)  
+forge test --match-contract OptimisticMintExploit -vvvv
+
+# Test 3: Staking Reward Manipulation ($50K potential)
+forge test --match-contract StakingRewardExploit -vvvv
+
+# Test 4: Flash Loan Governance ($50K potential)
+forge test --match-contract FlashLoanGovernanceExploit -vvvv
+
+# Test 5: Cross-Chain Message Forgery ($50K potential)
+forge test --match-contract CrossChainExploit -vvvv
+```
+
+#### Phase 4: PoC Development (Week 4-5)
+
+```bash
+# For each finding:
+# 1. Refine exploit PoC
+# 2. Measure impact (funds at risk, users affected)
+# 3. Document root cause
+# 4. Prepare remediation suggestions
+# 5. Create professional report
+
+# Example: Test on latest block
+export FORK_BLOCK=$(cast block-number)
+forge test --match-test testMyExploit -vvvv
+
+# Generate insights
+cd ..
+secbrain insights --workspace workspace/critical --format html --open
+```
+
+#### Phase 5: Submission (Week 6)
+
+```bash
+# 1. Final validation
+# - PoC works on latest mainnet fork
+# - Impact is clearly demonstrated
+# - Severity is correctly classified
+# - All requirements met
+
+# 2. Prepare submission package
+# - Foundry test file
+# - Detailed explanation
+# - Impact assessment
+# - Remediation suggestions
+# - Video/screenshots (optional)
+
+# 3. Submit via Immunefi platform
+# https://immunefi.com/bug-bounty/thresholdnetwork/
+
+# 4. Track submission status
+# Expect initial response in 2-4 weeks
+```
 
 ### Prerequisites
 
-1. Install dependencies (from repository root):
-   ```bash
-   cd /home/runner/work/secbrain/secbrain
-   pip install -e ".[dev]"
-   ```
+**Required Tools**:
+```bash
+# Foundry for testing
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
 
-2. Set up API keys:
-   ```bash
-   # Required for research integration
-   export PERPLEXITY_API_KEY=pplx-xxxx
-   
-   # Required for advisor model
-   export GOOGLE_API_KEY=AIza-xxxx
-   
-   # Required for worker model (choose one)
-   export TOGETHER_API_KEY=your-together-key
-   # OR
-   export OPENROUTER_API_KEY=your-openrouter-key
-   # OR
-   export OPENAI_API_KEY=your-openai-key
-   ```
+# SecBrain for analysis
+pip install -e ".[dev]"
 
-### Run Analysis
+# Optional: Additional security tools
+pip install slither-analyzer mythril
+```
+
+**Required API Keys**:
+```bash
+# For SecBrain analysis (all FREE tier available)
+export PERPLEXITY_API_KEY=pplx-xxxx     # Research integration
+export GOOGLE_API_KEY=AIza-xxxx         # Advisor model
+export TOGETHER_API_KEY=your-key        # Worker model
+
+# For testing
+export ETH_RPC_URL="https://eth.llamarpc.com"  # Or your preferred RPC
+```
+
+### Quick Analysis Commands
 
 #### Dry Run (Recommended First)
 ```bash
 secbrain run \
-  --scope targets/thresholdnetwork/scope.yaml \
-  --program targets/thresholdnetwork/program.json \
-  --workspace targets/thresholdnetwork/workspace \
+  --scope scope.yaml \
+  --program program.json \
+  --workspace workspace \
   --dry-run
 ```
 
-#### Full Analysis
+#### Critical Contracts Only
 ```bash
 secbrain run \
-  --scope targets/thresholdnetwork/scope.yaml \
-  --program targets/thresholdnetwork/program.json \
-  --workspace targets/thresholdnetwork/workspace
+  --scope scope-critical.yaml \
+  --program program.json \
+  --workspace workspace
+```
+
+#### Full Analysis (All 39 Contracts)
+```bash
+secbrain run \
+  --scope scope.yaml \
+  --program program.json \
+  --workspace workspace
 ```
 
 #### Generate Insights
 ```bash
-secbrain insights --workspace targets/thresholdnetwork/workspace --format html --open
+secbrain insights --workspace workspace --format html --open
 ```
 
-## Contract Overview
+## 🎯 Priority Targets
 
-The Threshold Network consists of 39 deployed contracts focused on:
+### Top 6 Critical Contracts
 
-### Core Components
-- **tBTC Bridge**: Bitcoin bridge contracts (TBTC, TBTCVault, Bridge, etc.)
-- **Threshold Cryptography**: Core threshold signature and encryption functionality
-- **Token System**: T token (merger of KEEP and NU tokens)
-- **Staking**: TokenStaking, RebateStaking contracts
-- **Governance**: TokenholderGovernor, BridgeGovernance, WalletRegistryGovernance
+### Top 6 Critical Contracts
 
-### Critical Contracts
-1. **TBTC** (0x18084fbA666a33d37592fA2633fD49a74DD93a88) - Main tBTC token
-2. **TBTCVault** (0x9C070027cdC9dc8F82416B2e5314E11DFb4FE3CD) - tBTC vault
-3. **Bridge** (0x8d014903bf7867260584d714e11809fea5293234) - Bridge logic
-4. **T Token** (0xCdF7028ceAB81fA0C6971208e83fa7872994beE5) - Threshold token
-5. **TokenStaking** (0xf5a2ccfea213cb3ff0799e0c33ea2fa3da7cbb65) - Staking contract
-6. **WalletRegistry** (0xfbae130e06bbc8ca198861beecae6e2b830398fb) - Wallet registry
+| # | Contract | Address | Priority | Max Bounty | Focus |
+|---|----------|---------|----------|------------|-------|
+| 1 | **TBTC** | 0x1808...3a88 | 10/10 | $1M | Mint, burn, token transfers |
+| 2 | **TBTCVault** | 0x9C07...E3CD | 10/10 | $1M | Optimistic minting, vault operations |
+| 3 | **Bridge** | 0x8d01...3234 | 10/10 | $1M | SPV proofs, deposits, redemptions |
+| 4 | **WalletRegistry** | 0xfbae...8fb | 9/10 | $1M | DKG, threshold signing, operators |
+| 5 | **T Token** | 0xCdF7...beE5 | 8/10 | $50K | Governance, delegation |
+| 6 | **TokenStaking** | 0xf5a2...b65 | 8/10 | $50K | Staking rewards, slashing |
 
-## Focus Areas
+### Top 6 High-Value Vulnerabilities
 
-Based on the bug bounty program, prioritize:
+1. **SPV Proof Manipulation** ($1M) - Forge Bitcoin transaction proofs to mint unauthorized tBTC
+2. **Optimistic Mint Exploit** ($1M) - Mint tBTC without depositing Bitcoin
+3. **Threshold Signature Bypass** ($1M) - Bypass threshold requirements to control Bitcoin
+4. **Cross-Chain Message Forgery** ($500K) - Forge messages to Wormhole/Starknet bridges
+5. **Staking Reward Manipulation** ($50K) - Inflate staking rewards via calculation errors
+6. **Flash Loan Governance** ($50K) - Manipulate votes using flash-loaned tokens
 
-1. **Direct theft of user funds** (Critical - up to $1M)
-2. **Permanent freezing of funds** (Critical)
-3. **Protocol insolvency** (Critical)
-4. **Bridge vulnerabilities** (tBTC bridge security)
-5. **Cross-chain attacks** (Starknet, Wormhole bridges)
-6. **Governance exploits** (Voting, proposals)
-7. **Staking vulnerabilities** (Rewards, slashing)
-8. **Proxy pattern issues** (Many TransparentUpgradeableProxy contracts)
+## 📋 Testing Resources
 
-## Building Contracts
+### PoC Templates Available
 
-The instascope directory contains all contract source code with Foundry configuration.
+All templates in [POC_TEMPLATES.md](POC_TEMPLATES.md):
+
+1. **SPVProofExploit.t.sol** - Bitcoin SPV proof manipulation
+2. **OptimisticMintExploit.t.sol** - Optimistic minting vulnerabilities
+3. **ReentrancyExploit.t.sol** - Reentrancy attacks
+4. **FlashLoanGovernance.t.sol** - Governance flash loan attacks
+5. **StakingRewardExploit.t.sol** - Staking reward manipulation
+6. **CrossChainExploit.t.sol** - Cross-chain message forgery
+7. **ProxyUpgradeExploit.t.sol** - Proxy upgrade vulnerabilities
+
+### Attack Surface Checklist
+
+See [ATTACK_SURFACE_GUIDE.md](ATTACK_SURFACE_GUIDE.md) for complete checklists:
+
+**Bitcoin Bridge**:
+- [ ] SPV proof verification bypass
+- [ ] Deposit replay attacks
+- [ ] Optimistic mint without Bitcoin
+- [ ] Optimistic mint challenge bypass
+- [ ] Redemption proof forgery
+
+**Threshold Cryptography**:
+- [ ] DKG manipulation
+- [ ] Threshold signature bypass
+- [ ] Operator collusion
+- [ ] Key share exposure
+
+**Staking & Governance**:
+- [ ] Reward calculation errors
+- [ ] Flash loan voting
+- [ ] Timelock bypass
+- [ ] Quorum manipulation
+
+**Cross-Chain Bridges**:
+- [ ] Wormhole message forgery
+- [ ] Starknet state proof manipulation
+- [ ] Replay attacks
+- [ ] Chain ID validation
+
+## 💰 Bounty Expectations
+
+### Realistic Targets (6-8 weeks effort)
+
+| Severity | Probability | Bounty Range | Expected Findings |
+|----------|-------------|--------------|-------------------|
+| Critical | 5-15% | $100K-$1M | 0-1 findings |
+| High | 30-50% | $10K-$50K | 0-1 findings |
+| Medium | 80%+ | $1K-$10K | 1-3 findings |
+| Low | 100% | $100-$1K | 2-5 findings |
+
+**Most Likely Outcome**: 1-2 medium severity findings ($1K-$10K each)
+
+**Best Case Scenario**: 1 critical + 1-2 high + 2-3 medium ($150K-$1.1M+)
+
+**Worst Case**: Only low severity findings or duplicates ($100-$1K)
+
+## 🛠️ Testing Environment
+
+### Build Contracts
+
+The instascope directory contains all contract source code with Foundry configuration:
 
 ```bash
-cd targets/thresholdnetwork/instascope
+cd instascope
 
 # Build all contracts
 ./build.sh

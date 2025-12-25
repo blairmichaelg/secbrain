@@ -3,6 +3,11 @@
   "platform": "Immunefi",
   "bounty_range": "Up to $1,000,000",
   "program_url": "https://immunefi.com/bug-bounty/thresholdnetwork/",
+  "program_type": "smart_contract",
+  "blockchain": ["Ethereum"],
+  "language": ["Solidity"],
+  "kyc_required": "Only for payouts above $100,000",
+  "proof_of_concept_required": true,
   "in_scope": [
     "Direct theft of any user funds, whether at-rest or in-motion, other than unclaimed yield (Critical)",
     "Permanent freezing of funds (Critical)",
@@ -15,6 +20,111 @@
     "Griefing (e.g. no profit motive for an attacker, but damage to the users or the protocol) (Medium)",
     "Theft of gas (Medium)",
     "Unbounded gas consumption (Medium)"
+  ],
+  "critical_contracts": [
+    {
+      "name": "TBTC",
+      "address": "0x18084fbA666a33d37592fA2633fD49a74DD93a88",
+      "priority": 10,
+      "description": "Main tBTC ERC20 token representing Bitcoin on Ethereum",
+      "critical_functions": ["mint", "burn", "transfer", "transferFrom"]
+    },
+    {
+      "name": "TBTCVault",
+      "address": "0x9C070027cdC9dc8F82416B2e5314E11DFb4FE3CD",
+      "priority": 10,
+      "description": "Custodian for minted tBTC, manages minting and unminting operations",
+      "critical_functions": ["mint", "unmint", "requestOptimisticMint", "finalizeOptimisticMint", "cancelOptimisticMint"]
+    },
+    {
+      "name": "Bridge",
+      "address": "0x8d014903bf7867260584d714e11809fea5293234",
+      "priority": 10,
+      "description": "Core Bitcoin bridge logic, handles deposits and redemptions",
+      "critical_functions": ["revealDeposit", "requestRedemption", "submitRedemptionProof", "notifyRedemptionTimeout"]
+    },
+    {
+      "name": "WalletRegistry",
+      "address": "0xfbae130e06bbc8ca198861beecae6e2b830398fb",
+      "priority": 9,
+      "description": "Manages ECDSA wallet groups for threshold signing",
+      "critical_functions": ["requestNewWallet", "registerOperator", "approveAuthorizationDecrease", "seize"]
+    },
+    {
+      "name": "T",
+      "address": "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5",
+      "priority": 8,
+      "description": "Threshold Network governance and utility token",
+      "critical_functions": ["transfer", "transferFrom", "delegate", "burn"]
+    },
+    {
+      "name": "TokenStaking",
+      "address": "0xf5a2ccfea213cb3ff0799e0c33ea2fa3da7cbb65",
+      "priority": 8,
+      "description": "Staking mechanism for T tokens",
+      "critical_functions": ["stake", "unstake", "notifyRewardAmount", "getReward", "slash"]
+    }
+  ],
+  "attack_surfaces": [
+    "Bitcoin SPV proof verification",
+    "Optimistic minting mechanism",
+    "Threshold signature generation",
+    "Distributed key generation (DKG)",
+    "Cross-chain bridge message verification",
+    "Proxy upgrade mechanisms",
+    "Staking reward calculations",
+    "Governance voting and timelock",
+    "Token vending machine (KEEP/NU to T migration)"
+  ],
+  "high_priority_vulnerabilities": [
+    {
+      "type": "SPV Proof Manipulation",
+      "severity": "Critical",
+      "bounty_potential": "$1,000,000",
+      "description": "Forge or manipulate Bitcoin SPV proofs to mint unauthorized tBTC",
+      "affected_contracts": ["Bridge", "TBTCVault", "TBTC"],
+      "test_focus": ["Proof verification logic", "Merkle proof validation", "Transaction parsing"]
+    },
+    {
+      "type": "Optimistic Mint Exploit",
+      "severity": "Critical",
+      "bounty_potential": "$1,000,000",
+      "description": "Mint tBTC without depositing Bitcoin via optimistic minting mechanism",
+      "affected_contracts": ["TBTCVault"],
+      "test_focus": ["Guardian authorization", "Challenge period", "Debt tracking"]
+    },
+    {
+      "type": "Threshold Signature Bypass",
+      "severity": "Critical",
+      "bounty_potential": "$1,000,000",
+      "description": "Bypass threshold signature requirements to control Bitcoin funds",
+      "affected_contracts": ["WalletRegistry", "Bridge"],
+      "test_focus": ["DKG validation", "Signature verification", "Threshold enforcement"]
+    },
+    {
+      "type": "Cross-Chain Message Forgery",
+      "severity": "Critical",
+      "bounty_potential": "$500,000",
+      "description": "Forge cross-chain messages to Wormhole or Starknet bridges",
+      "affected_contracts": ["BTCDepositorWormhole", "StarknetTokenBridge"],
+      "test_focus": ["Message verification", "Guardian signatures", "Replay protection"]
+    },
+    {
+      "type": "Staking Reward Manipulation",
+      "severity": "High",
+      "bounty_potential": "$50,000",
+      "description": "Manipulate staking reward calculations to inflate rewards",
+      "affected_contracts": ["TokenStaking", "RebateStaking"],
+      "test_focus": ["Reward calculation", "Rounding errors", "Distribution logic"]
+    },
+    {
+      "type": "Flash Loan Governance Attack",
+      "severity": "High",
+      "bounty_potential": "$50,000",
+      "description": "Use flash loans to manipulate governance votes",
+      "affected_contracts": ["TokenholderGovernor"],
+      "test_focus": ["Snapshot-based voting", "Voting delay", "Delegation mechanics"]
+    }
   ],
   "out_of_scope": [
     "Any testing on mainnet or public testnet deployed code",
@@ -39,6 +149,32 @@
     "Feature requests",
     "Impacts on test files and configuration files unless stated otherwise"
   ],
+  "testing_requirements": {
+    "environment": "Local fork of mainnet only",
+    "proof_of_concept": "Required for all severity levels",
+    "minimum_confirmations": "Bitcoin deposits require 6 confirmations",
+    "rpc_endpoints": [
+      "https://ethereum.publicnode.com",
+      "https://eth.llamarpc.com",
+      "https://rpc.ankr.com/eth"
+    ]
+  },
+  "submission_guidelines": {
+    "required_elements": [
+      "Foundry test file demonstrating exploit",
+      "Detailed explanation of root cause",
+      "Step-by-step exploit walkthrough",
+      "Impact assessment with severity justification",
+      "Before/after state comparison",
+      "Remediation suggestions (optional but valued)"
+    ],
+    "timeline": {
+      "initial_triage": "2-4 weeks",
+      "investigation": "2-8 weeks",
+      "fix_development": "2-12 weeks",
+      "payment": "After fix deployment and verification"
+    }
+  },
   "rules": [
     "All testing must be done on local-forks of either public testnet or mainnet",
     "Proof of Concept is required for all severities",
@@ -71,11 +207,37 @@
     "medium": "Up to $10,000 - Contract inoperability, block stuffing, griefing, gas theft, unbounded gas",
     "low": "Up to $1,000 - Based on Immunefi Severity Classification System"
   },
+  "resources": {
+    "documentation": [
+      "https://docs.threshold.network/",
+      "https://docs.threshold.network/applications/tbtc-v2",
+      "https://docs.threshold.network/applications/tbtc-v2/tbtc-v2-technical-design"
+    ],
+    "repositories": [
+      "https://github.com/threshold-network/solidity-contracts",
+      "https://github.com/keep-network/tbtc-v2"
+    ],
+    "security": [
+      "https://immunefi.com/severity-system/",
+      "https://immunefi.com/explore/",
+      "https://medium.com/immunefi"
+    ],
+    "community": {
+      "discord": "https://discord.gg/threshold",
+      "twitter": "@ThresholdDAO",
+      "github": "https://github.com/threshold-network"
+    }
+  },
   "notes": "Threshold Network is a merge of Keep Network and NuCypher, providing threshold cryptography for decentralized applications. The primary products are tBTC (a decentralized Bitcoin bridge) and threshold access control. This bug bounty program focuses on smart contract security across 39 deployed contracts on Ethereum mainnet. All testing must be done on local forks to avoid impact on production systems.",
   "contacts": {
     "platform": "Immunefi",
     "team": "Threshold Network team",
     "discord": "https://discord.gg/threshold",
     "twitter": "@ThresholdDAO"
-  }
+  },
+  "last_updated": "2024-12-25",
+  "total_contracts_in_scope": 39,
+  "critical_contracts_count": 6,
+  "blockchain_network": "Ethereum Mainnet",
+  "chain_id": 1
 }
