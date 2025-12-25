@@ -55,17 +55,17 @@ class TestWorkspaceStorageInit:
         """Test that initialize creates the database file."""
         storage = WorkspaceStorage(temp_workspace, "test-run")
         assert not storage.db_path.exists()
-        
+
         await storage.initialize()
         assert storage.db_path.exists()
-        
+
         await storage.close()
 
     @pytest.mark.asyncio
     async def test_execute_before_init_raises_error(self, temp_workspace) -> None:
         """Test that executing queries before initialization raises error."""
         storage = WorkspaceStorage(temp_workspace, "test-run")
-        
+
         with pytest.raises(RuntimeError, match="Database not initialized"):
             await storage._execute("SELECT 1")
 
@@ -77,14 +77,14 @@ class TestWorkspaceStorageRuns:
     async def test_start_run(self, storage) -> None:
         """Test starting a run."""
         await storage.start_run("scope-hash-123", {"key": "value"})
-        
+
         # Verify run was created
         cursor = await storage._execute(
             "SELECT * FROM runs WHERE run_id = ?",
             (storage.run_id,)
         )
         row = await fetch_one(storage, cursor)
-        
+
         assert row is not None
         assert row[0] == storage.run_id  # run_id
         assert row[3] == "running"  # status
@@ -95,14 +95,14 @@ class TestWorkspaceStorageRuns:
         """Test ending a run."""
         await storage.start_run("scope-hash")
         await storage.end_run("completed")
-        
+
         # Verify run was updated
         cursor = await storage._execute(
             "SELECT status, end_time FROM runs WHERE run_id = ?",
             (storage.run_id,)
         )
         row = await fetch_one(storage, cursor)
-        
+
         assert row is not None
         assert row[0] == "completed"  # status
         assert row[1] is not None  # end_time
@@ -112,13 +112,13 @@ class TestWorkspaceStorageRuns:
         """Test starting a run with metadata."""
         metadata = {"target": "example.com", "mode": "full"}
         await storage.start_run("hash", metadata)
-        
+
         cursor = await storage._execute(
             "SELECT metadata FROM runs WHERE run_id = ?",
             (storage.run_id,)
         )
         row = await fetch_one(storage, cursor)
-        
+
         stored_metadata = json.loads(row[0])
         assert stored_metadata == metadata
 
@@ -136,16 +136,16 @@ class TestWorkspaceStorageAssets:
             "technologies": ["nginx", "php"],
             "metadata": {"ip": "1.2.3.4"}
         }
-        
+
         await storage.save_asset(asset)
-        
+
         # Verify asset was saved
         cursor = await storage._execute(
             "SELECT * FROM assets WHERE id = ?",
             ("asset-1",)
         )
         row = await fetch_one(storage, cursor)
-        
+
         assert row is not None
         assert row[2] == "domain"  # type
         assert row[3] == "example.com"  # value
@@ -157,16 +157,16 @@ class TestWorkspaceStorageAssets:
             {"id": "asset-1", "type": "domain", "value": "example.com"},
             {"id": "asset-2", "type": "url", "value": "https://test.com"},
         ]
-        
+
         await storage.save_assets(assets)
-        
+
         # Verify both assets were saved
         cursor = await storage._execute(
             "SELECT COUNT(*) FROM assets WHERE run_id = ?",
             (storage.run_id,)
         )
         row = await fetch_one(storage, cursor)
-        
+
         assert row[0] == 2
 
     @pytest.mark.asyncio
@@ -179,9 +179,9 @@ class TestWorkspaceStorageAssets:
             "technologies": ["nginx"],
             "metadata": {"test": "data"}
         })
-        
+
         assets = await storage.get_assets()
-        
+
         assert len(assets) == 1
         assert assets[0]["id"] == "asset-1"
         assert assets[0]["type"] == "domain"
@@ -196,9 +196,9 @@ class TestWorkspaceStorageAssets:
             {"id": "asset-2", "type": "url", "value": "https://test.com"},
             {"id": "asset-3", "type": "domain", "value": "test.org"},
         ])
-        
+
         domains = await storage.get_assets(asset_type="domain")
-        
+
         assert len(domains) == 2
         assert all(a["type"] == "domain" for a in domains)
 
@@ -207,7 +207,7 @@ class TestWorkspaceStorageAssets:
         """Test saving asset with minimal required data."""
         asset = {"id": "minimal", "type": "test", "value": "value"}
         await storage.save_asset(asset)
-        
+
         assets = await storage.get_assets()
         assert len(assets) == 1
         assert assets[0]["id"] == "minimal"
@@ -230,16 +230,16 @@ class TestWorkspaceStorageHypotheses:
             "status": "pending",
             "result": {"test": "data"}
         }
-        
+
         await storage.save_hypothesis(hypothesis)
-        
+
         # Verify hypothesis was saved
         cursor = await storage._execute(
             "SELECT * FROM hypotheses WHERE id = ?",
             ("hyp-1",)
         )
         row = await fetch_one(storage, cursor)
-        
+
         assert row is not None
         assert row[3] == "sqli"  # vuln_type
         assert row[4] == 0.85  # confidence
@@ -254,9 +254,9 @@ class TestWorkspaceStorageHypotheses:
             "confidence": 0.7,
             "result": {"findings": [1, 2]}
         })
-        
+
         hypotheses = await storage.get_hypotheses()
-        
+
         assert len(hypotheses) == 1
         assert hypotheses[0]["id"] == "hyp-1"
         assert hypotheses[0]["vuln_type"] == "xss"
@@ -277,9 +277,9 @@ class TestWorkspaceStorageHypotheses:
             "vuln_type": "sqli",
             "status": "confirmed"
         })
-        
+
         pending = await storage.get_hypotheses(status="pending")
-        
+
         assert len(pending) == 1
         assert pending[0]["status"] == "pending"
 
@@ -291,10 +291,10 @@ class TestWorkspaceStorageHypotheses:
             "asset_id": "asset-1",
             "vuln_type": "test"
         }
-        
+
         await storage.save_hypothesis(hypothesis)
         hypotheses = await storage.get_hypotheses()
-        
+
         assert hypotheses[0]["confidence"] == 0.5
         assert hypotheses[0]["status"] == "pending"
         assert hypotheses[0]["result"] == {}
@@ -316,16 +316,16 @@ class TestWorkspaceStorageFindings:
             "description": "SQL injection in login form",
             "evidence": ["payload1", "payload2"]
         }
-        
+
         await storage.save_finding(finding)
-        
+
         # Verify finding was saved
         cursor = await storage._execute(
             "SELECT * FROM findings WHERE id = ?",
             ("finding-1",)
         )
         row = await fetch_one(storage, cursor)
-        
+
         assert row is not None
         assert row[2] == "SQL Injection"  # title
         assert row[3] == "critical"  # severity
@@ -340,9 +340,9 @@ class TestWorkspaceStorageFindings:
             "vuln_type": "xss",
             "evidence": ["test1", "test2"]
         })
-        
+
         findings = await storage.get_findings()
-        
+
         assert len(findings) == 1
         assert findings[0]["id"] == "finding-1"
         assert findings[0]["title"] == "XSS"
@@ -363,9 +363,9 @@ class TestWorkspaceStorageFindings:
             "severity": "low",
             "vuln_type": "test"
         })
-        
+
         critical = await storage.get_findings(severity="critical")
-        
+
         assert len(critical) == 1
         assert critical[0]["severity"] == "critical"
 
@@ -378,10 +378,10 @@ class TestWorkspaceStorageFindings:
             "severity": "low",
             "vuln_type": "test"
         }
-        
+
         await storage.save_finding(finding)
         findings = await storage.get_findings()
-        
+
         assert findings[0]["status"] == "potential"
         assert findings[0]["evidence"] == []
 
@@ -399,14 +399,14 @@ class TestWorkspaceStorageToolCalls:
             success=True,
             duration_ms=1234.5
         )
-        
+
         # Verify tool call was logged
         cursor = await storage._execute(
             "SELECT * FROM tool_calls WHERE run_id = ?",
             (storage.run_id,)
         )
         row = await fetch_one(storage, cursor)
-        
+
         assert row is not None
         assert row[2] == "nmap"  # tool
         assert row[3] == "scan"  # action
@@ -424,13 +424,13 @@ class TestWorkspaceStorageToolCalls:
             success=False,
             duration_ms=500.0
         )
-        
+
         cursor = await storage._execute(
             "SELECT success FROM tool_calls WHERE tool = ?",
             ("nuclei",)
         )
         row = await fetch_one(storage, cursor)
-        
+
         assert row[0] == 0  # success (False -> 0)
 
 
@@ -444,19 +444,19 @@ class TestWorkspaceStorageExport:
         await storage.save_asset({"id": "asset-1", "type": "domain", "value": "example.com"})
         await storage.save_hypothesis({"id": "hyp-1", "asset_id": "asset-1", "vuln_type": "xss"})
         await storage.save_finding({"id": "finding-1", "title": "Test", "severity": "low", "vuln_type": "test"})
-        
+
         # Export
         exports = await storage.export_to_json()
-        
+
         # Verify files were created
         assert "assets" in exports
         assert "hypotheses" in exports
         assert "findings" in exports
-        
+
         assert exports["assets"].exists()
         assert exports["hypotheses"].exists()
         assert exports["findings"].exists()
-        
+
         # Verify content
         with open(exports["assets"]) as f:
             assets = json.load(f)
@@ -467,9 +467,9 @@ class TestWorkspaceStorageExport:
     async def test_export_run(self, storage, temp_workspace) -> None:
         """Test exporting a complete run."""
         await storage.save_asset({"id": "asset-1", "type": "test", "value": "test"})
-        
+
         output_dir = await storage.export_run()
-        
+
         assert output_dir == temp_workspace
         assert (output_dir / "recon" / "assets.json").exists()
 
@@ -478,11 +478,11 @@ class TestWorkspaceStorageExport:
         """Test exporting to a custom directory."""
         custom_dir = temp_workspace / "custom_export"
         custom_dir.mkdir()
-        
+
         await storage.save_asset({"id": "asset-1", "type": "test", "value": "test"})
-        
+
         exports = await storage.export_to_json(output_dir=custom_dir)
-        
+
         assert exports["assets"].parent.parent == custom_dir
 
 
@@ -494,7 +494,7 @@ class TestWorkspaceStorageClose:
         """Test closing the database connection."""
         storage = WorkspaceStorage(temp_workspace, "test-run")
         await storage.initialize()
-        
+
         # Should not raise an error
         await storage.close()
 
@@ -502,6 +502,6 @@ class TestWorkspaceStorageClose:
     async def test_close_without_init(self, temp_workspace) -> None:
         """Test closing before initialization."""
         storage = WorkspaceStorage(temp_workspace, "test-run")
-        
+
         # Should not raise an error
         await storage.close()

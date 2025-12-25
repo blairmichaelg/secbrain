@@ -11,7 +11,7 @@ vulnerability detection and prioritization. It includes:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, ClassVar
 
 
 @dataclass
@@ -31,7 +31,7 @@ class ImmunefiIntelligence:
     """Intelligence database for Immunefi bug bounty programs."""
 
     # Based on Immunefi Vulnerability Severity Classification System V2.3
-    SEVERITY_CLASSIFICATION = {
+    SEVERITY_CLASSIFICATION: ClassVar[dict[str, Any]] = {
         "critical": {
             "smart_contract": [
                 "Direct theft of any user funds, whether at-rest or in-motion, other than unclaimed yield",

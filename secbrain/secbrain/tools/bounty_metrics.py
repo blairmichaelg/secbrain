@@ -144,7 +144,7 @@ class VulnerabilityPatternLearning:
 class BountyMetricsTracker:
     """
     Tracks and analyzes bug bounty hunting success metrics.
-    
+
     Features:
     - Submission tracking and outcome analysis
     - Program-specific metrics
@@ -345,7 +345,7 @@ class BountyMetricsTracker:
     ) -> dict[str, Any]:
         """
         Decide whether to submit based on learned patterns.
-        
+
         Returns recommendation with reasoning.
         """
         pattern = self.get_pattern_learning(vulnerability_type)

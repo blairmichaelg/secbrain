@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
 
 class OraclePattern(Enum):
@@ -16,7 +16,7 @@ class OraclePattern(Enum):
 class OracleManipulationDetector:
     """Detect price oracle dependencies and craft exploitation stubs."""
 
-    ORACLE_FUNCTION_PATTERNS = {
+    ORACLE_FUNCTION_PATTERNS: ClassVar[dict[str, list[str]]] = {
         "getPrice": ["uniswapv3", "twap", "getprice"],
         "latestRoundData": ["chainlink", "aggregator", "rounddata"],
         "consult": ["uniswap", "oracle", "reserve", "consult"],

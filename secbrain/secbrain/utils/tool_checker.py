@@ -191,20 +191,19 @@ Verify installation:
         self._cache[tool_name] = status
 
         # Log if tool is missing
-        if not status.available:
-            if self.logger:
-                if required:
-                    self.logger.warning(
-                        "tool_missing",
-                        tool=tool_name,
-                        required=True,
-                    )
-                else:
-                    self.logger.info(
-                        "tool_unavailable",
-                        tool=tool_name,
-                        required=False,
-                    )
+        if not status.available and self.logger:
+            if required:
+                self.logger.warning(
+                    "tool_missing",
+                    tool=tool_name,
+                    required=True,
+                )
+            else:
+                self.logger.info(
+                    "tool_unavailable",
+                    tool=tool_name,
+                    required=False,
+                )
 
         return status
 

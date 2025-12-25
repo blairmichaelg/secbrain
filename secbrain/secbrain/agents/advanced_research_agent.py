@@ -53,7 +53,7 @@ class ResearchFinding:
 class AdvancedResearchAgent:
     """
     Agent for advanced vulnerability research and discovery.
-    
+
     Capabilities:
     - Analyzes cutting-edge research papers and disclosures
     - Identifies emerging vulnerability patterns
@@ -77,10 +77,10 @@ class AdvancedResearchAgent:
     ) -> list[ResearchFinding]:
         """
         Research emerging vulnerability patterns from recent exploits.
-        
+
         Args:
             timeframe_days: How many days back to look for patterns
-            
+
         Returns:
             List of research findings about emerging patterns
         """
@@ -95,7 +95,7 @@ class AdvancedResearchAgent:
         3. Vulnerabilities with public exploits or PoCs
         4. Cross-chain or bridge-related issues
         5. Account abstraction and intent-based protocol issues
-        
+
         For each vulnerability, provide:
         - Attack vector and technique
         - Affected protocols
@@ -126,7 +126,7 @@ class AdvancedResearchAgent:
 
                 logger.info(f"Found {len(findings)} emerging patterns")
             except Exception as e:
-                logger.error(f"Research failed: {e}")
+                logger.exception(f"Research failed: {e}")
         else:
             # Dry-run or no client - return curated findings
             findings.extend(self._get_curated_emerging_patterns())
@@ -335,11 +335,11 @@ class AdvancedResearchAgent:
     ) -> list[ResearchFinding]:
         """
         Conduct protocol-specific vulnerability research.
-        
+
         Args:
             protocol_name: Name of the protocol to research
             blockchain: Blockchain the protocol runs on
-            
+
         Returns:
             List of protocol-specific findings
         """
@@ -353,7 +353,7 @@ class AdvancedResearchAgent:
         3. Integration risks with other protocols
         4. Unique features that could be exploited
         5. Similar protocols that have been exploited
-        
+
         Provide specific attack vectors and exploitation techniques.
         """
 
@@ -376,7 +376,7 @@ class AdvancedResearchAgent:
                     references=result.get("sources", []),
                 ))
             except Exception as e:
-                logger.error(f"Protocol research failed: {e}")
+                logger.exception(f"Protocol research failed: {e}")
 
         self.findings.extend(findings)
         return findings
@@ -387,10 +387,10 @@ class AdvancedResearchAgent:
     ) -> list[ResearchFinding]:
         """
         Identify vulnerabilities arising from cross-protocol interactions.
-        
+
         Args:
             protocols: List of protocol names to analyze
-            
+
         Returns:
             Cross-protocol vulnerability findings
         """
@@ -408,7 +408,7 @@ class AdvancedResearchAgent:
         3. Shared infrastructure weaknesses
         4. Cross-protocol arbitrage attacks
         5. Integration vulnerability amplification
-        
+
         Identify attack chains that exploit multiple protocols together.
         """
 
@@ -431,7 +431,7 @@ class AdvancedResearchAgent:
                     references=result.get("sources", []),
                 ))
             except Exception as e:
-                logger.error(f"Cross-protocol research failed: {e}")
+                logger.exception(f"Cross-protocol research failed: {e}")
         else:
             # Provide curated cross-protocol risk pattern
             findings.append(ResearchFinding(
@@ -463,11 +463,11 @@ class AdvancedResearchAgent:
     ) -> list[dict[str, Any]]:
         """
         Generate novel vulnerability hypotheses using AI reasoning.
-        
+
         Args:
             target_contracts: List of contract names/addresses
             context: Additional context about the target
-            
+
         Returns:
             List of novel vulnerability hypotheses
         """

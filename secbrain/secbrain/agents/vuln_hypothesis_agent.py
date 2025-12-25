@@ -1518,7 +1518,7 @@ Respond with JSON:
     ) -> list[dict[str, Any]]:
         """
         Generate generic fallback hypotheses when no hypotheses were generated.
-        
+
         This ensures the workflow can continue even when LLM/research calls fail,
         by creating basic hypotheses from contract metadata.
         """

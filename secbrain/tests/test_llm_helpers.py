@@ -41,9 +41,9 @@ class TestExtractJsonFromResponse:
     def test_extract_with_extra_whitespace(self) -> None:
         """Test extracting JSON with extra whitespace."""
         response = """
-        
+
         {"key": "value"}
-        
+
         """
         result = extract_json_from_response(response)
         assert result == {"key": "value"}

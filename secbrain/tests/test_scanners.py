@@ -127,7 +127,7 @@ async def test_nuclei_preconditions_approval_auto_approved():
     scanner = NucleiScanner(run_context)
 
     result = await scanner.scan(targets=["example.com"])
-    
+
     # Should pass approval check, but may fail on nuclei not found
     assert result.scanner == "nuclei"
     if not result.success:
@@ -144,7 +144,7 @@ async def test_nuclei_preconditions_dry_run():
     scanner = NucleiScanner(run_context)
 
     result = await scanner.scan(targets=["example.com"])
-    
+
     # Dry run should bypass approval, but may fail on nuclei not found
     assert result.scanner == "nuclei"
     if not result.success:

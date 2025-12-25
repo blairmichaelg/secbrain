@@ -118,7 +118,7 @@ class ImmunefiTrend:
 class ImmunefiClient:
     """
     Client for interacting with Immunefi platform intelligence.
-    
+
     Features:
     - Live program data fetching (web scraping/API)
     - Trending vulnerability tracking
@@ -162,10 +162,10 @@ class ImmunefiClient:
     ) -> list[ImmunefiProgram]:
         """
         Get all active Immunefi programs.
-        
+
         Args:
             refresh: Force refresh even if cache is valid
-            
+
         Returns:
             List of active programs
         """
@@ -197,7 +197,7 @@ class ImmunefiClient:
         # This would be replaced with real API calls in production
         # Note: Using recent dates for recency scoring in priority algorithm
 
-        programs = [
+        return [
             ImmunefiProgram(
                 id="wormhole",
                 name="Wormhole",
@@ -311,7 +311,6 @@ class ImmunefiClient:
             ),
         ]
 
-        return programs
 
     async def get_program_by_id(self, program_id: str) -> ImmunefiProgram | None:
         """Get a specific program by ID."""
@@ -325,11 +324,11 @@ class ImmunefiClient:
     ) -> list[ImmunefiProgram]:
         """
         Get high-value programs above a bounty threshold.
-        
+
         Args:
             min_bounty: Minimum max bounty amount
             limit: Maximum number of programs to return
-            
+
         Returns:
             List of high-value programs, sorted by priority
         """
@@ -357,17 +356,17 @@ class ImmunefiClient:
     ) -> list[ImmunefiTrend]:
         """
         Get trending vulnerability types on Immunefi.
-        
+
         Args:
             days: Number of days to look back
-            
+
         Returns:
             List of trending vulnerabilities
         """
         # In production, this would analyze recent submissions
         # For now, return known high-impact patterns from 2024
 
-        trends = [
+        return [
             ImmunefiTrend(
                 vulnerability_type="Intent-Based Protocol Exploits",
                 occurrences=8,
@@ -442,7 +441,6 @@ class ImmunefiClient:
             ),
         ]
 
-        return trends
 
     async def get_program_intelligence(
         self,
@@ -450,7 +448,7 @@ class ImmunefiClient:
     ) -> dict[str, Any]:
         """
         Get comprehensive intelligence for a specific program.
-        
+
         Returns insights including:
         - Program details and rewards
         - Historical submission patterns
@@ -537,11 +535,11 @@ async def get_immunefi_intelligence(
 ) -> dict[str, Any]:
     """
     Quick access to Immunefi intelligence.
-    
+
     Args:
         program_id: Specific program to analyze (optional)
         min_bounty: Minimum bounty for high-value programs
-        
+
     Returns:
         Intelligence data including programs and trends
     """

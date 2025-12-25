@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class EnhancedBountyWorkflow:
     """
     Enhanced workflow for bug bounty hunting with cutting-edge research.
-    
+
     Workflow stages:
     1. Target Selection - Use Immunefi data to prioritize high-value programs
     2. Intelligence Gathering - Collect platform and research intelligence
@@ -41,11 +41,11 @@ class EnhancedBountyWorkflow:
     ) -> list[dict[str, Any]]:
         """
         Select high-value targets from Immunefi platform.
-        
+
         Args:
             min_bounty: Minimum bounty amount to consider
             limit: Max number of targets to return
-            
+
         Returns:
             List of prioritized targets with intelligence
         """
@@ -87,10 +87,10 @@ class EnhancedBountyWorkflow:
     ) -> dict[str, Any]:
         """
         Gather comprehensive intelligence for a target program.
-        
+
         Args:
             target_program: Program ID or name
-            
+
         Returns:
             Intelligence package with all relevant data
         """
@@ -140,11 +140,11 @@ class EnhancedBountyWorkflow:
     ) -> dict[str, Any]:
         """
         Conduct advanced vulnerability research.
-        
+
         Args:
             target_contracts: List of contracts to analyze
             protocol_name: Protocol name for context
-            
+
         Returns:
             Research findings and novel hypotheses
         """
@@ -207,11 +207,11 @@ class EnhancedBountyWorkflow:
     ) -> list[dict[str, Any]]:
         """
         Optimize hypotheses using historical success metrics.
-        
+
         Args:
             hypotheses: List of vulnerability hypotheses
             metrics_dir: Directory with metrics data
-            
+
         Returns:
             Optimized and prioritized hypotheses
         """
@@ -271,11 +271,11 @@ class EnhancedBountyWorkflow:
     ) -> dict[str, Any]:
         """
         Run complete enhanced bounty workflow.
-        
+
         Args:
             target_program: Specific program to analyze (optional)
             min_bounty: Minimum bounty for auto-target selection
-            
+
         Returns:
             Complete analysis results
         """
@@ -385,12 +385,12 @@ async def run_enhanced_bounty_hunt(
 ) -> dict[str, Any]:
     """
     Convenience function to run enhanced bounty workflow.
-    
+
     Args:
         run_context: Run context with configuration
         target_program: Specific program to analyze (optional)
         min_bounty: Minimum bounty for target selection
-        
+
     Returns:
         Complete analysis results
     """

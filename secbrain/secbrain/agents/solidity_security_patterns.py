@@ -571,9 +571,9 @@ contract Secure {
 contract SecureBridge {
     mapping(bytes32 => bool) public processedMessages;
     mapping(address => bool) public trustedRelayers;
-    
+
     event MessageProcessed(bytes32 indexed messageHash);
-    
+
     function processMessage(
         bytes memory message,
         bytes[] memory signatures,
@@ -582,25 +582,25 @@ contract SecureBridge {
         // Prevent replay attacks
         bytes32 messageHash = keccak256(abi.encodePacked(message, nonce, block.chainid));
         require(!processedMessages[messageHash], "Message already processed");
-        
+
         // Verify signatures from trusted relayers
         require(signatures.length >= 3, "Need at least 3 signatures");
-        
+
         address[] memory signers = new address[](signatures.length);
         mapping(address => bool) seenSigners;
         for (uint256 i = 0; i < signatures.length; i++) {
             address signer = ECDSA.recover(messageHash, signatures[i]);
             require(trustedRelayers[signer], "Invalid signer");
-            
+
             // Prevent duplicate signers with O(1) lookup
             require(!seenSigners[signer], "Duplicate signer");
             seenSigners[signer] = true;
             signers[i] = signer;
         }
-        
+
         processedMessages[messageHash] = true;
         emit MessageProcessed(messageHash);
-        
+
         // Process message...
     }
 }
@@ -627,25 +627,25 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 contract SecureBridge {
     bytes32 public merkleRoot;
     mapping(bytes32 => bool) public claimedLeaves;
-    
+
     function claimWithProof(
         bytes32 leaf,
         bytes32[] calldata proof
     ) external {
         // Prevent double-claiming
         require(!claimedLeaves[leaf], "Already claimed");
-        
+
         // Verify proof
         require(
             MerkleProof.verify(proof, merkleRoot, leaf),
             "Invalid Merkle proof"
         );
-        
+
         claimedLeaves[leaf] = true;
-        
+
         // Process claim...
     }
-    
+
     // Admin function with timelock
     function updateMerkleRoot(bytes32 newRoot) external onlyRole(ADMIN_ROLE) {
         require(newRoot != bytes32(0), "Invalid root");
@@ -674,9 +674,9 @@ contract SecureBridge {
 contract SecureBitcoinBridge {
     uint256 public constant MIN_CONFIRMATIONS = 6;
     uint256 public constant DIFFICULTY_ADJUSTMENT_INTERVAL = 2016;
-    
+
     mapping(bytes32 => bool) public verifiedTransactions;
-    
+
     function verifyTransaction(
         bytes memory txBytes,
         bytes memory merkleProof,
@@ -686,31 +686,31 @@ contract SecureBitcoinBridge {
         // Extract transaction hash
         bytes32 txHash = sha256(abi.encodePacked(sha256(txBytes)));
         require(!verifiedTransactions[txHash], "Transaction already verified");
-        
+
         // Verify Merkle proof
         bytes32 merkleRoot = extractMerkleRoot(blockHeader);
         require(verifyMerkleProof(txHash, merkleProof, merkleRoot), "Invalid Merkle proof");
-        
+
         // Verify block header
         require(verifyBlockHeader(blockHeader, blockHeight), "Invalid block header");
-        
+
         // Require minimum confirmations
         require(
             getCurrentBlockHeight() >= blockHeight + MIN_CONFIRMATIONS,
             "Insufficient confirmations"
         );
-        
+
         verifiedTransactions[txHash] = true;
-        
+
         // Process verified transaction...
     }
-    
+
     function verifyBlockHeader(bytes memory header, uint256 height) internal view returns (bool) {
         // Verify proof of work
         bytes32 headerHash = sha256(abi.encodePacked(sha256(header)));
         uint256 target = extractTarget(header);
         require(uint256(headerHash) < target, "Invalid proof of work");
-        
+
         // Additional checks: difficulty adjustment, timestamp, etc.
         return true;
     }
@@ -735,7 +735,7 @@ contract SecureBitcoinBridge {
 contract SecureBridge {
     mapping(bytes32 => bool) public processedMessages;
     uint256 public nonce;
-    
+
     function processMessage(
         bytes memory message,
         uint256 messageNonce,
@@ -752,17 +752,17 @@ contract SecureBridge {
                 address(this)   // Contract address
             )
         );
-        
+
         require(!processedMessages[messageHash], "Message already processed");
         require(messageNonce == nonce + 1, "Invalid nonce");
-        
+
         // Verify signature
         address signer = ECDSA.recover(messageHash, signature);
         require(trustedRelayer[signer], "Unauthorized signer");
-        
+
         processedMessages[messageHash] = true;
         nonce = messageNonce;
-        
+
         // Process message...
     }
 }
@@ -794,17 +794,17 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 contract SecureGovernor is Governor, GovernorVotes {
     uint256 public constant VOTING_DELAY = 1 days;  // Delay before voting starts
     uint256 public constant VOTING_PERIOD = 3 days;  // Voting duration
-    
+
     constructor(IVotes _token) Governor("SecureDAO") GovernorVotes(_token) {}
-    
+
     function votingDelay() public pure override returns (uint256) {
         return VOTING_DELAY;  // Prevents flash loan attacks
     }
-    
+
     function votingPeriod() public pure override returns (uint256) {
         return VOTING_PERIOD;
     }
-    
+
     // Use snapshot-based voting (voting power at proposal creation)
     function _getVotes(
         address account,
@@ -837,7 +837,7 @@ import "@openzeppelin/contracts/governance/TimelockController.sol";
 contract SecureDAO {
     TimelockController public timelock;
     uint256 public constant MIN_DELAY = 2 days;
-    
+
     constructor(address[] memory proposers, address[] memory executors) {
         timelock = new TimelockController(
             MIN_DELAY,
@@ -846,7 +846,7 @@ contract SecureDAO {
             address(this)  // Admin (can change roles)
         );
     }
-    
+
     function executeProposal(
         address target,
         uint256 value,
@@ -857,7 +857,7 @@ contract SecureDAO {
         // Must be scheduled first with MIN_DELAY
         timelock.execute(target, value, data, predecessor, salt);
     }
-    
+
     function scheduleProposal(
         address target,
         uint256 value,
@@ -892,15 +892,15 @@ import "@openzeppelin/contracts/governance/Governor.sol";
 contract SecureGovernor is Governor {
     uint256 public constant QUORUM_PERCENTAGE = 4;  // 4% of total supply
     uint256 public constant MIN_QUORUM_VOTES = 1_000_000e18;  // Minimum absolute quorum
-    
+
     function quorum(uint256 blockNumber) public view override returns (uint256) {
         uint256 totalSupply = token.getPastTotalSupply(blockNumber);
         uint256 percentageQuorum = (totalSupply * QUORUM_PERCENTAGE) / 100;
-        
+
         // Use the higher of percentage-based or absolute minimum
         return percentageQuorum > MIN_QUORUM_VOTES ? percentageQuorum : MIN_QUORUM_VOTES;
     }
-    
+
     // Additional: Prevent quorum manipulation via supply changes
     function propose(
         address[] memory targets,
@@ -914,7 +914,7 @@ contract SecureGovernor is Governor {
             proposerVotes >= proposalThreshold(),
             "Proposer votes below threshold"
         );
-        
+
         return super.propose(targets, values, calldatas, description);
     }
 }
@@ -940,16 +940,16 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 contract SecureGovernanceToken is ERC20Votes {
     // Minimum delegation period before votes become active
     uint256 public constant DELEGATION_DELAY = 1 days;
-    
+
     mapping(address => uint256) public delegationTimestamp;
-    
+
     constructor() ERC20("SecureDAO", "SDAO") ERC20Permit("SecureDAO") {}
-    
+
     function delegate(address delegatee) public override {
         super.delegate(delegatee);
         delegationTimestamp[msg.sender] = block.timestamp;
     }
-    
+
     function delegateBySig(
         address delegatee,
         uint256 nonce,
@@ -961,7 +961,7 @@ contract SecureGovernanceToken is ERC20Votes {
         super.delegateBySig(delegatee, nonce, expiry, v, r, s);
         delegationTimestamp[_msgSender()] = block.timestamp;
     }
-    
+
     // Override to enforce delegation delay
     function _getVotes(
         address account,

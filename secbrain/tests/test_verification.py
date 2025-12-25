@@ -199,13 +199,13 @@ class TestReflectedXSSVerifier:
             {"contains_payload": False, "response_snippet": "normal response"},
             {"contains_payload": False, "response_snippet": "another response"},
         ]
-        
+
         result = verifier.verify(
             vuln_type="xss",
             target="https://example.com",
             results=results
         )
-        
+
         assert result.success is False
         assert result.confidence == 0.1
         assert "No reflected payload observed" in result.reason
@@ -224,13 +224,13 @@ class TestReflectedXSSVerifier:
         "response_snippet": "Found: <script>alert(1)</script>"
             }
         ]
-        
+
         result = verifier.verify(
             vuln_type="reflected_xss",
             target="https://example.com/search",
             results=results
         )
-        
+
         assert result.success is True
         assert result.confidence == 0.75
         assert "Payload reflected" in result.reason
@@ -276,13 +276,13 @@ class TestReflectedXSSVerifier:
         "response_snippet": "Test 4"
             }
         ]
-        
+
         result = verifier.verify(
             vuln_type="xss",
             target="https://test.com",
             results=results
         )
-        
+
         assert result.success is True
         # Should only include first 3 observations
         assert len(result.evidence.observations) == 3
@@ -300,13 +300,13 @@ class TestReflectedXSSVerifier:
         "response_snippet": "test response"
             }
         ]
-        
+
         result = verifier.verify(
             vuln_type="xss",
             target="https://test.com",
             results=results
         )
-        
+
         obs = result.evidence.observations[0]
         assert "payload" in obs
         assert "status_code" in obs
@@ -322,7 +322,7 @@ class TestReflectedXSSVerifier:
             target="https://test.com",
             results=[]
         )
-        
+
         assert result.success is False
         assert result.confidence == 0.1
 
@@ -346,13 +346,13 @@ class TestBasicSQLiVerifier:
         "duration_ms": 100
             }
         ]
-        
+
         result = verifier.verify(
             vuln_type="sqli",
             target="https://example.com/login",
             results=results
         )
-        
+
         assert result.success is False
         assert result.confidence == 0.1
         assert "No SQL error patterns" in result.reason
@@ -370,13 +370,13 @@ class TestBasicSQLiVerifier:
         "duration_ms": 150
             }
         ]
-        
+
         result = verifier.verify(
             vuln_type="sqli",
             target="https://example.com/api",
             results=results
         )
-        
+
         assert result.success is True
         assert result.confidence == 0.65  # Higher confidence for error signature
         assert "SQLi signal detected" in result.reason
@@ -395,13 +395,13 @@ class TestBasicSQLiVerifier:
         "duration_ms": 120
             }
         ]
-        
+
         result = verifier.verify(
             vuln_type="sqli",
             target="https://test.com",
             results=results
         )
-        
+
         assert result.success is True
         assert result.evidence.observations[0]["match"] == "db_error_signature"
 
@@ -416,13 +416,13 @@ class TestBasicSQLiVerifier:
         "duration_ms": 5200
             }
         ]
-        
+
         result = verifier.verify(
             vuln_type="sqli",
             target="https://test.com",
             results=results
         )
-        
+
         assert result.success is True
         assert result.confidence == 0.55  # Lower confidence for time delay
         assert result.evidence.observations[0]["match"] == "time_delay"
@@ -438,13 +438,13 @@ class TestBasicSQLiVerifier:
         "duration_ms": 5100
             }
         ]
-        
+
         result = verifier.verify(
             vuln_type="sqli",
             target="https://test.com",
             results=results
         )
-        
+
         assert result.success is True
         assert result.evidence.observations[0]["match"] == "time_delay"
 
@@ -471,13 +471,13 @@ class TestBasicSQLiVerifier:
         "duration_ms": 105
             }
         ]
-        
+
         result = verifier.verify(
             vuln_type="sqli",
             target="https://test.com",
             results=results
         )
-        
+
         assert result.success is True
         assert result.confidence == 0.65
         assert len(result.evidence.observations) == 3
@@ -494,13 +494,13 @@ class TestBasicSQLiVerifier:
             }
             for i in range(10)
         ]
-        
+
         result = verifier.verify(
             vuln_type="sqli",
             target="https://test.com",
             results=results
         )
-        
+
         assert result.success is True
         # Should be limited to 5 observations
         assert len(result.evidence.observations) <= 5
@@ -516,13 +516,13 @@ class TestBasicSQLiVerifier:
         "duration_ms": 100
             }
         ]
-        
+
         result = verifier.verify(
             vuln_type="sqli",
             target="https://test.com",
             results=results
         )
-        
+
         assert result.success is True
 
     def test_verify_time_delay_insufficient(self) -> None:
@@ -536,13 +536,13 @@ class TestBasicSQLiVerifier:
         "duration_ms": 500  # Less than 4000ms threshold
             }
         ]
-        
+
         result = verifier.verify(
             vuln_type="sqli",
             target="https://test.com",
             results=results
         )
-        
+
         assert result.success is False
 
 
@@ -558,7 +558,7 @@ class TestGetDefaultVerifier:
         """Test XSS verifier retrieval is case insensitive."""
         verifier = get_default_verifier("XSS")
         assert isinstance(verifier, ReflectedXSSVerifier)
-        
+
         verifier = get_default_verifier("reflected_xss")
         assert isinstance(verifier, ReflectedXSSVerifier)
 

@@ -321,7 +321,7 @@ async def test_vulnerability_type_extraction():
     assert len(enhanced) == 2
     reentrancy_hyp = next((h for h in enhanced if h["vuln_type"] == "reentrancy"), None)
     oracle_hyp = next((h for h in enhanced if h["vuln_type"] == "oracle"), None)
-    
+
     assert reentrancy_hyp is not None
     assert oracle_hyp is not None
     # At least one should have research validation
@@ -337,7 +337,7 @@ async def test_pattern_extraction_from_research():
     enhancer = HypothesisEnhancer(orch)
 
     research_text = "The contract should validate user inputs. Common attack: flash loan manipulation."
-    
+
     # Test through public API (generate_targeted_llm_prompt uses _extract_patterns_from_research internally)
     prompt = await enhancer.generate_targeted_llm_prompt(
         contract_metadata={
