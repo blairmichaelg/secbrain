@@ -164,14 +164,14 @@ jobs:
             ECHIDNA_CONFIG="../../echidna.yaml"
           else
             # Create basic echidna config
-            cat > echidna-config.yaml << 'ECHIDNA_EOF'
-testLimit: 50000
-testMode: assertion
-coverage: true
-corpusDir: corpus
-timeout: 600
-shrinkLimit: 5000
-ECHIDNA_EOF
+            cat > echidna-config.yaml << 'EOL'
+          testLimit: 50000
+          testMode: assertion
+          coverage: true
+          corpusDir: corpus
+          timeout: 600
+          shrinkLimit: 5000
+          EOL
             ECHIDNA_CONFIG="echidna-config.yaml"
           fi
           
@@ -369,12 +369,11 @@ ECHIDNA_EOF
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Foundry bounty hunt results - ${{ steps.validate.outputs.target_name }} - ${{ steps.results.outputs.timestamp }}
-
-Fuzz failures: ${{ steps.analyze.outputs.fuzz_failures }}
-Invariant failures: ${{ steps.analyze.outputs.invariant_failures }}
-Slither issues: ${{ steps.analyze.outputs.slither_issues }}
-Total issues: ${{ steps.analyze.outputs.total_issues }}"
+            git commit -m "Foundry bounty hunt results - ${{ steps.validate.outputs.target_name }} - ${{ steps.results.outputs.timestamp }}" \
+                       -m "Fuzz failures: ${{ steps.analyze.outputs.fuzz_failures }}" \
+                       -m "Invariant failures: ${{ steps.analyze.outputs.invariant_failures }}" \
+                       -m "Slither issues: ${{ steps.analyze.outputs.slither_issues }}" \
+                       -m "Total issues: ${{ steps.analyze.outputs.total_issues }}"
             
             git push origin HEAD:main || echo "::warning::Failed to push to main"
           fi
@@ -383,7 +382,7 @@ Total issues: ${{ steps.analyze.outputs.total_issues }}"
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: foundry-bounty-results-${{ steps.validate.outputs.target_name }}-${{ steps.results.outputs.timestamp }}
+          name: foundry-bounty-results
           path: ${{ steps.results.outputs.results_dir }}
           retention-days: 90
 

@@ -295,13 +295,12 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Threshold Network bounty hunt results - ${{ steps.workspace.outputs.timestamp }}
-
-Run ID: ${{ steps.run_secbrain.outputs.run_id }}
-Findings: ${{ steps.run_secbrain.outputs.findings_count }}
-Reports: ${{ steps.run_secbrain.outputs.reports_generated }}
-Duration: ${{ steps.run_secbrain.outputs.duration }}s
-Mode: ${{ inputs.run_mode || 'full' }}"
+            git commit -m "Threshold Network bounty hunt results - ${{ steps.workspace.outputs.timestamp }}" \
+                       -m "Run ID: ${{ steps.run_secbrain.outputs.run_id }}" \
+                       -m "Findings: ${{ steps.run_secbrain.outputs.findings_count }}" \
+                       -m "Reports: ${{ steps.run_secbrain.outputs.reports_generated }}" \
+                       -m "Duration: ${{ steps.run_secbrain.outputs.duration }}s" \
+                       -m "Mode: ${{ inputs.run_mode || 'full' }}"
             
             git push origin HEAD:main || echo "::warning::Failed to push to main branch"
           fi
@@ -310,7 +309,7 @@ Mode: ${{ inputs.run_mode || 'full' }}"
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: threshold-bounty-workspace-${{ steps.workspace.outputs.timestamp }}
+          name: threshold-bounty-workspace
           path: ${{ steps.workspace.outputs.workspace_path }}
           retention-days: 90
 
