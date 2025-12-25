@@ -153,6 +153,9 @@ class HypothesisEnhancer:
             vuln_type = hyp.get("vuln_type", "")
             function_name = hyp.get("function_signature", "").split("(")[0]
 
+            # Track if we found a pattern match
+            pattern_matched = False
+
             # Check if vulnerability matches known Immunefi patterns
             for pattern in immunefi_patterns:
                 if any(p in vuln_type for p in pattern.common_patterns):
@@ -162,13 +165,15 @@ class HypothesisEnhancer:
                     hyp["recent_examples"] = pattern.recent_examples[:2]
                     # Boost confidence for well-known patterns
                     hyp["confidence"] = min(hyp.get("confidence", 0.5) * 1.2, 0.95)
+                    pattern_matched = True
                     break
 
             # Add detection priority based on contract and function
             priority = ImmunefiIntelligence.get_detection_priority(contract_name, function_name)
             hyp["detection_priority"] = priority
-            if priority >= 8:
-                # Boost confidence for high-priority targets
+            # Only boost confidence for high-priority targets if we also have a pattern match
+            if priority >= 8 and pattern_matched:
+                # Additional boost for high-priority targets with known patterns
                 hyp["confidence"] = min(hyp.get("confidence", 0.5) * 1.15, 0.95)
 
         return hypotheses

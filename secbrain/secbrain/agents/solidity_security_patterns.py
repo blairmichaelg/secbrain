@@ -929,7 +929,7 @@ contract SecureGovernor is Governor {
             description="Delegation attack allowing unauthorized voting power transfer",
             detection_heuristics=[
                 "delegate",
-                "delegateBySig",
+                "delegatebysig",
                 "voting power",
                 "transfer votes",
             ],
