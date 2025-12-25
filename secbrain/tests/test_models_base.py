@@ -2,7 +2,7 @@
 
 import pytest
 
-from secbrain.models.base import ModelClient, ModelResponse
+from secbrain.models.base import DryRunModelClient, ModelClient, ModelResponse
 
 
 class TestModelResponse:
@@ -156,3 +156,139 @@ class TestModelClient:
         # Test generate_structured
         result = await client.generate_structured("Test", {"type": "object"})
         assert result == {"result": "structured output"}
+
+
+class TestDryRunModelClient:
+    """Test DryRunModelClient for dry-run mode."""
+
+    def test_initialization_default(self):
+        """Test DryRunModelClient initialization with defaults."""
+        client = DryRunModelClient()
+        assert client.model == "dry-run"
+        assert client.config == {}
+
+    def test_initialization_custom_model(self):
+        """Test DryRunModelClient initialization with custom model name."""
+        client = DryRunModelClient(model="dry-run-test", api_key="fake")
+        assert client.model == "dry-run-test"
+        assert client.config == {"api_key": "fake"}
+
+    def test_get_model_name(self):
+        """Test getting model name."""
+        client = DryRunModelClient(model="test-dry-run")
+        assert client.get_model_name() == "test-dry-run"
+
+    @pytest.mark.asyncio
+    async def test_generate_basic(self):
+        """Test generate method returns mock response."""
+        client = DryRunModelClient()
+        response = await client.generate("Test prompt")
+
+        assert isinstance(response, ModelResponse)
+        assert response.model == "dry-run"
+        assert "[DRY-RUN]" in response.content
+        assert "Test prompt" in response.content
+        assert response.finish_reason == "stop"
+        assert response.prompt_tokens > 0
+        assert response.completion_tokens == 50
+        assert response.total_tokens > 0
+
+    @pytest.mark.asyncio
+    async def test_generate_with_system_prompt(self):
+        """Test generate with system prompt."""
+        client = DryRunModelClient()
+        response = await client.generate(
+            "User prompt",
+            system="System instructions",
+            temperature=0.9,
+            max_tokens=1000,
+        )
+
+        assert isinstance(response, ModelResponse)
+        assert "[DRY-RUN]" in response.content
+        assert "User prompt" in response.content
+
+    @pytest.mark.asyncio
+    async def test_generate_long_prompt(self):
+        """Test generate with long prompt (truncated in response)."""
+        client = DryRunModelClient()
+        long_prompt = "A" * 200
+        response = await client.generate(long_prompt)
+
+        assert "[DRY-RUN]" in response.content
+        # Content should include truncated prompt
+        assert len(response.content) < len(long_prompt) + 50
+
+    @pytest.mark.asyncio
+    async def test_generate_structured_string_properties(self):
+        """Test generate_structured with string properties."""
+        client = DryRunModelClient()
+        schema = {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "description": {"type": "string"},
+            },
+        }
+
+        result = await client.generate_structured("Test prompt", schema)
+
+        assert isinstance(result, dict)
+        assert "name" in result
+        assert "description" in result
+        assert result["name"] == "[DRY-RUN] name"
+        assert result["description"] == "[DRY-RUN] description"
+
+    @pytest.mark.asyncio
+    async def test_generate_structured_various_types(self):
+        """Test generate_structured with various property types."""
+        client = DryRunModelClient()
+        schema = {
+            "type": "object",
+            "properties": {
+                "text": {"type": "string"},
+                "count": {"type": "integer"},
+                "score": {"type": "number"},
+                "active": {"type": "boolean"},
+                "items": {"type": "array"},
+                "metadata": {"type": "object"},
+            },
+        }
+
+        result = await client.generate_structured("Test", schema)
+
+        assert result["text"] == "[DRY-RUN] text"
+        assert result["count"] == 0
+        assert result["score"] == 0.0
+        assert result["active"] is False
+        assert result["items"] == []
+        assert result["metadata"] == {}
+
+    @pytest.mark.asyncio
+    async def test_generate_structured_no_properties(self):
+        """Test generate_structured with schema without properties."""
+        client = DryRunModelClient()
+        schema = {"type": "object"}
+
+        result = await client.generate_structured("Test", schema)
+
+        assert isinstance(result, dict)
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_generate_structured_with_system(self):
+        """Test generate_structured with system prompt."""
+        client = DryRunModelClient()
+        schema = {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+            },
+        }
+
+        result = await client.generate_structured(
+            "Test", schema, system="System instructions"
+        )
+
+        assert "status" in result
+        assert result["status"] == "[DRY-RUN] status"
