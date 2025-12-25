@@ -42,6 +42,7 @@ class ProtocolProfile:
             "flash_loan_drainage",
             "oracle_manipulation",
             "fee_extraction",
+            "restaking_share_inflation",
         ],
         "amm": [
             "sandwich_attack",
@@ -49,6 +50,9 @@ class ProtocolProfile:
             "slippage_extraction",
             "flash_loan_arbitrage",
             "pool_balance_manipulation",
+            "intent_front_running",
+            "solver_collusion",
+            "dutch_auction_manipulation",
         ],
         "lending": [
             "collateral_extraction",
@@ -72,6 +76,8 @@ class ProtocolProfile:
             "redemption_proof_forgery",
             "cross_chain_message_forgery",
             "relay_message_manipulation",
+            "zk_proof_verification_flaw",
+            "optimistic_challenge_bypass",
         ],
         "threshold_network": [
             "bitcoin_peg_manipulation",
@@ -83,6 +89,17 @@ class ProtocolProfile:
             "staking_reward_manipulation",
             "governance_vote_buying",
             "proxy_upgrade_exploit",
+            "zk_proof_verification_flaw",
+            "optimistic_challenge_bypass",
+            "mev_extraction_vulnerability",
+            "withdrawal_queue_manipulation",
+            "slashing_mechanism_bypass",
+        ],
+        "account_abstraction": [
+            "account_abstraction_exploit",
+            "paymaster_exploitation",
+            "userop_validation_bypass",
+            "session_key_compromise",
         ],
         "generic": [
             "reentrancy",
@@ -100,16 +117,18 @@ class ProtocolProfile:
         "governance": 6,
         "bridge": 12,
         "threshold_network": 15,
+        "account_abstraction": 8,
         "generic": 5,
     }
 
     _DESCRIPTIONS: ClassVar[dict[str, str]] = {
         "defi_vault": "Focus on vault share accounting, rebasing, and flash-loanable TVL manipulations.",
-        "amm": "Focus on swap routing, price manipulation, and MEV-prone flow control.",
+        "amm": "Focus on swap routing, price manipulation, MEV-prone flow control, and intent-based trading.",
         "lending": "Prioritize collateral, liquidation, and reserve accounting exploits.",
         "governance": "Prioritize voting power escalation, timelock bypass, and treasury drains.",
-        "bridge": "Focus on cross-chain message forgery, proof verification, and relay manipulation.",
-        "threshold_network": "Prioritize tBTC bridge security, threshold cryptography, operator collusion, and cross-chain attacks per Immunefi bounty program.",
+        "bridge": "Focus on cross-chain message forgery, proof verification, ZK proof flaws, and relay manipulation.",
+        "threshold_network": "Prioritize tBTC bridge security, threshold cryptography, operator collusion, MEV, withdrawal queues, and cross-chain attacks per Immunefi bounty program.",
+        "account_abstraction": "Focus on EIP-4337 UserOperation validation, paymaster exploits, session key security, and bundler manipulation.",
         "generic": "Use broad on-chain exploit classes (reentrancy, access control, arithmetic).",
     }
 
@@ -205,6 +224,21 @@ class VulnHypothesisAgent(BaseAgent):
                         "token_ratio_manipulation",
                         "vending_machine_exploit",
                         "legacy_token_double_spend",
+                        # New 2024-2025 patterns
+                        "zk_proof_verification_flaw",
+                        "optimistic_challenge_bypass",
+                        "mev_extraction_vulnerability",
+                        "withdrawal_queue_manipulation",
+                        "slashing_mechanism_bypass",
+                        "account_abstraction_exploit",
+                        "paymaster_exploitation",
+                        "userop_validation_bypass",
+                        "session_key_compromise",
+                        "intent_front_running",
+                        "solver_collusion",
+                        "dutch_auction_manipulation",
+                        "restaking_share_inflation",
+                        "avs_integration_flaw",
                     ],
                 },
                 "confidence": {"type": "number", "minimum": 0, "maximum": 1},
