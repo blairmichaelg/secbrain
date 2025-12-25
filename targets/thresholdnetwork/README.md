@@ -2,6 +2,36 @@
 
 This directory contains comprehensive resources for hunting bugs in the Threshold Network bug bounty program on Immunefi.
 
+---
+
+## 🚨 **CRITICAL VULNERABILITY RESEARCH - DKG Polynomial Degree Validation**
+
+**Status:** ✅ **CONFIRMED CRITICAL VULNERABILITY**  
+**Date:** December 25, 2024  
+**Severity:** CRITICAL - Permanent Freezing of Funds (Protocol Insolvency)  
+**Bounty Estimate:** $100,000 - $500,000  
+
+### Quick Access
+
+- **📄 [IMMUNEFI_SUBMISSION.md](./IMMUNEFI_SUBMISSION.md)** - Ready-to-submit bug bounty report
+- **📊 [DKG_VULNERABILITY_REPORT.md](./DKG_VULNERABILITY_REPORT.md)** - Complete technical analysis (451 lines)
+- **📋 [EXECUTIVE_SUMMARY.md](./EXECUTIVE_SUMMARY.md)** - Quick reference and checklist
+- **📚 [INDEX.md](./INDEX.md)** - Complete navigation guide
+- **🧪 [DKGMissingValidationExploit.t.sol](./instascope/test/exploits/DKGMissingValidationExploit.t.sol)** - PoC test suite (271 lines)
+- **🔍 [validate_dkg_vulnerability.sh](./instascope/validate_dkg_vulnerability.sh)** - Automated validation script
+
+### Vulnerability Summary
+
+**Root Cause:** The `EcdsaDkg.Result` struct is missing the `groupCommitment` field, making polynomial degree verification cryptographically impossible.
+
+**Impact:** Malicious operators can create wallets with incorrect thresholds (100-of-100 instead of 52-of-100), permanently freezing all deposited Bitcoin.
+
+**Validation:** Run `bash instascope/validate_dkg_vulnerability.sh` for automated confirmation.
+
+**For complete details, see [INDEX.md](./INDEX.md)**
+
+---
+
 ## 📚 Documentation Hub
 
 **Start Here**: New to Threshold Network bounty hunting?
