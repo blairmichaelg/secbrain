@@ -1,4 +1,11 @@
-"""Controlled concurrency harness for race testing and bounded execution."""
+"""Controlled concurrency harness for race testing and bounded execution.
+
+This module provides utilities for managing concurrent task execution with:
+- Semaphore-based concurrency limiting
+- Idempotency checking and deduplication
+- Structured result collection
+- Type-safe async task management
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,12 @@
-"""Reconnaissance agent for discovering assets and gathering information."""
+"""Reconnaissance agent for discovering assets and gathering information.
+
+This module provides the ReconAgent which handles:
+- Asset discovery through various recon tools
+- Smart contract compilation and analysis
+- Foundry profile parsing and configuration
+- Compilation error handling and retry logic
+- Integration with external recon CLI tools
+"""
 
 from __future__ import annotations
 

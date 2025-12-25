@@ -1,4 +1,12 @@
-"""SecBrain CLI - Main entry point for the security bounty agent system."""
+"""SecBrain CLI - Main entry point for the security bounty agent system.
+
+This module provides the command-line interface for SecBrain, including:
+- Bug bounty workflow execution
+- Target configuration management
+- Dry-run testing capabilities
+- Kill-switch and signal handling
+- Integration with multiple LLM providers
+"""
 
 from __future__ import annotations
 

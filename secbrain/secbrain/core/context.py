@@ -1,4 +1,13 @@
-"""Run context and session management for SecBrain."""
+"""Run context and session management for SecBrain.
+
+This module manages the runtime context and configuration for SecBrain execution,
+including:
+- Session state and lifecycle management
+- Configuration loading and validation
+- Approval manager integration
+- Model client coordination
+- Identity and permission management
+"""
 
 from __future__ import annotations
 

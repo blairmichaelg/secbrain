@@ -1,4 +1,12 @@
-"""Foundry runner helper for forked exploit attempts."""
+"""Foundry runner helper for forked exploit attempts.
+
+This module provides tools for running Foundry-based exploit tests including:
+- Test execution and output parsing
+- Gas cost analysis and profit calculations
+- Compilation error detection and handling
+- Test result validation and formatting
+- Integration with ForgeOutputParser
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,12 @@
-"""Vulnerability hypothesis agent - generates hypotheses for testing."""
+"""Vulnerability hypothesis agent - generates hypotheses for testing.
+
+This module provides the VulnHypothesisAgent which:
+- Generates vulnerability hypotheses from static analysis and recon data
+- Scores and prioritizes hypotheses based on severity and likelihood
+- Integrates with oracle manipulation detection
+- Produces structured hypothesis data for exploit attempts
+- Handles ABI analysis and function signature extraction
+"""
 
 from __future__ import annotations
 
