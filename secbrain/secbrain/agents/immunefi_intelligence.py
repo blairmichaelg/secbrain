@@ -68,7 +68,7 @@ class ImmunefiIntelligence:
         },
     }
 
-    # Common vulnerability patterns from Immunefi programs (2022-2024)
+    # Common vulnerability patterns from Immunefi programs (2022-2025)
     COMMON_VULNERABILITIES = {
         "bridge_exploits": ImmunefiVulnerabilityClass(
             name="Cross-chain Bridge Exploits",
@@ -82,6 +82,9 @@ class ImmunefiIntelligence:
                 "Relay manipulation",
                 "Cross-chain reentrancy",
                 "Deposit/withdrawal mismatch",
+                "Intent-based bridge exploits (2024+)",
+                "ZK proof verification flaws",
+                "Optimistic bridge challenge bypass",
             ],
             detection_techniques=[
                 "Analyze proof verification logic",
@@ -89,6 +92,9 @@ class ImmunefiIntelligence:
                 "Check for replay protection",
                 "Verify cross-chain message authentication",
                 "Test relay censorship resistance",
+                "Test ZK proof verification circuits",
+                "Validate optimistic challenge periods",
+                "Test intent settlement atomicity",
             ],
             recent_examples=[
                 "Wormhole ($320M, 2022) - Signature verification bypass",
@@ -96,6 +102,8 @@ class ImmunefiIntelligence:
                 "Nomad Bridge ($190M, 2022) - Merkle root verification flaw",
                 "BNB Bridge ($586M, 2022) - Proof verification exploit",
                 "Multichain ($126M, 2023) - Key compromise",
+                "Socket ($3.3M, 2024) - Incomplete input validation",
+                "LI.FI ($10M, 2024) - Arbitrary external call vulnerability",
             ],
         ),
         "flash_loan_attacks": ImmunefiVulnerabilityClass(
@@ -109,17 +117,25 @@ class ImmunefiIntelligence:
                 "Liquidity pool drainage",
                 "Collateral manipulation",
                 "Same-block borrow/repay exploits",
+                "Multi-block MEV attacks (2024+)",
+                "Intent-based flash loan sandwiching",
+                "Cross-chain flash loan arbitrage",
             ],
             detection_techniques=[
                 "Check for TWAP usage vs spot price",
                 "Verify governance voting has time delays",
                 "Test price deviation limits",
                 "Check for same-block action restrictions",
+                "Validate MEV protection mechanisms",
+                "Test multi-block state manipulation",
+                "Check for intent front-running protection",
             ],
             recent_examples=[
                 "Euler Finance ($197M, 2023) - Donation attack + flash loan",
                 "Mango Markets ($110M, 2022) - Oracle manipulation via flash loan",
                 "Cream Finance ($130M, 2021) - Flash loan price manipulation",
+                "KyberSwap ($48M, 2023) - Complex flash loan arbitrage",
+                "Curve Finance ($73M, 2024) - Multi-pool flash loan attack",
             ],
         ),
         "access_control": ImmunefiVulnerabilityClass(
@@ -260,6 +276,86 @@ class ImmunefiIntelligence:
                 "Harvest Finance ($34M, 2020) - Proxy manipulation",
             ],
         ),
+        "account_abstraction": ImmunefiVulnerabilityClass(
+            name="Account Abstraction (EIP-4337) Vulnerabilities",
+            severity="critical",
+            typical_bounty_range=(100_000, 1_000_000),
+            description="Vulnerabilities in EIP-4337 account abstraction implementations",
+            common_patterns=[
+                "UserOperation validation bypass",
+                "Paymaster exploitation",
+                "Signature aggregation flaws",
+                "EntryPoint contract manipulation",
+                "Bundler MEV exploitation",
+                "Session key compromise",
+                "Gas estimation manipulation",
+            ],
+            detection_techniques=[
+                "Test UserOperation signature validation",
+                "Verify paymaster sponsor limits",
+                "Test bundler replay protection",
+                "Check session key expiration",
+                "Validate gas griefing protection",
+                "Test aggregator signature verification",
+            ],
+            recent_examples=[
+                "Zyfi Paymaster ($200K, 2024) - Paymaster validation bypass",
+                "Safe{Wallet} ($100K, 2024) - Signature replay in module",
+                "Biconomy ($50K, 2024) - Session key validation flaw",
+            ],
+        ),
+        "intent_based_protocols": ImmunefiVulnerabilityClass(
+            name="Intent-Based Protocol Vulnerabilities",
+            severity="critical",
+            typical_bounty_range=(50_000, 500_000),
+            description="Vulnerabilities in intent-based trading and settlement protocols",
+            common_patterns=[
+                "Intent front-running",
+                "Solver collusion",
+                "Settlement atomicity bypass",
+                "Intent signature forgery",
+                "Dutch auction manipulation",
+                "Cross-chain intent settlement issues",
+            ],
+            detection_techniques=[
+                "Test intent signature validation",
+                "Verify solver selection fairness",
+                "Check settlement atomicity guarantees",
+                "Test auction price manipulation",
+                "Validate cross-chain settlement finality",
+            ],
+            recent_examples=[
+                "UniswapX ($75K, 2024) - Filler front-running vulnerability",
+                "CowSwap ($120K, 2024) - Solver manipulation",
+                "1inch Fusion ($90K, 2024) - Dutch auction exploit",
+            ],
+        ),
+        "restaking_protocols": ImmunefiVulnerabilityClass(
+            name="Restaking Protocol Vulnerabilities",
+            severity="critical",
+            typical_bounty_range=(100_000, 1_000_000),
+            description="Vulnerabilities in liquid staking and restaking protocols (EigenLayer-style)",
+            common_patterns=[
+                "Withdrawal queue manipulation",
+                "Slashing condition bypass",
+                "Operator delegation exploits",
+                "AVS (Actively Validated Service) integration flaws",
+                "Share price manipulation",
+                "Withdrawal delay exploitation",
+            ],
+            detection_techniques=[
+                "Test withdrawal queue fairness",
+                "Verify slashing conditions",
+                "Check operator registration controls",
+                "Test AVS integration security",
+                "Validate share price calculations",
+            ],
+            recent_examples=[
+                "Renzo Protocol ($150K, 2024) - Withdrawal queue exploit",
+                "Puffer Finance ($200K, 2024) - Share price manipulation",
+                "EigenLayer Testnet ($50K, 2024) - Delegation bypass",
+            ],
+        ),
     }
 
     @classmethod
@@ -268,12 +364,18 @@ class ImmunefiIntelligence:
     ) -> list[ImmunefiVulnerabilityClass]:
         """Get relevant vulnerability patterns for a specific protocol type."""
         protocol_mapping = {
-            "bridge": ["bridge_exploits", "oracle_manipulation", "access_control"],
+            "bridge": [
+                "bridge_exploits",
+                "oracle_manipulation",
+                "access_control",
+                "intent_based_protocols",
+            ],
             "threshold_network": [
                 "bridge_exploits",
                 "governance_attacks",
                 "access_control",
                 "proxy_patterns",
+                "restaking_protocols",
             ],
             "defi_vault": [
                 "erc4626_vault_attacks",
@@ -291,12 +393,23 @@ class ImmunefiIntelligence:
                 "flash_loan_attacks",
                 "oracle_manipulation",
                 "reentrancy",
+                "intent_based_protocols",
             ],
             "governance": [
                 "governance_attacks",
                 "flash_loan_attacks",
                 "access_control",
                 "proxy_patterns",
+            ],
+            "account_abstraction": [
+                "account_abstraction",
+                "access_control",
+                "reentrancy",
+            ],
+            "restaking": [
+                "restaking_protocols",
+                "access_control",
+                "oracle_manipulation",
             ],
         }
 
@@ -383,6 +496,12 @@ class ImmunefiIntelligence:
             "execute": 8,
             "approve": 7,
             "initialize": 9,
+            "validateuserop": 10,  # EIP-4337
+            "handlepaymaster": 9,  # Paymaster
+            "settleintent": 9,  # Intent-based
+            "fillorder": 8,  # Intent settlement
+            "slash": 9,  # Restaking slashing
+            "delegateto": 8,  # Delegation
         }
 
         contract_lower = contract_name.lower()

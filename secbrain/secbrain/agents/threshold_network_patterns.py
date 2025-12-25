@@ -57,6 +57,13 @@ class ThresholdVulnerabilityPattern(Enum):
     VENDING_MACHINE_EXPLOIT = "vending_machine_exploit"
     LEGACY_TOKEN_DOUBLE_SPEND = "legacy_token_double_spend"
 
+    # New 2024-2025 patterns
+    ZK_PROOF_VERIFICATION_FLAW = "zk_proof_verification_flaw"
+    OPTIMISTIC_CHALLENGE_BYPASS = "optimistic_challenge_bypass"
+    MEV_EXTRACTION_VULNERABILITY = "mev_extraction_vulnerability"
+    WITHDRAWAL_QUEUE_MANIPULATION = "withdrawal_queue_manipulation"
+    SLASHING_MECHANISM_BYPASS = "slashing_mechanism_bypass"
+
 
 class ImmunefiSeverity(Enum):
     """Immunefi vulnerability severity classification."""
@@ -477,6 +484,164 @@ class ThresholdNetworkPatterns:
         ),
     }
 
+    # New 2024-2025 Attack Patterns
+    ADVANCED_PATTERNS: dict[str, ThresholdSecurityPattern] = {
+        "zk_proof_verification_flaw": ThresholdSecurityPattern(
+            pattern_type=ThresholdVulnerabilityPattern.ZK_PROOF_VERIFICATION_FLAW,
+            severity=ImmunefiSeverity.CRITICAL,
+            description="Vulnerabilities in zero-knowledge proof verification for cross-chain operations",
+            immunefi_category="Direct theft of any user funds",
+            max_bounty_usd=1_000_000,
+            detection_heuristics=[
+                "zk proof",
+                "zkSNARK",
+                "zkSTARK",
+                "verify proof",
+                "proof validation",
+                "circuit verification",
+            ],
+            exploitation_steps=[
+                "1. Analyze ZK proof verification circuit",
+                "2. Find edge case or malformed proof acceptance",
+                "3. Craft malicious proof that passes verification",
+                "4. Execute unauthorized cross-chain operation",
+            ],
+            mitigation_strategies=[
+                "Formal verification of ZK circuits",
+                "Multiple independent proof verifiers",
+                "Trusted setup validation",
+                "Proof challenge period",
+            ],
+            references=[
+                "https://docs.threshold.network/",
+            ],
+            affected_contracts=["Bridge", "L2Bridge"],
+        ),
+        "optimistic_challenge_bypass": ThresholdSecurityPattern(
+            pattern_type=ThresholdVulnerabilityPattern.OPTIMISTIC_CHALLENGE_BYPASS,
+            severity=ImmunefiSeverity.CRITICAL,
+            description="Bypass optimistic assumption challenge mechanisms in bridge operations",
+            immunefi_category="Direct theft of any user funds",
+            max_bounty_usd=1_000_000,
+            detection_heuristics=[
+                "challenge",
+                "dispute",
+                "fraud proof",
+                "optimistic",
+                "challenge period",
+                "finalize",
+            ],
+            exploitation_steps=[
+                "1. Identify optimistic bridge operations",
+                "2. Find weakness in challenge mechanism",
+                "3. Submit fraudulent operation during challenge window",
+                "4. Prevent or bypass valid challenges",
+                "5. Finalize fraudulent operation after timeout",
+            ],
+            mitigation_strategies=[
+                "Multiple independent watchers",
+                "Economic incentives for challengers",
+                "Sufficient challenge periods",
+                "Automated fraud detection",
+            ],
+            references=[
+                "https://docs.threshold.network/applications/tbtc-v2",
+            ],
+            affected_contracts=["Bridge", "TBTCVault", "RedemptionWatchtower"],
+        ),
+        "mev_extraction_vulnerability": ThresholdSecurityPattern(
+            pattern_type=ThresholdVulnerabilityPattern.MEV_EXTRACTION_VULNERABILITY,
+            severity=ImmunefiSeverity.HIGH,
+            description="MEV extraction vulnerabilities in deposit/withdrawal/redemption operations",
+            immunefi_category="Theft of unclaimed yield",
+            max_bounty_usd=50_000,
+            detection_heuristics=[
+                "deposit",
+                "withdraw",
+                "redemption",
+                "front-run",
+                "sandwich",
+                "atomic arbitrage",
+            ],
+            exploitation_steps=[
+                "1. Monitor mempool for bridge operations",
+                "2. Identify profitable MEV opportunities",
+                "3. Front-run or sandwich user transactions",
+                "4. Extract value from operation ordering",
+            ],
+            mitigation_strategies=[
+                "Commit-reveal schemes",
+                "Time-delayed operations",
+                "Flashbots private transactions",
+                "Fair ordering mechanisms",
+            ],
+            references=[
+                "https://docs.threshold.network/",
+            ],
+            affected_contracts=["Bridge", "TBTCVault", "TokenStaking"],
+        ),
+        "withdrawal_queue_manipulation": ThresholdSecurityPattern(
+            pattern_type=ThresholdVulnerabilityPattern.WITHDRAWAL_QUEUE_MANIPULATION,
+            severity=ImmunefiSeverity.HIGH,
+            description="Manipulation of withdrawal queue to gain unfair advantage or grief users",
+            immunefi_category="Temporary freezing of funds for at least 1 hour",
+            max_bounty_usd=50_000,
+            detection_heuristics=[
+                "withdrawal queue",
+                "withdraw",
+                "unstake",
+                "exit queue",
+                "withdrawal delay",
+            ],
+            exploitation_steps=[
+                "1. Analyze withdrawal queue mechanics",
+                "2. Find queue jumping or griefing vectors",
+                "3. Manipulate queue position or timing",
+                "4. Delay or front-run other withdrawals",
+            ],
+            mitigation_strategies=[
+                "FIFO queue enforcement",
+                "Proportional withdrawal processing",
+                "Anti-griefing mechanisms",
+                "Queue size limits",
+            ],
+            references=[
+                "https://docs.threshold.network/staking-and-running-a-node",
+            ],
+            affected_contracts=["TokenStaking", "RebateStaking", "TBTCVault"],
+        ),
+        "slashing_mechanism_bypass": ThresholdSecurityPattern(
+            pattern_type=ThresholdVulnerabilityPattern.SLASHING_MECHANISM_BYPASS,
+            severity=ImmunefiSeverity.CRITICAL,
+            description="Bypass or exploit slashing mechanisms to avoid penalties for malicious behavior",
+            immunefi_category="Protocol insolvency",
+            max_bounty_usd=1_000_000,
+            detection_heuristics=[
+                "slash",
+                "seize",
+                "penalize",
+                "malicious operator",
+                "stake burn",
+            ],
+            exploitation_steps=[
+                "1. Analyze slashing conditions and triggers",
+                "2. Find bypass or exploit in slash execution",
+                "3. Perform malicious operations without penalty",
+                "4. Withdraw stake before slashing occurs",
+            ],
+            mitigation_strategies=[
+                "Immediate stake locking on malicious detection",
+                "Multiple independent slash enforcers",
+                "Economic guarantees for slashing",
+                "Timelock on stake withdrawals",
+            ],
+            references=[
+                "https://docs.threshold.network/staking-and-running-a-node/threshold-stake",
+            ],
+            affected_contracts=["TokenStaking", "WalletRegistry", "RandomBeacon"],
+        ),
+    }
+
     @classmethod
     def get_all_patterns(cls) -> dict[str, ThresholdSecurityPattern]:
         """Get all Threshold Network vulnerability patterns."""
@@ -486,6 +651,7 @@ class ThresholdNetworkPatterns:
         all_patterns.update(cls.CROSS_CHAIN_PATTERNS)
         all_patterns.update(cls.STAKING_GOVERNANCE_PATTERNS)
         all_patterns.update(cls.TOKEN_MERGER_PATTERNS)
+        all_patterns.update(cls.ADVANCED_PATTERNS)
         return all_patterns
 
     @classmethod

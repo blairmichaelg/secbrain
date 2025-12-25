@@ -149,7 +149,7 @@ class HypothesisEnhancer:
         functions: list[str],
         hypotheses: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        """Enhance hypotheses with Immunefi intelligence."""
+        """Enhance hypotheses with Immunefi intelligence and weighted confidence scoring."""
         # Get relevant vulnerability patterns for this protocol type
         immunefi_patterns = ImmunefiIntelligence.get_vulnerability_patterns_for_protocol(protocol_type)
 
@@ -164,9 +164,11 @@ class HypothesisEnhancer:
         for hyp in hypotheses:
             vuln_type = hyp.get("vuln_type", "")
             function_name = hyp.get("function_signature", "").split("(")[0]
+            base_confidence = hyp.get("confidence", 0.5)
 
-            # Track if we found a pattern match
-            pattern_matched = False
+            # Track confidence multipliers
+            confidence_multiplier = 1.0
+            confidence_reasons = []
 
             # Check if vulnerability matches known Immunefi patterns using exact (case-insensitive) match
             matched_pattern = None
@@ -178,17 +180,44 @@ class HypothesisEnhancer:
                 hyp["typical_bounty_range"] = matched_pattern.typical_bounty_range
                 hyp["detection_techniques"] = matched_pattern.detection_techniques
                 hyp["recent_examples"] = matched_pattern.recent_examples[:2]
-                # Boost confidence for well-known patterns
-                hyp["confidence"] = min(hyp.get("confidence", 0.5) * 1.2, 0.95)
-                pattern_matched = True
+                
+                # Weighted boost based on severity and recent examples
+                severity_multiplier = {
+                    "critical": 1.25,
+                    "high": 1.15,
+                    "medium": 1.08,
+                    "low": 1.02,
+                }.get(matched_pattern.severity, 1.1)
+                
+                confidence_multiplier *= severity_multiplier
+                confidence_reasons.append(f"Immunefi {matched_pattern.severity} pattern (+{(severity_multiplier-1)*100:.0f}%)")
+                
+                # Additional boost for patterns with many recent examples
+                if len(matched_pattern.recent_examples) >= 3:
+                    confidence_multiplier *= 1.1
+                    confidence_reasons.append("Multiple recent exploits (+10%)")
 
             # Add detection priority based on contract and function
             priority = ImmunefiIntelligence.get_detection_priority(contract_name, function_name)
             hyp["detection_priority"] = priority
-            # Only boost confidence for high-priority targets if we also have a pattern match
-            if priority >= 8 and pattern_matched:
-                # Additional boost for high-priority targets with known patterns
-                hyp["confidence"] = min(hyp.get("confidence", 0.5) * 1.15, 0.95)
+            
+            # Weighted boost for high-priority targets
+            if priority >= 9:
+                confidence_multiplier *= 1.20
+                confidence_reasons.append(f"Critical priority target (priority={priority}) (+20%)")
+            elif priority >= 8:
+                confidence_multiplier *= 1.15
+                confidence_reasons.append(f"High priority target (priority={priority}) (+15%)")
+            elif priority >= 7:
+                confidence_multiplier *= 1.08
+                confidence_reasons.append(f"Medium priority target (priority={priority}) (+8%)")
+
+            # Apply confidence multiplier with cap at 0.95
+            if confidence_multiplier > 1.0:
+                new_confidence = min(base_confidence * confidence_multiplier, 0.95)
+                hyp["confidence"] = new_confidence
+                hyp["confidence_boost_reasons"] = confidence_reasons
+                hyp["confidence_multiplier"] = confidence_multiplier
 
         return hypotheses
 
