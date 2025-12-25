@@ -46,6 +46,23 @@ capabilities:
     name: Optimize Workflow Artifacts
     description: Review and optimize artifacts generated from audit processes
     task_file: tasks/optimize-artifacts.yml
+  
+  # PR 117 Parallel Agent Coordination
+  - id: pr117-security-patterns
+    name: PR 117 - Security Pattern Enhancement
+    description: Enhance security patterns with bridge vulnerabilities, tBTC vectors, oracle manipulation, and governance patterns for Threshold Network
+    task_file: tasks/pr117-security-patterns.yml
+    coordination: agents/pr117-coordination.yml
+    role: security_specialist
+  
+  - id: pr117-testing-validation
+    name: PR 117 - Testing and Validation
+    description: Create comprehensive tests and validate optimizations for Threshold Network patterns
+    task_file: tasks/pr117-testing-validation.yml
+    coordination: agents/pr117-coordination.yml
+    role: testing_specialist
+    dependencies:
+      - pr117-security-patterns
 
 # Workspace instructions
 instructions:
@@ -70,6 +87,14 @@ instructions:
     - Parallelize independent jobs where possible
     - Minimize redundant artifact storage
     - Use fail-fast strategies for quick feedback
+  
+  parallel_agent_coordination: |
+    When coordinating multiple agents on the same PR:
+    - Use shared state files for inter-agent communication
+    - Define clear handoff protocols between agents
+    - Implement dependency management to prevent conflicts
+    - Monitor progress through coordination state
+    - Follow the agent coordination protocol in agents/ directory
 
 # Knowledge base references
 knowledge_bases:
@@ -77,3 +102,7 @@ knowledge_bases:
     description: Contract audit workflow patterns and best practices
   - path: .github/copilot/sota-coverage-knowledge.md
     description: SOTA coverage testing patterns and optimization strategies
+  - path: .github/copilot/agents/README-PR117.md
+    description: Parallel agent coordination system for PR 117 - Threshold Network optimizations
+  - path: .github/copilot/agents/QUICKSTART-PR117.md
+    description: Quick start guide for invoking parallel agents on PR 117

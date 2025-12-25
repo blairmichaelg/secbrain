@@ -1,0 +1,85 @@
+{
+  "coordination_session": {
+    "id": "pr117-parallel-agents-001",
+    "created_at": "2025-12-25T03:42:43.389Z",
+    "pull_request": 117,
+    "branch": "copilot/optimize-bug-finding-logic",
+    "status": "initialized",
+    "phase": "initialization"
+  },
+  "agents": {
+    "security-pattern-agent": {
+      "status": "ready",
+      "last_update": "2025-12-25T03:42:43.389Z",
+      "progress": 0,
+      "current_task": "awaiting_start",
+      "completed_tasks": [],
+      "blocked": false,
+      "blocker_reason": null,
+      "artifacts_produced": [],
+      "messages": []
+    },
+    "testing-validation-agent": {
+      "status": "ready",
+      "last_update": "2025-12-25T03:42:43.389Z",
+      "progress": 0,
+      "current_task": "awaiting_start",
+      "completed_tasks": [],
+      "blocked": false,
+      "blocker_reason": null,
+      "waiting_for": ["security-pattern-agent"],
+      "artifacts_produced": [],
+      "messages": []
+    }
+  },
+  "checklist": {
+    "update_security_patterns_bridge_vulnerabilities": {
+      "status": "pending",
+      "assigned_to": "security-pattern-agent",
+      "priority": "high",
+      "dependencies": []
+    },
+    "add_tbtc_attack_vectors": {
+      "status": "pending",
+      "assigned_to": "security-pattern-agent",
+      "priority": "high",
+      "dependencies": []
+    },
+    "enhance_oracle_manipulation_detection": {
+      "status": "pending",
+      "assigned_to": "security-pattern-agent",
+      "priority": "high",
+      "dependencies": []
+    },
+    "add_governance_attack_patterns": {
+      "status": "pending",
+      "assigned_to": "security-pattern-agent",
+      "priority": "medium",
+      "dependencies": []
+    },
+    "test_optimizations_threshold_network": {
+      "status": "pending",
+      "assigned_to": "testing-validation-agent",
+      "priority": "high",
+      "dependencies": [
+        "update_security_patterns_bridge_vulnerabilities",
+        "add_tbtc_attack_vectors",
+        "enhance_oracle_manipulation_detection",
+        "add_governance_attack_patterns"
+      ]
+    }
+  },
+  "communication_log": [],
+  "handoffs": [],
+  "conflicts": [],
+  "metrics": {
+    "start_time": "2025-12-25T03:42:43.389Z",
+    "estimated_completion": null,
+    "actual_completion": null,
+    "total_tasks": 5,
+    "completed_tasks": 0,
+    "agent_communications": 0,
+    "handoffs_completed": 0,
+    "conflicts_resolved": 0
+  }
+}

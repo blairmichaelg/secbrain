@@ -1,0 +1,217 @@
+name: PR 117 - Security Pattern Enhancement
+description: Enhance security patterns with bridge vulnerabilities, tBTC attack vectors, oracle manipulation, and governance patterns
+
+# Agent: Security Pattern Enhancement Agent
+# Role: Add and enhance vulnerability patterns for Threshold Network
+
+metadata:
+  agent_id: security-pattern-agent
+  pr_number: 117
+  coordination_file: ../.github/copilot/agents/pr117-state.json
+  priority: high
+
+inputs:
+  state_file:
+    description: Path to shared state file for coordination
+    default: .github/copilot/agents/pr117-state.json
+    required: true
+  
+  focus_areas:
+    description: Specific areas to enhance
+    default:
+      - bridge_vulnerabilities
+      - tbtc_attack_vectors
+      - oracle_manipulation
+      - governance_patterns
+    required: false
+
+task:
+  # Security pattern enhancement workflow
+  steps:
+    - name: Initialize and sync state
+      action: update_coordination_state
+      with:
+        agent_id: security-pattern-agent
+        status: in_progress
+        message: "Starting security pattern enhancements for Threshold Network"
+    
+    - name: Analyze existing patterns
+      action: ai_analysis
+      prompt: |
+        Review the existing files:
+        - secbrain/secbrain/agents/threshold_network_patterns.py
+        - secbrain/secbrain/agents/immunefi_intelligence.py
+        
+        Identify gaps in coverage for:
+        1. Bridge-specific vulnerabilities (cross-chain attacks, relay manipulation)
+        2. tBTC attack vectors (Bitcoin peg manipulation, wallet registry exploits)
+        3. Oracle manipulation patterns for cross-chain bridges
+        4. Governance attack patterns for DAO structures
+        
+        Based on the PR 117 checklist, what specific patterns need to be added?
+    
+    - name: Add bridge vulnerability patterns
+      action: code_enhancement
+      description: |
+        Add comprehensive bridge-specific vulnerability patterns including:
+        - Cross-chain message forgery detection
+        - Relay censorship attacks
+        - Bridge fund drainage patterns
+        - Multi-chain attack vectors
+        - Bridge governance exploits
+      
+      files_to_modify:
+        - secbrain/secbrain/agents/threshold_network_patterns.py
+        - secbrain/secbrain/agents/immunefi_intelligence.py
+      
+      update_state:
+        task: update_security_patterns_bridge_vulnerabilities
+        status: in_progress
+    
+    - name: Sync progress - Bridge patterns
+      action: update_coordination_state
+      with:
+        agent_id: security-pattern-agent
+        current_task: bridge_vulnerabilities_completed
+        progress: 25
+        artifacts:
+          - secbrain/secbrain/agents/threshold_network_patterns.py
+        message: "Completed bridge vulnerability patterns"
+    
+    - name: Add tBTC attack vectors
+      action: code_enhancement
+      description: |
+        Add tBTC-specific attack vectors including:
+        - Bitcoin SPV proof manipulation
+        - Wallet registry compromise scenarios
+        - Optimistic minting exploits
+        - Guardian key attacks
+        - Deposit/redemption manipulation
+        - Cross-chain Bitcoin theft patterns
+      
+      files_to_modify:
+        - secbrain/secbrain/agents/threshold_network_patterns.py
+      
+      update_state:
+        task: add_tbtc_attack_vectors
+        status: in_progress
+    
+    - name: Sync progress - tBTC vectors
+      action: update_coordination_state
+      with:
+        agent_id: security-pattern-agent
+        current_task: tbtc_vectors_completed
+        progress: 50
+        artifacts:
+          - secbrain/secbrain/agents/threshold_network_patterns.py
+        message: "Completed tBTC attack vector patterns"
+    
+    - name: Enhance oracle manipulation detection
+      action: code_enhancement
+      description: |
+        Enhance oracle manipulation patterns for cross-chain scenarios:
+        - Cross-chain price oracle attacks
+        - Multi-oracle consensus bypass
+        - Timestamp manipulation in bridges
+        - Stale price data exploitation
+        - Flash loan cross-chain arbitrage
+        - Oracle front-running patterns
+      
+      files_to_modify:
+        - secbrain/secbrain/agents/immunefi_intelligence.py
+        - secbrain/secbrain/agents/threshold_network_patterns.py
+      
+      update_state:
+        task: enhance_oracle_manipulation_detection
+        status: in_progress
+    
+    - name: Sync progress - Oracle patterns
+      action: update_coordination_state
+      with:
+        agent_id: security-pattern-agent
+        current_task: oracle_patterns_completed
+        progress: 75
+        artifacts:
+          - secbrain/secbrain/agents/immunefi_intelligence.py
+          - secbrain/secbrain/agents/threshold_network_patterns.py
+        message: "Completed oracle manipulation patterns"
+    
+    - name: Add governance attack patterns
+      action: code_enhancement
+      description: |
+        Add DAO-specific governance attack patterns:
+        - Threshold governance vote buying
+        - Timelock bypass techniques
+        - Quorum manipulation
+        - Delegation attacks
+        - Proposal execution exploits
+        - Cross-chain governance attacks
+      
+      files_to_modify:
+        - secbrain/secbrain/agents/threshold_network_patterns.py
+      
+      update_state:
+        task: add_governance_attack_patterns
+        status: in_progress
+    
+    - name: Finalize and handoff
+      action: update_coordination_state
+      with:
+        agent_id: security-pattern-agent
+        status: completed
+        progress: 100
+        current_task: all_patterns_completed
+        message: "All security patterns enhanced. Ready for testing."
+        handoff:
+          to_agent: testing-validation-agent
+          type: files_ready
+          priority: high
+          data:
+            modified_files:
+              - secbrain/secbrain/agents/threshold_network_patterns.py
+              - secbrain/secbrain/agents/immunefi_intelligence.py
+            new_patterns_added:
+              - bridge_vulnerabilities
+              - tbtc_attack_vectors
+              - oracle_manipulation
+              - governance_patterns
+            test_scenarios_needed:
+              - Bridge vulnerability detection tests
+              - tBTC attack vector validation
+              - Oracle manipulation test cases
+              - Governance exploit scenarios
+              - Integration tests for all patterns
+
+outputs:
+  patterns_added:
+    description: List of new vulnerability patterns added
+  
+  files_modified:
+    description: List of files that were modified
+  
+  test_scenarios:
+    description: Test scenarios needed for validation
+  
+  completion_status:
+    description: Overall completion status
+
+success_criteria:
+  - All four focus areas completed
+  - Patterns integrated into existing codebase
+  - No syntax errors introduced
+  - Coordination state updated successfully
+  - Handoff to testing agent completed
+
+notifications:
+  on_progress:
+    - Update coordination state file
+    - Notify testing agent of completion percentage
+  
+  on_completion:
+    - Create handoff to testing-validation-agent
+    - Update PR checklist
+    - Generate summary of changes
+  
+  on_blocked:
+    - Update state with blocker details
+    - Alert for manual intervention

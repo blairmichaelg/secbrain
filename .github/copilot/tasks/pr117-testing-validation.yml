@@ -1,0 +1,276 @@
+name: PR 117 - Testing and Validation
+description: Create comprehensive tests for new vulnerability patterns and validate against Threshold Network scope
+
+# Agent: Testing and Validation Agent
+# Role: Test new patterns, validate optimizations, ensure quality
+
+metadata:
+  agent_id: testing-validation-agent
+  pr_number: 117
+  coordination_file: ../.github/copilot/agents/pr117-state.json
+  priority: high
+
+inputs:
+  state_file:
+    description: Path to shared state file for coordination
+    default: .github/copilot/agents/pr117-state.json
+    required: true
+  
+  coverage_threshold:
+    description: Minimum test coverage required
+    default: 80
+    required: false
+  
+  wait_for_agent:
+    description: Agent to wait for before starting
+    default: security-pattern-agent
+    required: true
+
+task:
+  # Testing and validation workflow
+  steps:
+    - name: Initialize and monitor
+      action: update_coordination_state
+      with:
+        agent_id: testing-validation-agent
+        status: waiting
+        message: "Monitoring security-pattern-agent progress"
+    
+    - name: Wait for security patterns
+      action: monitor_coordination_state
+      with:
+        watch_agent: security-pattern-agent
+        wait_for_status: completed
+        check_interval: 30_seconds
+        timeout: 30_minutes
+    
+    - name: Receive handoff
+      action: process_handoff
+      with:
+        from_agent: security-pattern-agent
+        expected_data:
+          - modified_files
+          - new_patterns_added
+          - test_scenarios_needed
+    
+    - name: Start testing phase
+      action: update_coordination_state
+      with:
+        agent_id: testing-validation-agent
+        status: in_progress
+        current_task: creating_test_suite
+        message: "Starting test creation for new patterns"
+    
+    - name: Analyze patterns for test requirements
+      action: ai_analysis
+      prompt: |
+        Review the security patterns added by security-pattern-agent:
+        Files: {{ handoff.data.modified_files }}
+        Patterns: {{ handoff.data.new_patterns_added }}
+        
+        Identify:
+        1. Test cases needed for each vulnerability pattern
+        2. Edge cases and boundary conditions
+        3. Integration test scenarios
+        4. Mock data requirements
+        5. Expected outputs for validation
+        
+        Create comprehensive test plan covering:
+        - Unit tests for individual patterns
+        - Integration tests for pattern combinations
+        - Validation against real Threshold Network contracts
+        - Performance tests for pattern matching
+    
+    - name: Create test suite for bridge vulnerabilities
+      action: create_tests
+      description: |
+        Create tests for bridge vulnerability patterns:
+        - Test cross-chain message forgery detection
+        - Test relay manipulation identification
+        - Test bridge fund drainage scenarios
+        - Validate pattern matching accuracy
+      
+      test_file: secbrain/tests/test_threshold_bridge_patterns.py
+      
+      update_state:
+        progress: 20
+        current_task: bridge_tests_created
+    
+    - name: Create test suite for tBTC attack vectors
+      action: create_tests
+      description: |
+        Create tests for tBTC-specific patterns:
+        - Test Bitcoin SPV proof validation
+        - Test wallet registry attack detection
+        - Test optimistic minting exploit scenarios
+        - Validate guardian key compromise detection
+      
+      test_file: secbrain/tests/test_tbtc_attack_vectors.py
+      
+      update_state:
+        progress: 40
+        current_task: tbtc_tests_created
+    
+    - name: Create test suite for oracle manipulation
+      action: create_tests
+      description: |
+        Create tests for oracle manipulation patterns:
+        - Test cross-chain oracle attacks
+        - Test multi-oracle consensus bypass
+        - Test timestamp manipulation detection
+        - Validate flash loan oracle scenarios
+      
+      test_file: secbrain/tests/test_oracle_manipulation.py
+      
+      update_state:
+        progress: 60
+        current_task: oracle_tests_created
+    
+    - name: Create test suite for governance attacks
+      action: create_tests
+      description: |
+        Create tests for governance patterns:
+        - Test vote buying detection
+        - Test timelock bypass scenarios
+        - Test quorum manipulation
+        - Validate delegation attack patterns
+      
+      test_file: secbrain/tests/test_governance_attacks.py
+      
+      update_state:
+        progress: 80
+        current_task: governance_tests_created
+    
+    - name: Run test suite
+      action: run_tests
+      with:
+        test_paths:
+          - secbrain/tests/test_threshold_bridge_patterns.py
+          - secbrain/tests/test_tbtc_attack_vectors.py
+          - secbrain/tests/test_oracle_manipulation.py
+          - secbrain/tests/test_governance_attacks.py
+        coverage: true
+        coverage_threshold: "{{ inputs.coverage_threshold }}"
+    
+    - name: Validate against Threshold Network scope
+      action: integration_test
+      description: |
+        Run integration tests against actual Threshold Network contracts:
+        - Test pattern matching on tBTC contracts
+        - Test detection on Bridge contracts
+        - Test analysis on WalletRegistry
+        - Validate against TokenStaking
+        - Check governance contracts
+      
+      contracts_to_test:
+        - TBTC
+        - TBTCVault
+        - Bridge
+        - WalletRegistry
+        - TokenStaking
+    
+    - name: Performance validation
+      action: benchmark_tests
+      description: |
+        Validate performance of new patterns:
+        - Measure pattern matching speed
+        - Check memory usage
+        - Validate scalability
+        - Compare to baseline performance
+      
+      baseline_file: .github/copilot/agents/performance-baseline.json
+    
+    - name: Generate test report
+      action: create_summary
+      template: |
+        ## Testing and Validation Report - PR 117
+        
+        ### Test Coverage
+        - Overall Coverage: {{ test_results.coverage }}%
+        - Threshold: {{ inputs.coverage_threshold }}%
+        - Status: {{ test_results.coverage_status }}
+        
+        ### Test Results
+        - Total Tests: {{ test_results.total }}
+        - Passed: {{ test_results.passed }}
+        - Failed: {{ test_results.failed }}
+        - Skipped: {{ test_results.skipped }}
+        
+        ### New Test Files Created
+        {{ test_files_created | list }}
+        
+        ### Pattern Validation Results
+        {{ validation_results | table }}
+        
+        ### Performance Metrics
+        - Pattern Matching Speed: {{ perf.pattern_speed }}
+        - Memory Usage: {{ perf.memory }}
+        - Scalability: {{ perf.scalability_score }}
+        
+        ### Issues Found
+        {{ issues_found | list }}
+        
+        ### Recommendations
+        {{ recommendations | list }}
+    
+    - name: Complete validation
+      action: update_coordination_state
+      with:
+        agent_id: testing-validation-agent
+        status: completed
+        progress: 100
+        current_task: validation_complete
+        message: "All tests created and passing. Validation complete."
+        artifacts:
+          - secbrain/tests/test_threshold_bridge_patterns.py
+          - secbrain/tests/test_tbtc_attack_vectors.py
+          - secbrain/tests/test_oracle_manipulation.py
+          - secbrain/tests/test_governance_attacks.py
+        test_results:
+          coverage: "{{ test_results.coverage }}"
+          passed: "{{ test_results.passed }}"
+          failed: "{{ test_results.failed }}"
+
+outputs:
+  test_files_created:
+    description: List of test files created
+  
+  test_coverage:
+    description: Overall test coverage percentage
+  
+  validation_status:
+    description: Validation results against Threshold Network
+  
+  performance_metrics:
+    description: Performance benchmark results
+  
+  issues_found:
+    description: Any issues or gaps identified
+
+success_criteria:
+  - All test files created successfully
+  - Test coverage >= threshold (80%)
+  - All tests passing
+  - Integration validation successful
+  - Performance within acceptable range
+  - No critical issues found
+
+notifications:
+  on_progress:
+    - Update coordination state file
+    - Notify completion percentage
+  
+  on_test_failure:
+    - Create issue with failure details
+    - Alert security-pattern-agent for fixes
+    - Update coordination state as blocked
+  
+  on_completion:
+    - Update PR checklist
+    - Generate final validation report
+    - Mark all tasks complete in state file
+  
+  on_blocked:
+    - Update state with blocker details
+    - Create handoff back to security-pattern-agent if fixes needed
+    - Alert for manual intervention
