@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ResearchFinding:
     """A research finding from advanced analysis."""
-    
+
     title: str
     description: str
     severity: str  # critical, high, medium, low
@@ -35,7 +35,7 @@ class ResearchFinding:
     mitigation: str = ""
     references: list[str] = field(default_factory=list)
     exploit_complexity: str = "medium"  # low, medium, high
-    
+
     def to_hypothesis(self) -> dict[str, Any]:
         """Convert finding to vulnerability hypothesis format."""
         return {
@@ -61,7 +61,7 @@ class AdvancedResearchAgent:
     - Generates novel vulnerability hypotheses
     - Tracks zero-day indicators
     """
-    
+
     def __init__(
         self,
         run_context: RunContext,
@@ -70,7 +70,7 @@ class AdvancedResearchAgent:
         self.run_context = run_context
         self.research_client = research_client
         self.findings: list[ResearchFinding] = []
-    
+
     async def research_emerging_patterns(
         self,
         timeframe_days: int = 90,
@@ -85,7 +85,7 @@ class AdvancedResearchAgent:
             List of research findings about emerging patterns
         """
         logger.info(f"Researching emerging patterns from last {timeframe_days} days")
-        
+
         # Query for recent high-impact vulnerabilities
         query = f"""
         What are the most critical smart contract vulnerabilities discovered in the last {timeframe_days} days?
@@ -102,9 +102,9 @@ class AdvancedResearchAgent:
         - Exploit complexity
         - Mitigation strategies
         """
-        
+
         findings = []
-        
+
         if self.research_client:
             try:
                 result = await self.research_client.research(
@@ -112,7 +112,7 @@ class AdvancedResearchAgent:
                     context="Security research for bug bounty hunting",
                     ttl_hours=24,  # Cache for 24 hours
                 )
-                
+
                 # Parse research result into findings
                 # This is simplified - real implementation would use LLM to structure data
                 findings.append(ResearchFinding(
@@ -123,17 +123,17 @@ class AdvancedResearchAgent:
                     research_source="perplexity",
                     references=result.get("sources", []),
                 ))
-                
+
                 logger.info(f"Found {len(findings)} emerging patterns")
             except Exception as e:
                 logger.error(f"Research failed: {e}")
         else:
             # Dry-run or no client - return curated findings
             findings.extend(self._get_curated_emerging_patterns())
-        
+
         self.findings.extend(findings)
         return findings
-    
+
     def _get_curated_emerging_patterns(self) -> list[ResearchFinding]:
         """Get curated list of emerging vulnerability patterns (2024-2025)."""
         return [
@@ -327,7 +327,7 @@ class AdvancedResearchAgent:
                 exploit_complexity="medium",
             ),
         ]
-    
+
     async def analyze_protocol_specific(
         self,
         protocol_name: str,
@@ -344,7 +344,7 @@ class AdvancedResearchAgent:
             List of protocol-specific findings
         """
         logger.info(f"Analyzing {protocol_name} on {blockchain}")
-        
+
         query = f"""
         Analyze security vulnerabilities specific to {protocol_name} on {blockchain}.
         Focus on:
@@ -356,9 +356,9 @@ class AdvancedResearchAgent:
         
         Provide specific attack vectors and exploitation techniques.
         """
-        
+
         findings = []
-        
+
         if self.research_client:
             try:
                 result = await self.research_client.research(
@@ -366,7 +366,7 @@ class AdvancedResearchAgent:
                     context=f"Deep security analysis of {protocol_name}",
                     ttl_hours=48,  # Cache protocol research for 48 hours
                 )
-                
+
                 findings.append(ResearchFinding(
                     title=f"{protocol_name} Security Analysis",
                     description=result.get("answer", ""),
@@ -377,10 +377,10 @@ class AdvancedResearchAgent:
                 ))
             except Exception as e:
                 logger.error(f"Protocol research failed: {e}")
-        
+
         self.findings.extend(findings)
         return findings
-    
+
     async def correlate_cross_protocol(
         self,
         protocols: list[str],
@@ -395,11 +395,11 @@ class AdvancedResearchAgent:
             Cross-protocol vulnerability findings
         """
         logger.info(f"Analyzing cross-protocol risks for: {', '.join(protocols)}")
-        
+
         if len(protocols) < 2:
             logger.warning("Need at least 2 protocols for correlation analysis")
             return []
-        
+
         query = f"""
         Analyze security risks from interactions between these protocols: {', '.join(protocols)}.
         Focus on:
@@ -411,9 +411,9 @@ class AdvancedResearchAgent:
         
         Identify attack chains that exploit multiple protocols together.
         """
-        
+
         findings = []
-        
+
         if self.research_client:
             try:
                 result = await self.research_client.research(
@@ -421,7 +421,7 @@ class AdvancedResearchAgent:
                     context="Cross-protocol vulnerability correlation",
                     ttl_hours=24,
                 )
-                
+
                 findings.append(ResearchFinding(
                     title=f"Cross-Protocol Risks: {', '.join(protocols)}",
                     description=result.get("answer", ""),
@@ -452,10 +452,10 @@ class AdvancedResearchAgent:
                     "Dependency exploitation cascades",
                 ],
             ))
-        
+
         self.findings.extend(findings)
         return findings
-    
+
     async def generate_novel_hypotheses(
         self,
         target_contracts: list[str],
@@ -472,10 +472,10 @@ class AdvancedResearchAgent:
             List of novel vulnerability hypotheses
         """
         logger.info(f"Generating novel hypotheses for {len(target_contracts)} contracts")
-        
+
         # Combine emerging patterns with protocol-specific analysis
         emerging = await self.research_emerging_patterns(timeframe_days=90)
-        
+
         # Convert findings to hypotheses
         hypotheses = []
         for finding in emerging:
@@ -483,14 +483,14 @@ class AdvancedResearchAgent:
             hypothesis["novelty_score"] = 0.7  # Base novelty for emerging patterns
             hypothesis["source"] = "advanced_research"
             hypotheses.append(hypothesis)
-        
+
         logger.info(f"Generated {len(hypotheses)} novel hypotheses")
         return hypotheses
-    
+
     def get_all_findings(self) -> list[ResearchFinding]:
         """Get all research findings collected."""
         return self.findings
-    
+
     def get_high_confidence_findings(
         self,
         min_confidence: float = 0.75,

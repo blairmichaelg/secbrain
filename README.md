@@ -36,6 +36,29 @@ SecBrain is a CLI-first Python project that automates bug bounty workflows using
 
 ## Quick Start
 
+### New: Quick Bounty Hunt Workflow
+
+Want to start hunting bugs on Immunefi right away? Try this:
+
+```bash
+# 1. Install SecBrain
+pip install -e ".[dev]"
+
+# 2. Discover high-value targets
+secbrain immunefi list --min-bounty 1000000 --limit 5
+
+# 3. Research emerging vulnerabilities
+secbrain research --timeframe 90 --output findings.json
+
+# 4. Get intelligence on a specific program
+secbrain immunefi intelligence --program thresholdnetwork
+
+# 5. View your metrics (after making submissions)
+secbrain metrics summary
+```
+
+See the [Immunefi Integration Guide](docs/IMMUNEFI_INTEGRATION_GUIDE.md) for detailed workflows.
+
 ### Verify Everything Works
 
 Before doing anything else, verify that everything is working:
@@ -145,8 +168,11 @@ secbrain insights --workspace ./targets/protocol1 --format html --open
 - ⚡ [Automation Quick Ref](AUTOMATION-QUICK-REF.md) - Daily workflows and tools
 - 📋 [Testing Quick Ref](docs/TESTING-QUICK-REF.md) - Quick testing commands
 - 📚 [Documentation Index](docs/README.md) - All contributor guides
+- 🎯 [Immunefi Integration Guide](docs/IMMUNEFI_INTEGRATION_GUIDE.md) - Bug bounty platform integration
 
 ## CLI Commands
+
+### Core Commands
 
 | Command | Description |
 |---------|-------------|
@@ -155,7 +181,74 @@ secbrain insights --workspace ./targets/protocol1 --format html --open
 | `secbrain validate` | Validate configuration files |
 | `secbrain version` | Show version |
 
+### Bounty Hunting Commands (NEW)
+
+| Command | Description |
+|---------|-------------|
+| `secbrain immunefi` | Access Immunefi platform intelligence (list, show, trends, intelligence) |
+| `secbrain research` | Conduct advanced vulnerability research with cutting-edge patterns |
+| `secbrain metrics` | Track and analyze bug bounty success metrics |
+
 For detailed CLI options, see the [Operations Guide](secbrain/docs/ops.md).
+
+## New: Enhanced Bug Bounty Capabilities
+
+SecBrain now includes advanced features to improve your bug bounty finding ability:
+
+### 🎯 Immunefi Platform Integration
+- **High-value target discovery** - Automatically identify programs with ≥$500K bounties
+- **Program intelligence** - Get comprehensive data on scope, rewards, and focus areas
+- **Trending vulnerabilities** - Track emerging patterns from recent successful submissions
+- **Priority scoring** - Programs ranked 0-100 based on bounty, activity, and success rate
+
+```bash
+# Find high-value targets
+secbrain immunefi list --min-bounty 1000000
+
+# Get program intelligence
+secbrain immunefi intelligence --program wormhole
+```
+
+### 🔬 Advanced Research Agent
+- **Emerging pattern discovery** - 6+ cutting-edge vulnerability types (2024-2025)
+- **Protocol-specific analysis** - Deep dive into target protocols
+- **Novel hypothesis generation** - AI-powered vulnerability discovery
+- **Real-world exploit data** - Learn from $2B+ in historical hacks
+
+**Key patterns tracked:**
+- Intent-Based Protocol Exploits ($450K avg)
+- Cross-Chain Bridge Vulnerabilities ($2.3M avg)
+- Read-Only Reentrancy ($180K avg)
+- ERC-4337 Account Abstraction Issues ($320K avg)
+- ZK-Proof Verification Flaws
+- Concentrated Liquidity MEV ($125K avg)
+
+```bash
+# Research emerging vulnerabilities
+secbrain research --timeframe 90 --output findings.json
+
+# Analyze specific protocol
+secbrain research --protocol "Threshold Network" --contracts "TBTC,Bridge"
+```
+
+### 📊 Success Metrics Tracking
+- **Submission tracking** - Record all bounty submissions and outcomes
+- **Pattern effectiveness** - Learn which vulnerability types have highest success rates
+- **Continuous learning** - Get insights for improving acceptance rates
+- **Decision support** - Recommendations on whether to submit based on historical data
+
+```bash
+# View your success metrics
+secbrain metrics summary
+
+# See most effective patterns
+secbrain metrics patterns
+
+# Get improvement insights
+secbrain metrics insights
+```
+
+See the [Immunefi Integration Guide](docs/IMMUNEFI_INTEGRATION_GUIDE.md) for complete documentation.
 
 ## Project Structure
 

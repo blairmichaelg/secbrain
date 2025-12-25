@@ -9,7 +9,6 @@ This workflow provides an improved bug hunting experience with:
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -31,10 +30,10 @@ class EnhancedBountyWorkflow:
     5. Validation - Verify findings with historical success data
     6. Submission Optimization - Use metrics to optimize submission quality
     """
-    
+
     def __init__(self, run_context: RunContext):
         self.run_context = run_context
-    
+
     async def select_targets_from_immunefi(
         self,
         min_bounty: int = 500_000,
@@ -51,9 +50,9 @@ class EnhancedBountyWorkflow:
             List of prioritized targets with intelligence
         """
         from secbrain.tools.immunefi_client import ImmunefiClient
-        
+
         logger.info(f"Selecting Immunefi targets with min bounty ${min_bounty:,}")
-        
+
         client = ImmunefiClient()
         try:
             # Get high-value programs
@@ -61,12 +60,12 @@ class EnhancedBountyWorkflow:
                 min_bounty=min_bounty,
                 limit=limit,
             )
-            
+
             # Enrich with intelligence
             targets = []
             for program in programs:
                 intelligence = await client.get_program_intelligence(program.id)
-                
+
                 targets.append({
                     "program_id": program.id,
                     "name": program.name,
@@ -75,13 +74,13 @@ class EnhancedBountyWorkflow:
                     "blockchain": program.blockchain,
                     "intelligence": intelligence,
                 })
-            
+
             logger.info(f"Selected {len(targets)} high-priority targets")
             return targets
-            
+
         finally:
             await client.close()
-    
+
     async def gather_intelligence(
         self,
         target_program: str,
@@ -96,16 +95,16 @@ class EnhancedBountyWorkflow:
             Intelligence package with all relevant data
         """
         from secbrain.tools.immunefi_client import ImmunefiClient
-        
+
         logger.info(f"Gathering intelligence for {target_program}")
-        
+
         intelligence = {
             "program_details": None,
             "trending_vulnerabilities": [],
             "recommended_focus": [],
             "similar_programs": [],
         }
-        
+
         client = ImmunefiClient()
         try:
             # Get program-specific intelligence
@@ -113,7 +112,7 @@ class EnhancedBountyWorkflow:
             intelligence["program_details"] = program_intel.get("program", {})
             intelligence["recommended_focus"] = program_intel.get("recommended_focus_areas", [])
             intelligence["similar_programs"] = program_intel.get("similar_programs", [])
-            
+
             # Get trending vulnerabilities
             trends = await client.get_trending_vulnerabilities(days=90)
             intelligence["trending_vulnerabilities"] = [
@@ -125,15 +124,15 @@ class EnhancedBountyWorkflow:
                 }
                 for t in trends[:10]
             ]
-            
+
             logger.info(f"Gathered intelligence: {len(trends)} trends, "
                        f"{len(intelligence['recommended_focus'])} focus areas")
-            
+
             return intelligence
-            
+
         finally:
             await client.close()
-    
+
     async def conduct_advanced_research(
         self,
         target_contracts: list[str],
@@ -150,20 +149,20 @@ class EnhancedBountyWorkflow:
             Research findings and novel hypotheses
         """
         from secbrain.agents.advanced_research_agent import AdvancedResearchAgent
-        
+
         logger.info(f"Conducting advanced research on {len(target_contracts)} contracts")
-        
+
         # Get research client if available
         research_client = getattr(self.run_context, 'research_client', None)
-        
+
         agent = AdvancedResearchAgent(
             run_context=self.run_context,
             research_client=research_client,
         )
-        
+
         # Research emerging patterns
         emerging_patterns = await agent.research_emerging_patterns(timeframe_days=90)
-        
+
         # Protocol-specific research if name provided
         protocol_findings = []
         if protocol_name:
@@ -171,13 +170,13 @@ class EnhancedBountyWorkflow:
                 protocol_name=protocol_name,
                 blockchain=self.run_context.config.get("blockchain", "Ethereum"),
             )
-        
+
         # Generate novel hypotheses
         novel_hypotheses = await agent.generate_novel_hypotheses(
             target_contracts=target_contracts,
             context=f"Analyzing {protocol_name}" if protocol_name else "",
         )
-        
+
         return {
             "emerging_patterns": [
                 {
@@ -198,7 +197,7 @@ class EnhancedBountyWorkflow:
             ],
             "novel_hypotheses": novel_hypotheses,
         }
-    
+
     async def optimize_analysis_with_metrics(
         self,
         hypotheses: list[dict[str, Any]],
@@ -215,32 +214,33 @@ class EnhancedBountyWorkflow:
             Optimized and prioritized hypotheses
         """
         from pathlib import Path
+
         from secbrain.tools.bounty_metrics import BountyMetricsTracker
-        
+
         if not metrics_dir:
             # Use workspace metrics directory
             workspace = Path(self.run_context.workspace)
             metrics_dir = workspace / "metrics"
-        
+
         tracker = BountyMetricsTracker(metrics_dir)
-        
+
         # Get learning insights
         insights = tracker.get_learning_insights()
         high_value_patterns = {p["pattern"] for p in insights["high_value_patterns"]}
         low_confidence_patterns = {p["pattern"] for p in insights["low_confidence_patterns"]}
-        
+
         # Optimize hypotheses
         optimized = []
         for hyp in hypotheses:
             vuln_type = hyp.get("vulnerability_type", hyp.get("title", "unknown"))
             confidence = hyp.get("confidence", 0.5)
-            
+
             # Check if should submit based on historical data
             decision = tracker.should_submit(
                 vulnerability_type=vuln_type,
                 confidence=confidence,
             )
-            
+
             # Adjust priority based on historical performance
             priority_boost = 0.0
             if vuln_type in high_value_patterns:
@@ -249,19 +249,19 @@ class EnhancedBountyWorkflow:
             elif vuln_type in low_confidence_patterns:
                 priority_boost = -0.2
                 hyp["low_confidence_pattern"] = True
-            
+
             # Add submission recommendation
             hyp["submission_recommendation"] = decision
             hyp["priority_score"] = confidence + priority_boost
-            
+
             optimized.append(hyp)
-        
+
         # Sort by priority
         optimized.sort(key=lambda h: h.get("priority_score", 0), reverse=True)
-        
+
         logger.info(f"Optimized {len(optimized)} hypotheses using historical metrics")
         return optimized
-    
+
     async def run_enhanced_workflow(
         self,
         target_program: str | None = None,
@@ -278,7 +278,7 @@ class EnhancedBountyWorkflow:
             Complete analysis results
         """
         logger.info("Starting enhanced bug bounty workflow")
-        
+
         results = {
             "targets": [],
             "intelligence": {},
@@ -286,7 +286,7 @@ class EnhancedBountyWorkflow:
             "optimized_hypotheses": [],
             "recommendations": [],
         }
-        
+
         # Stage 1: Target Selection
         if not target_program:
             targets = await self.select_targets_from_immunefi(
@@ -294,47 +294,47 @@ class EnhancedBountyWorkflow:
                 limit=5,
             )
             results["targets"] = targets
-            
+
             if targets:
                 # Use highest priority target
                 target_program = targets[0]["program_id"]
                 logger.info(f"Selected target: {targets[0]['name']} "
                            f"(priority: {targets[0]['priority_score']:.1f})")
-        
+
         # Stage 2: Intelligence Gathering
         if target_program:
             intelligence = await self.gather_intelligence(target_program)
             results["intelligence"] = intelligence
-            
+
             # Stage 3: Advanced Research
             # Extract contract names from intelligence
             program_details = intelligence.get("program_details", {})
             contracts = program_details.get("assets_in_scope", [])
             program_name = program_details.get("name", target_program)
-            
+
             if contracts:
                 research = await self.conduct_advanced_research(
                     target_contracts=contracts,
                     protocol_name=program_name,
                 )
                 results["research"] = research
-                
+
                 # Stage 4: Optimization with Metrics
                 all_hypotheses = research.get("novel_hypotheses", [])
                 if all_hypotheses:
                     optimized = await self.optimize_analysis_with_metrics(all_hypotheses)
                     results["optimized_hypotheses"] = optimized
-        
+
         # Generate recommendations
         results["recommendations"] = self._generate_recommendations(results)
-        
+
         logger.info("Enhanced workflow complete")
         return results
-    
+
     def _generate_recommendations(self, results: dict[str, Any]) -> list[str]:
         """Generate actionable recommendations from workflow results."""
         recommendations = []
-        
+
         # Target recommendations
         if results["targets"]:
             top_target = results["targets"][0]
@@ -343,7 +343,7 @@ class EnhancedBountyWorkflow:
                 f"${top_target['max_bounty']:,} max bounty, "
                 f"priority score {top_target['priority_score']:.1f}/100"
             )
-        
+
         # Research-based recommendations
         research = results.get("research", {})
         if research.get("emerging_patterns"):
@@ -352,7 +352,7 @@ class EnhancedBountyWorkflow:
                 f"Prioritize {len(top_patterns)} emerging vulnerability patterns with "
                 f"high severity ratings"
             )
-        
+
         # Intelligence-based recommendations
         intelligence = results.get("intelligence", {})
         if intelligence.get("recommended_focus"):
@@ -360,7 +360,7 @@ class EnhancedBountyWorkflow:
             recommendations.append(
                 f"Concentrate analysis on: {', '.join(focus_areas)}"
             )
-        
+
         # Hypothesis recommendations
         if results.get("optimized_hypotheses"):
             high_priority = [
@@ -372,7 +372,7 @@ class EnhancedBountyWorkflow:
                     f"Investigate {len(high_priority)} high-priority hypotheses "
                     f"with historical success patterns"
                 )
-        
+
         return recommendations
 
 

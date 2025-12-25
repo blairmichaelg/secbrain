@@ -10,11 +10,7 @@ This module provides integration with the Immunefi platform to:
 
 from __future__ import annotations
 
-import asyncio
-import hashlib
-import json
 import logging
-import os
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
@@ -34,33 +30,33 @@ class ImmunefiProgram:
     website: str
     max_bounty: int
     launched_at: str
-    
+
     # Program details
     program_type: str = "smart_contract"  # smart_contract, websites, blockchain
     blockchain: list[str] = field(default_factory=list)
     language: list[str] = field(default_factory=list)
-    
+
     # Bounty ranges by severity
     critical_reward: tuple[int, int] = (0, 0)
     high_reward: tuple[int, int] = (0, 0)
     medium_reward: tuple[int, int] = (0, 0)
     low_reward: tuple[int, int] = (0, 0)
-    
+
     # Program metadata
     kyc_required: bool = False
     proof_of_concept_required: bool = True
     is_featured: bool = False
     assets_in_scope: list[str] = field(default_factory=list)
     out_of_scope: list[str] = field(default_factory=list)
-    
+
     # Stats
     total_paid: int = 0
     submission_count: int = 0
-    
+
     def get_priority_score(self) -> float:
         """Calculate a priority score for this program (0-100)."""
         score = 0.0
-        
+
         # Max bounty weight (0-40 points)
         if self.max_bounty >= 1_000_000:
             score += 40
@@ -70,11 +66,11 @@ class ImmunefiProgram:
             score += 20
         elif self.max_bounty >= 50_000:
             score += 10
-        
+
         # Featured programs get bonus (0-15 points)
         if self.is_featured:
             score += 15
-        
+
         # Recent/active programs (0-15 points)
         try:
             launch_date = datetime.fromisoformat(self.launched_at.replace('Z', '+00:00'))
@@ -87,10 +83,10 @@ class ImmunefiProgram:
                 score += 5
         except (ValueError, AttributeError):
             pass
-        
+
         # Blockchain diversity bonus (0-10 points)
         score += min(len(self.blockchain) * 2, 10)
-        
+
         # Total paid indicates active program (0-20 points)
         if self.total_paid >= 1_000_000:
             score += 20
@@ -100,7 +96,7 @@ class ImmunefiProgram:
             score += 10
         elif self.total_paid >= 10_000:
             score += 5
-        
+
         return min(score, 100.0)
 
 
@@ -127,7 +123,7 @@ class ImmunefiClient:
     - Program prioritization
     - Smart caching with TTL
     """
-    
+
     def __init__(
         self,
         cache_ttl_hours: int = 24,
@@ -135,12 +131,12 @@ class ImmunefiClient:
     ):
         self.cache_ttl = timedelta(hours=cache_ttl_hours)
         self.max_programs_cache = max_programs_cache
-        
+
         # Cache state
         self._programs_cache: dict[str, ImmunefiProgram] = {}
         self._cache_timestamp: datetime | None = None
         self._trends_cache: list[ImmunefiTrend] = []
-        
+
         # HTTP client
         self.client = httpx.AsyncClient(
             timeout=30.0,
@@ -149,14 +145,14 @@ class ImmunefiClient:
                 "User-Agent": "SecBrain Security Research Tool/1.0"
             }
         )
-    
+
     async def _is_cache_valid(self) -> bool:
         """Check if the cache is still valid."""
         if self._cache_timestamp is None:
             return False
         age = datetime.now() - self._cache_timestamp
         return age < self.cache_ttl
-    
+
     async def get_all_programs(
         self,
         refresh: bool = False,
@@ -173,30 +169,30 @@ class ImmunefiClient:
         if not refresh and await self._is_cache_valid() and self._programs_cache:
             logger.info("Using cached Immunefi programs")
             return list(self._programs_cache.values())
-        
+
         logger.info("Fetching Immunefi programs (cache expired or refresh requested)")
-        
+
         # NOTE: This is a simplified implementation
         # In production, this would:
         # 1. Use Immunefi's API if available
         # 2. Or scrape their public program list
         # 3. Handle pagination and rate limiting
-        
+
         # For now, we return curated high-value programs based on public data
         programs = await self._fetch_curated_programs()
-        
+
         # Update cache
         self._programs_cache = {p.id: p for p in programs}
         self._cache_timestamp = datetime.now()
-        
+
         logger.info(f"Cached {len(programs)} Immunefi programs")
         return programs
-    
+
     async def _fetch_curated_programs(self) -> list[ImmunefiProgram]:
         """Fetch curated list of high-value Immunefi programs."""
         # Based on public Immunefi data (as of Dec 2024)
         # This would be replaced with real API calls in production
-        
+
         programs = [
             ImmunefiProgram(
                 id="wormhole",
@@ -310,14 +306,14 @@ class ImmunefiClient:
                 submission_count=8,
             ),
         ]
-        
+
         return programs
-    
+
     async def get_program_by_id(self, program_id: str) -> ImmunefiProgram | None:
         """Get a specific program by ID."""
-        programs = await self.get_all_programs()
+        await self.get_all_programs()  # Ensure cache is populated
         return self._programs_cache.get(program_id)
-    
+
     async def get_high_value_programs(
         self,
         min_bounty: int = 500_000,
@@ -334,15 +330,15 @@ class ImmunefiClient:
             List of high-value programs, sorted by priority
         """
         programs = await self.get_all_programs()
-        
+
         # Filter by minimum bounty
         high_value = [p for p in programs if p.max_bounty >= min_bounty]
-        
+
         # Sort by priority score
         high_value.sort(key=lambda p: p.get_priority_score(), reverse=True)
-        
+
         return high_value[:limit]
-    
+
     async def get_programs_by_blockchain(
         self,
         blockchain: str,
@@ -350,7 +346,7 @@ class ImmunefiClient:
         """Get programs for a specific blockchain."""
         programs = await self.get_all_programs()
         return [p for p in programs if blockchain in p.blockchain]
-    
+
     async def get_trending_vulnerabilities(
         self,
         days: int = 90,
@@ -366,7 +362,7 @@ class ImmunefiClient:
         """
         # In production, this would analyze recent submissions
         # For now, return known high-impact patterns from 2024
-        
+
         trends = [
             ImmunefiTrend(
                 vulnerability_type="Intent-Based Protocol Exploits",
@@ -441,9 +437,9 @@ class ImmunefiClient:
                 ],
             ),
         ]
-        
+
         return trends
-    
+
     async def get_program_intelligence(
         self,
         program_id: str,
@@ -460,10 +456,10 @@ class ImmunefiClient:
         program = await self.get_program_by_id(program_id)
         if not program:
             return {"error": f"Program {program_id} not found"}
-        
+
         # Get trending vulns that might apply
         trends = await self.get_trending_vulnerabilities()
-        
+
         # Calculate focus areas based on program type
         focus_areas = []
         if "bridge" in program.name.lower() or "bridge" in program.project_name.lower():
@@ -473,14 +469,14 @@ class ImmunefiClient:
                 "Signature schemes",
                 "Relay mechanisms",
             ])
-        
+
         if any(chain in program.blockchain for chain in ["Ethereum", "Polygon", "BSC"]):
             focus_areas.extend([
                 "Reentrancy patterns (classic and read-only)",
                 "Oracle manipulation",
                 "Access control",
             ])
-        
+
         # Find similar programs
         all_programs = await self.get_all_programs()
         similar = []
@@ -495,9 +491,9 @@ class ImmunefiClient:
                         "total_paid": p.total_paid,
                         "blockchain": p.blockchain,
                     })
-        
+
         similar = sorted(similar, key=lambda x: x["max_bounty"], reverse=True)[:5]
-        
+
         return {
             "program": {
                 "id": program.id,
@@ -524,7 +520,7 @@ class ImmunefiClient:
             ],
             "similar_programs": similar,
         }
-    
+
     async def close(self) -> None:
         """Close the HTTP client."""
         await self.client.aclose()
@@ -546,35 +542,34 @@ async def get_immunefi_intelligence(
         Intelligence data including programs and trends
     """
     client = ImmunefiClient()
-    
+
     try:
         if program_id:
             return await client.get_program_intelligence(program_id)
-        else:
-            # Return high-value programs and trends
-            programs = await client.get_high_value_programs(min_bounty=min_bounty)
-            trends = await client.get_trending_vulnerabilities()
-            
-            return {
-                "high_value_programs": [
-                    {
-                        "id": p.id,
-                        "name": p.name,
-                        "max_bounty": p.max_bounty,
-                        "priority_score": p.get_priority_score(),
-                        "blockchain": p.blockchain,
-                    }
-                    for p in programs
-                ],
-                "trending_vulnerabilities": [
-                    {
-                        "type": t.vulnerability_type,
-                        "occurrences": t.occurrences,
-                        "avg_bounty": t.avg_bounty,
-                        "severity": t.severity,
-                    }
-                    for t in trends
-                ],
-            }
+        # Return high-value programs and trends
+        programs = await client.get_high_value_programs(min_bounty=min_bounty)
+        trends = await client.get_trending_vulnerabilities()
+
+        return {
+            "high_value_programs": [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "max_bounty": p.max_bounty,
+                    "priority_score": p.get_priority_score(),
+                    "blockchain": p.blockchain,
+                }
+                for p in programs
+            ],
+            "trending_vulnerabilities": [
+                {
+                    "type": t.vulnerability_type,
+                    "occurrences": t.occurrences,
+                    "avg_bounty": t.avg_bounty,
+                    "severity": t.severity,
+                }
+                for t in trends
+            ],
+        }
     finally:
         await client.close()
