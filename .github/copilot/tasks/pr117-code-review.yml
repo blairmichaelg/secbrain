@@ -1,0 +1,166 @@
+name: PR117 Code Review Agent
+description: Specialized agent for reviewing and fixing code quality issues in PR #117
+
+# This agent focuses on code quality, linting, and type checking
+agent_role: code_reviewer
+coordination_id: pr117_parallel_work
+agent_id: code_reviewer
+
+trigger:
+  manual: true
+  pr_numbers: [117]
+  depends_on: test_optimizer
+
+inputs:
+  pr_number:
+    description: Pull request number to work on
+    default: 117
+    required: true
+
+task:
+  steps:
+    - name: Read coordination state
+      action: check_agent_state
+      with:
+        coordination_file: .github/copilot/coordination/pr117_state.json
+        agent_id: code_reviewer
+    
+    - name: Wait for test agent completion
+      action: wait_for_dependency
+      with:
+        depends_on: test_optimizer
+        timeout_minutes: 30
+    
+    - name: Claim code quality tasks
+      action: update_coordination
+      with:
+        claim_tasks:
+          - "fix_mypy_type_errors"
+          - "fix_pylint_issues"
+          - "optimize_complexity"
+          - "review_security_patterns"
+    
+    - name: Analyze type errors from CI
+      action: fetch_ci_results
+      with:
+        workflow: code-quality
+        artifact: mypy-report
+    
+    - name: Fix MyPy type errors
+      action: ai_code_editing
+      prompt: |
+        Fix the MyPy type errors in the following files modified in PR #117:
+        
+        Files to fix:
+        1. secbrain/agents/hypothesis_enhancer.py
+        2. secbrain/agents/immunefi_intelligence.py
+        3. secbrain/agents/research_orchestrator.py
+        4. secbrain/agents/threshold_network_patterns.py
+        5. secbrain/agents/solidity_security_patterns.py
+        6. secbrain/agents/vuln_hypothesis_agent.py
+        
+        Fix type annotations, add proper type hints, and resolve any incompatible type assignments.
+        Maintain backward compatibility and don't break existing functionality.
+    
+    - name: Address Pylint issues
+      action: ai_code_editing
+      prompt: |
+        Address Pylint errors, warnings, and convention issues in PR #117 files.
+        
+        Priority:
+        1. Errors (22 found) - Fix all
+        2. Warnings (146 found) - Fix critical ones
+        3. Conventions (281 found) - Fix where it improves readability
+        
+        Focus on:
+        - Missing docstrings for public methods
+        - Line length violations
+        - Naming conventions
+        - Unused imports
+        - Complex functions (reduce cyclomatic complexity)
+    
+    - name: Reduce cyclomatic complexity
+      action: ai_code_refactoring
+      prompt: |
+        Refactor complex functions identified by Radon (65 functions with D/E/F grade).
+        
+        For each complex function in the new files:
+        1. Break down into smaller helper functions
+        2. Simplify conditional logic
+        3. Extract repeated code
+        4. Improve readability
+        
+        Target: All functions should have C grade or better (complexity < 10)
+    
+    - name: Security review of new patterns
+      action: ai_security_analysis
+      prompt: |
+        Review the security vulnerability patterns added in PR #117:
+        
+        1. Verify Threshold Network patterns are accurate based on:
+           - Immunefi bug bounty program
+           - Known bridge exploits (Wormhole, Nomad, etc.)
+           - tBTC v2 security documentation
+        
+        2. Check that detection heuristics are comprehensive
+        
+        3. Validate that mitigation strategies are current best practices
+        
+        4. Ensure no false positives in pattern matching
+    
+    - name: Run linters and type checkers
+      action: execute_checks
+      with:
+        commands:
+          - "ruff check ."
+          - "mypy secbrain/agents/"
+          - "pylint secbrain/agents/"
+          - "radon cc secbrain/agents/ -a"
+    
+    - name: Update coordination state
+      action: update_coordination
+      with:
+        mark_complete:
+          - "fix_mypy_type_errors"
+          - "fix_pylint_issues"
+          - "optimize_complexity"
+          - "review_security_patterns"
+        report_status:
+          agent_id: code_reviewer
+          status: completed
+          type_errors_fixed: "{{ mypy_results.errors_fixed }}"
+          pylint_score: "{{ pylint_results.score }}"
+          complexity_improvements: "{{ radon_results.improvements }}"
+
+outputs:
+  type_errors_fixed:
+    description: Number of MyPy type errors resolved
+  
+  pylint_score:
+    description: Final Pylint score
+  
+  complexity_reduced:
+    description: Functions with reduced complexity
+  
+  security_review_passed:
+    description: Whether security review found issues
+
+success_criteria:
+  - type_errors_fixed >= 145
+  - pylint_score >= 8.0
+  - complexity_reduced >= 30
+  - security_review_passed == true
+
+communication:
+  status_updates:
+    - Write status to .github/copilot/coordination/pr117_state.json
+    - Update PR comment with code quality improvements
+  
+  completion_signal:
+    - Mark all tasks complete
+    - Trigger final validation
+    - Ready for PR merge
+
+dependencies:
+  requires:
+    - test_optimizer: completed

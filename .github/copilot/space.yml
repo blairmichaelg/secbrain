@@ -46,6 +46,21 @@ capabilities:
     name: Optimize Workflow Artifacts
     description: Review and optimize artifacts generated from audit processes
     task_file: tasks/optimize-artifacts.yml
+  
+  - id: pr117-test-optimization
+    name: PR117 Test Optimization Agent
+    description: Specialized agent for testing Threshold Network optimizations in PR #117
+    task_file: tasks/pr117-test-optimization.yml
+    agent_type: parallel
+    coordination: pr117_parallel_work
+  
+  - id: pr117-code-review
+    name: PR117 Code Review Agent
+    description: Specialized agent for reviewing and fixing code quality issues in PR #117
+    task_file: tasks/pr117-code-review.yml
+    agent_type: parallel
+    coordination: pr117_parallel_work
+    depends_on: [pr117-test-optimization]
 
 # Workspace instructions
 instructions:
@@ -70,6 +85,15 @@ instructions:
     - Parallelize independent jobs where possible
     - Minimize redundant artifact storage
     - Use fail-fast strategies for quick feedback
+  
+  parallel_agents: |
+    When working with parallel agents:
+    - Use the coordination system in .github/copilot/coordination/
+    - Check coordination state before claiming tasks
+    - Update state file after completing each task
+    - Respect agent dependencies and task priorities
+    - Communicate through shared state file
+    - See coordination/README.md for detailed instructions
 
 # Knowledge base references
 knowledge_bases:
@@ -77,3 +101,5 @@ knowledge_bases:
     description: Contract audit workflow patterns and best practices
   - path: .github/copilot/sota-coverage-knowledge.md
     description: SOTA coverage testing patterns and optimization strategies
+  - path: .github/copilot/coordination/README.md
+    description: Parallel agent coordination system documentation

@@ -1,0 +1,113 @@
+name: Parallel Agents for PR #117
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull Request number'
+        required: true
+        default: '117'
+  
+  issue_comment:
+    types: [created]
+
+jobs:
+  initialize-coordination:
+    name: Initialize Agent Coordination
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' && 
+       contains(github.event.comment.body, '@copilot parallel agents'))
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || 'copilot/optimize-bug-finding-logic' }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Initialize coordination state
+        run: |
+          python .github/copilot/coordination/orchestrator.py \
+            --state-file .github/copilot/coordination/pr117_state.json \
+            --command init \
+            --pr-number ${{ github.event.inputs.pr_number || '117' }}
+      
+      - name: Display initial state
+        run: |
+          echo "## Parallel Agent Coordination Initialized" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Registered Agents" >> $GITHUB_STEP_SUMMARY
+          echo "- Test Optimizer Agent (Priority 1)" >> $GITHUB_STEP_SUMMARY
+          echo "- Code Review Agent (Priority 2, depends on Test Optimizer)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Total Tasks: 8" >> $GITHUB_STEP_SUMMARY
+          echo "- Testing Tasks: 4" >> $GITHUB_STEP_SUMMARY
+          echo "- Code Quality Tasks: 4" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Invoke Test Optimizer: \`@copilot task .github/copilot/tasks/pr117-test-optimization.yml\`" >> $GITHUB_STEP_SUMMARY
+          echo "2. Invoke Code Reviewer: \`@copilot task .github/copilot/tasks/pr117-code-review.yml\`" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Commit coordination state
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .github/copilot/coordination/pr117_state.json
+          git commit -m "Initialize parallel agent coordination for PR #117" || echo "No changes to commit"
+          git push origin HEAD || echo "Nothing to push"
+
+  # Note: The actual agent tasks would be invoked separately via Copilot
+  # This workflow just sets up the coordination infrastructure
+  
+  monitor-progress:
+    name: Monitor Agent Progress
+    runs-on: ubuntu-latest
+    needs: initialize-coordination
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Check coordination status
+        id: status
+        run: |
+          python .github/copilot/coordination/orchestrator.py \
+            --state-file .github/copilot/coordination/pr117_state.json \
+            --command status > status.json
+          
+          cat status.json
+      
+      - name: Display progress
+        run: |
+          echo "## Agent Progress" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Parse and display the status
+          OVERALL_STATUS=$(cat status.json | jq -r '.overall_status')
+          PERCENTAGE=$(cat status.json | jq -r '.progress.percentage_complete')
+          COMPLETED=$(cat status.json | jq -r '.progress.completed_tasks')
+          TOTAL=$(cat status.json | jq -r '.progress.total_tasks')
+          
+          echo "**Overall Status**: $OVERALL_STATUS" >> $GITHUB_STEP_SUMMARY
+          echo "**Progress**: $COMPLETED / $TOTAL tasks ($PERCENTAGE%)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Agent Status" >> $GITHUB_STEP_SUMMARY
+          cat status.json | jq -r '.agents | to_entries[] | "- **\(.key)**: \(.value.status) (\(.value.tasks_completed)/\(.value.tasks_claimed) tasks)"' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Pending Tasks" >> $GITHUB_STEP_SUMMARY
+          cat status.json | jq -r '.pending_tasks[]' | while read task; do
+            echo "- $task" >> $GITHUB_STEP_SUMMARY
+          done
