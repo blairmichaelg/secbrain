@@ -29,6 +29,7 @@ structlog>=23.2.0
 
 # Ethereum utilities
 eth-utils>=2.0.0
+eth-hash[pycryptodome]>=0.7.0
 
 # Development dependencies
 pytest>=7.4.0
