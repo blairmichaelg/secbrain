@@ -1,0 +1,26 @@
+# Ignore workspace directory
+workspace/
+
+# Ignore environment files with secrets
+.env
+
+# Ignore Foundry build artifacts
+out/
+cache/
+broadcast/
+
+# Ignore node modules (if any)
+node_modules/
+
+# Ignore temporary files
+*.tmp
+*.log
+.DS_Store
+
+# Ignore local notes
+notes.txt
+scratch.md
+TODO.md
+
+# Keep .env.example
+!.env.example
