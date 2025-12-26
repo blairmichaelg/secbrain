@@ -1,5 +1,7 @@
 # Kiln Staking Contracts - Vulnerability Hunting Guide
 
+> **👉 New to this? Start with [GETTING_STARTED.md](GETTING_STARTED.md)**
+
 ## Overview
 
 This directory contains the setup, templates, and documentation for conducting security vulnerability research on the Kiln/MetaMask Validator Staking Smart Contracts.
@@ -17,6 +19,14 @@ To successfully hunt and write a valid report, you must focus on vulnerabilities
 - ✅ **Technically verifiable** via provided source code
 
 The "Known Issues" list is extensive (especially regarding malicious operator attacks), so most "operator bypass" bugs will be rejected. Focus on **Protocol logic errors** or **Fee/Withdrawal DoS** that happen *without* a malicious operator.
+
+## 📚 Documentation Guide
+
+- **[GETTING_STARTED.md](GETTING_STARTED.md)** - Start here! Beginner-friendly introduction
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Fast command reference for experienced hunters
+- **[REPORT_TEMPLATE.md](REPORT_TEMPLATE.md)** - Professional report format for submissions
+- **[SUBMISSION_STRATEGY.md](SUBMISSION_STRATEGY.md)** - How to avoid rejections and maximize acceptance
+- **[RESEARCH_NOTES.md](RESEARCH_NOTES.md)** - Advanced techniques and vulnerability patterns
 
 ## Quick Start
 
