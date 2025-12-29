@@ -176,7 +176,7 @@ jobs:
         uses: actions/checkout@v6
       
       - name: Download target repository
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: target-repository
           path: ${{ env.ANALYSIS_DIR }}/target
@@ -246,7 +246,7 @@ jobs:
         uses: actions/checkout@v6
       
       - name: Download target repository
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: target-repository
           path: ${{ env.ANALYSIS_DIR }}/target
@@ -319,7 +319,7 @@ jobs:
         uses: actions/checkout@v6
       
       - name: Download target repository
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: target-repository
           path: ${{ env.ANALYSIS_DIR }}/target
@@ -371,7 +371,7 @@ jobs:
         uses: actions/checkout@v6
       
       - name: Download target repository
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: target-repository
           path: ${{ env.ANALYSIS_DIR }}/target
@@ -439,7 +439,7 @@ jobs:
         uses: actions/checkout@v6
       
       - name: Download target repository
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: target-repository
           path: ${{ env.ANALYSIS_DIR }}/target
@@ -499,7 +499,7 @@ jobs:
         uses: actions/checkout@v6
       
       - name: Download target repository
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: target-repository
           path: ${{ env.ANALYSIS_DIR }}/target
@@ -574,14 +574,14 @@ jobs:
         uses: actions/checkout@v6
       
       - name: Download AI analysis
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ai-engineer-analysis
           path: ${{ env.RESULTS_DIR }}/ai
         continue-on-error: true
       
       - name: Download security intelligence
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: security-intelligence
           path: ${{ env.RESULTS_DIR }}/intel
@@ -632,7 +632,7 @@ jobs:
         uses: actions/checkout@v6
       
       - name: Download target repository
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: target-repository
           path: ${{ env.ANALYSIS_DIR }}/target
@@ -721,7 +721,7 @@ jobs:
         uses: actions/checkout@v6
       
       - name: Download all artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: ${{ env.RESULTS_DIR }}/all-artifacts
         continue-on-error: true
@@ -920,7 +920,7 @@ jobs:
     
     steps:
       - name: Download aggregated results
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: comprehensive-analysis-report
           path: ${{ env.RESULTS_DIR }}/report
