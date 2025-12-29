@@ -1,0 +1,15 @@
+{
+  "run_id": "ffa8472c",
+  "phase": "static",
+  "success": true,
+  "duration_seconds": 0.002723,
+  "errors": [],
+  "data": {
+    "findings": [],
+    "correlations": [],
+    "scanner": "semgrep",
+    "source_path": "targets/thresholdnetwork/instascope/src",
+    "auto_detected": false
+  },
+  "timestamp": "2025-12-29T06:09:00.845543+00:00"
+}

@@ -1,0 +1,20 @@
+{
+  "run_id": "ffa8472c",
+  "phase": "hypothesis",
+  "success": true,
+  "duration_seconds": 0.000277,
+  "errors": [],
+  "data": {
+    "hypotheses": [],
+    "top_hypotheses": [],
+    "review": {
+      "reviewed": false
+    },
+    "by_vuln_type": {},
+    "missing_targets": {
+      "missing_contract_or_function": 0,
+      "total_hypotheses": 0
+    }
+  },
+  "timestamp": "2025-12-29T06:09:00.845348+00:00"
+}

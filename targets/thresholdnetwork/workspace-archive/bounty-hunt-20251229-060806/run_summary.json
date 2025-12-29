@@ -1,0 +1,896 @@
+{
+  "run_id": "ffa8472c",
+  "success": true,
+  "phases_completed": [
+    "ingest",
+    "plan",
+    "recon",
+    "hypothesis",
+    "static",
+    "triage",
+    "report",
+    "meta"
+  ],
+  "phases_failed": [
+    "exploit"
+  ],
+  "findings_count": 0,
+  "reports_generated": 0,
+  "duration_seconds": 48.267876,
+  "errors": [
+    "No hypotheses to test"
+  ],
+  "economic": {
+    "decision": "SKIP",
+    "reason": "no_attempts",
+    "max_profit_eth": 0.0,
+    "max_profit_usd": 0.0,
+    "gas_cost_usd_est": 0.0,
+    "net_usd_est": 0.0
+  },
+  "attempts_count": 0,
+  "meta_metrics": {
+    "hypotheses_count": 0,
+    "hypotheses_with_concrete_target": 0,
+    "missing_targets": {
+      "missing_contract_or_function": 0,
+      "total_hypotheses": 0
+    },
+    "attempts_count": 0,
+    "attempts_with_profit": 0,
+    "economic_decision": "SKIP",
+    "total_duration_seconds": 48.267876,
+    "performance": {
+      "run_id": "ffa8472c",
+      "start_time": 1766988492.5705743,
+      "end_time": 1766988540.8385975,
+      "total_duration_seconds": 48.26802325248718,
+      "phases": {
+        "ingest": {
+          "phase_name": "ingest",
+          "start_time": 1766988492.570943,
+          "end_time": 1766988492.5713348,
+          "duration_seconds": 0.0003917217254638672,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "program_name": "Threshold Network",
+            "platform": "Immunefi",
+            "domains": [],
+            "urls": [],
+            "focus_areas": [
+              "Smart contract vulnerabilities",
+              "Loss of user funds",
+              "Bitcoin bridge security (tBTC)",
+              "Threshold cryptography implementation",
+              "Token staking mechanisms",
+              "Governance vulnerabilities",
+              "Cross-chain bridge security",
+              "Proxy pattern implementations",
+              "Access control vulnerabilities",
+              "Reentrancy attacks",
+              "Flash loan attacks",
+              "Oracle manipulation",
+              "Front-running vulnerabilities"
+            ],
+            "rules": [
+              "All testing must be done on local-forks of either public testnet or mainnet",
+              "Proof of Concept is required for all severities",
+              "No KYC required for payouts under $100,000",
+              "KYC required for payouts above $100,000",
+              "Rewards distributed according to Immunefi Vulnerability Severity Classification System V2.3",
+              "Critical smart contract vulnerabilities capped at 10% of funds at risk",
+              "Payouts are denominated in USD and made in USDC, USDT, ETH, or T tokens",
+              "All payouts are handled by the Threshold Network team",
+              "Duplicates and private known issues are not eligible for rewards"
+            ],
+            "research": {},
+            "normalized": {
+              "domains": [],
+              "urls": [],
+              "target_types": [],
+              "excluded_paths": [],
+              "allowed_methods": [
+                "GET",
+                "POST",
+                "PUT",
+                "HEAD",
+                "OPTIONS"
+              ]
+            }
+          }
+        },
+        "plan": {
+          "phase_name": "plan",
+          "start_time": 1766988492.5719218,
+          "end_time": 1766988492.6919708,
+          "duration_seconds": 0.12004899978637695,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "plan": {
+              "phases": [
+                {
+                  "phase": "recon",
+                  "objectives": [
+                    "Subdomain enumeration",
+                    "Port scanning",
+                    "Technology detection"
+                  ],
+                  "tools": [
+                    "subfinder",
+                    "httpx",
+                    "nmap"
+                  ],
+                  "time_estimate": "30 minutes",
+                  "success_criteria": [
+                    "Complete asset inventory",
+                    "Technology stack identified"
+                  ]
+                },
+                {
+                  "phase": "hypothesis",
+                  "objectives": [
+                    "Identify vulnerability classes",
+                    "Map attack surface"
+                  ],
+                  "tools": [
+                    "worker_model",
+                    "research"
+                  ],
+                  "time_estimate": "20 minutes",
+                  "success_criteria": [
+                    "Hypothesis list generated",
+                    "Priorities assigned"
+                  ]
+                },
+                {
+                  "phase": "exploit",
+                  "objectives": [
+                    "Test hypotheses",
+                    "Validate vulnerabilities"
+                  ],
+                  "tools": [
+                    "http_client",
+                    "nuclei"
+                  ],
+                  "time_estimate": "60 minutes",
+                  "success_criteria": [
+                    "Hypotheses tested",
+                    "Findings documented"
+                  ]
+                },
+                {
+                  "phase": "triage",
+                  "objectives": [
+                    "Validate findings",
+                    "Assess severity"
+                  ],
+                  "tools": [
+                    "advisor_model"
+                  ],
+                  "time_estimate": "15 minutes",
+                  "success_criteria": [
+                    "Findings validated",
+                    "Severity assigned"
+                  ]
+                },
+                {
+                  "phase": "report",
+                  "objectives": [
+                    "Create PoCs",
+                    "Write reports"
+                  ],
+                  "tools": [
+                    "worker_model",
+                    "research"
+                  ],
+                  "time_estimate": "30 minutes",
+                  "success_criteria": [
+                    "Reports ready for submission"
+                  ]
+                }
+              ],
+              "priority_targets": [],
+              "risk_considerations": [
+                "Stay within scope boundaries",
+                "Respect rate limits",
+                "Avoid destructive testing"
+              ]
+            },
+            "review": {
+              "approved": true,
+              "concerns": [],
+              "suggestions": [],
+              "risk_level": "medium"
+            },
+            "phases": [
+              "recon",
+              "hypothesis",
+              "exploit",
+              "triage",
+              "report"
+            ]
+          }
+        },
+        "recon": {
+          "phase_name": "recon",
+          "start_time": 1766988492.6930263,
+          "end_time": 1766988540.7941434,
+          "duration_seconds": 48.10111713409424,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "assets": [
+              {
+                "id": "error-d96c9661",
+                "type": "compilation_error",
+                "value": "0x65Fbae61ad2C8836fFbFB502A0dA41b0789D9Fc6",
+                "name": "Bank",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:18.708456+00:00"
+                }
+              },
+              {
+                "id": "error-31ed01de",
+                "type": "compilation_error",
+                "value": "0x2111A49ebb717959059693a3698872a0aE9866b9",
+                "name": "ProxyV5",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:18.709196+00:00"
+                }
+              },
+              {
+                "id": "error-14ff7a2a",
+                "type": "compilation_error",
+                "value": "0x46d52E41C2F300BC82217Ce22b920c34995204eb",
+                "name": "TransparentUpgradeableProxy",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:18.709851+00:00"
+                }
+              },
+              {
+                "id": "error-590bb567",
+                "type": "compilation_error",
+                "value": "0x836cdFE63fe2d63f8Bdb69b96f6097F36635896E",
+                "name": "LightRelay",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:18.710459+00:00"
+                }
+              },
+              {
+                "id": "error-e72c85bf",
+                "type": "compilation_error",
+                "value": "0xd101f2b25bcbf992bdf55db67c104fe7646f5447",
+                "name": "TokenholderGovernor",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:18.711016+00:00"
+                }
+              },
+              {
+                "id": "error-f8699f3b",
+                "type": "compilation_error",
+                "value": "0x5e4861a80B55f035D899f66772117F00FA0E8e7B",
+                "name": "TransparentUpgradeableProxy",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:24.720806+00:00"
+                }
+              },
+              {
+                "id": "error-c84bb52e",
+                "type": "compilation_error",
+                "value": "0xC9031f76006da0BD4bFa9E02aDf0d448dB3BC155",
+                "name": "TransparentUpgradeableProxy",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:24.721466+00:00"
+                }
+              },
+              {
+                "id": "error-9874da7e",
+                "type": "compilation_error",
+                "value": "0xcF29Ff894674775841F60Aa2a3c373DE27A8df2b",
+                "name": "MaintainerProxy",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:24.722160+00:00"
+                }
+              },
+              {
+                "id": "error-081bf196",
+                "type": "compilation_error",
+                "value": "0xa544b70dC6af906862f68eb8e68c27bb7150e672",
+                "name": "DonationVault",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:24.722823+00:00"
+                }
+              },
+              {
+                "id": "error-95b8d35e",
+                "type": "compilation_error",
+                "value": "0xfbae130e06bbc8ca198861beecae6e2b830398fb",
+                "name": "WalletRegistry",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:24.723437+00:00"
+                }
+              },
+              {
+                "id": "error-61183aa6",
+                "type": "compilation_error",
+                "value": "0x0125c8977a02b2Fa3970b1ED9AF02f5Bedd4eF27",
+                "name": "EcdsaDkgValidator",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:30.733153+00:00"
+                }
+              },
+              {
+                "id": "error-87f570b2",
+                "type": "compilation_error",
+                "value": "0xb810AbD43d8FCFD812d6FEB14fefc236E92a341A",
+                "name": "TransparentUpgradeableProxy",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:30.733762+00:00"
+                }
+              },
+              {
+                "id": "error-97f71a7c",
+                "type": "compilation_error",
+                "value": "0x18084fbA666a33d37592fA2633fD49a74DD93a88",
+                "name": "TBTC",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:30.734392+00:00"
+                }
+              },
+              {
+                "id": "error-1eb69855",
+                "type": "compilation_error",
+                "value": "0x75A6e4A7C8fAa162192FAD6C1F7A6d48992c619A",
+                "name": "TransparentUpgradeableProxy",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:30.734980+00:00"
+                }
+              },
+              {
+                "id": "error-4f7f452e",
+                "type": "compilation_error",
+                "value": "0xea7ca290c7811d1cc2e79f8d706bd05d8280bd37",
+                "name": "CumulativeMerkleDrop",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:30.735540+00:00"
+                }
+              },
+              {
+                "id": "error-7bdfcba0",
+                "type": "compilation_error",
+                "value": "0x5D4d83aaB53B7E7cA915AEB2d4d3f4e03823DbDe",
+                "name": "TransparentUpgradeableProxy",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:36.744806+00:00"
+                }
+              },
+              {
+                "id": "error-bf8bff7d",
+                "type": "compilation_error",
+                "value": "0x6aed6cC30D1b2770771052555d257Da86eD47fe8",
+                "name": "WalletRegistryGovernance",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:36.745426+00:00"
+                }
+              },
+              {
+                "id": "error-286d2a3c",
+                "type": "compilation_error",
+                "value": "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5",
+                "name": "T",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:36.745973+00:00"
+                }
+              },
+              {
+                "id": "error-5f466c61",
+                "type": "compilation_error",
+                "value": "0x9C070027cdC9dc8F82416B2e5314E11DFb4FE3CD",
+                "name": "TBTCVault",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:36.746527+00:00"
+                }
+              },
+              {
+                "id": "error-e970d510",
+                "type": "compilation_error",
+                "value": "0x8adF3f35dBE4026112bCFc078872bcb967732Ea8",
+                "name": "ReimbursementPool",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:36.747049+00:00"
+                }
+              },
+              {
+                "id": "error-be84eed7",
+                "type": "compilation_error",
+                "value": "0x0184739C32edc3471D3e4860c8E39a5f3Ff85A45",
+                "name": "TransparentUpgradeableProxy",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:42.756749+00:00"
+                }
+              },
+              {
+                "id": "error-04ad0c3b",
+                "type": "compilation_error",
+                "value": "0xB8dF0A949aC45ff8f401553A1dcb742Feb38E6D3",
+                "name": "TransparentUpgradeableProxy",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:42.757370+00:00"
+                }
+              },
+              {
+                "id": "error-8b60e624",
+                "type": "compilation_error",
+                "value": "0x30019D85a86ABD3cDA1167F4C052690c32FBDEc2",
+                "name": "WalletProposalValidator",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:42.757897+00:00"
+                }
+              },
+              {
+                "id": "error-bd46d741",
+                "type": "compilation_error",
+                "value": "0x8d014903bf7867260584d714e11809fea5293234",
+                "name": "Bridge",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:42.758461+00:00"
+                }
+              },
+              {
+                "id": "error-201a8e15",
+                "type": "compilation_error",
+                "value": "0x01B67b1194C75264d06F808A921228a95C765dd7",
+                "name": "TransparentUpgradeableProxy",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:42.759001+00:00"
+                }
+              },
+              {
+                "id": "error-7641ff8d",
+                "type": "compilation_error",
+                "value": "0xc2731fb2823af3Efc2694c9bC86F444d5c5bb4Dc",
+                "name": "SortitionPool",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:48.768417+00:00"
+                }
+              },
+              {
+                "id": "error-512adbee",
+                "type": "compilation_error",
+                "value": "0x03E342731c08FDDc34cFb43E91cB3a7e424ee0F6",
+                "name": "TransparentUpgradeableProxy",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:48.769049+00:00"
+                }
+              },
+              {
+                "id": "error-09975b5e",
+                "type": "compilation_error",
+                "value": "0xA94DD662E2A247493fACCeab9f2459AAF90778Ee",
+                "name": "BridgeGovernance",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:48.769620+00:00"
+                }
+              },
+              {
+                "id": "error-5a777308",
+                "type": "compilation_error",
+                "value": "0xf39d314c5ad7dc88958116dfa7d5ac095d563aff",
+                "name": "StarknetTokenBridge",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:48.770181+00:00"
+                }
+              },
+              {
+                "id": "error-abd29b65",
+                "type": "compilation_error",
+                "value": "0x08d7e8ce124921caafd7670502379ced0065c832",
+                "name": "WalletRegistry",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:48.770717+00:00"
+                }
+              },
+              {
+                "id": "error-c0c9757c",
+                "type": "compilation_error",
+                "value": "0x8ce2003abee1f37fb055e52c14a5eeea00ad1ce7",
+                "name": "Bridge",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:54.780016+00:00"
+                }
+              },
+              {
+                "id": "error-a7e0ec81",
+                "type": "compilation_error",
+                "value": "0xd3585922b7f6b30953fc81726f48046826b8b2ca",
+                "name": "StarkNetBitcoinDepositor",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:54.780682+00:00"
+                }
+              },
+              {
+                "id": "error-8468f974",
+                "type": "compilation_error",
+                "value": "0x9a5250c7bea10f7472eb9d50bb757b83d67fb5ed",
+                "name": "BTCDepositorWormhole",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:54.781298+00:00"
+                }
+              },
+              {
+                "id": "error-6717fbc8",
+                "type": "compilation_error",
+                "value": "0x3ffee7d7be970201a33d17e318e2421a06ad69f8",
+                "name": "L1BitcoinDepositor",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:54.781975+00:00"
+                }
+              },
+              {
+                "id": "error-24ef58ac",
+                "type": "compilation_error",
+                "value": "0x14d93d4c4e07130fffe6083432b66b96d8eb9dc0",
+                "name": "L1BTCRedeemerWormhole",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:08:54.782575+00:00"
+                }
+              },
+              {
+                "id": "error-45e37e62",
+                "type": "compilation_error",
+                "value": "0xe490c802f8455ea1f0df96a7b5043536a41e2535",
+                "name": "RebateStaking",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:09:00.792300+00:00"
+                }
+              },
+              {
+                "id": "error-4a6aa121",
+                "type": "compilation_error",
+                "value": "0xbfd04e3928923ad8c86256b9a8f64ebd01cf1daf",
+                "name": "RedemptionWatchtower",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:09:00.792898+00:00"
+                }
+              },
+              {
+                "id": "error-08d68398",
+                "type": "compilation_error",
+                "value": "0xf5a2ccfea213cb3ff0799e0c33ea2fa3da7cbb65",
+                "name": "TokenStaking",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:09:00.793481+00:00"
+                }
+              },
+              {
+                "id": "error-7f27cc29",
+                "type": "compilation_error",
+                "value": "0x7ff02bb686658f2d55f28fdf45286f9499beb9a5",
+                "name": "LockReleaseTokenPoolUpgradeable",
+                "chain_id": 1,
+                "status": "compilation_error",
+                "metadata": {
+                  "error": "[Errno 2] No such file or directory: PosixPath('c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope')",
+                  "error_type": "FileNotFoundError",
+                  "timestamp": "2025-12-29T06:09:00.794024+00:00"
+                }
+              }
+            ],
+            "contracts_count": 39,
+            "compiled_count": 0,
+            "failed_count": 39,
+            "foundry_root": "c:/Users/Michael/CascadeProjects/windsurf-project-2/targets/thresholdnetwork/instascope"
+          }
+        },
+        "hypothesis": {
+          "phase_name": "hypothesis",
+          "start_time": 1766988540.797462,
+          "end_time": 1766988540.7978437,
+          "duration_seconds": 0.00038170814514160156,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "hypotheses": [],
+            "top_hypotheses": [],
+            "review": {
+              "reviewed": false
+            },
+            "by_vuln_type": {},
+            "missing_targets": {
+              "missing_contract_or_function": 0,
+              "total_hypotheses": 0
+            }
+          }
+        },
+        "exploit": {
+          "phase_name": "exploit",
+          "start_time": 1766988540.8010473,
+          "end_time": 1766988540.8013384,
+          "duration_seconds": 0.0002911090850830078,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": false,
+          "metadata": {}
+        },
+        "static": {
+          "phase_name": "static",
+          "start_time": 1766988540.80142,
+          "end_time": 1766988540.8042333,
+          "duration_seconds": 0.0028133392333984375,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "findings": [],
+            "correlations": [],
+            "scanner": "semgrep",
+            "source_path": "targets/thresholdnetwork/instascope/src",
+            "auto_detected": false
+          }
+        },
+        "triage": {
+          "phase_name": "triage",
+          "start_time": 1766988540.8075075,
+          "end_time": 1766988540.807755,
+          "duration_seconds": 0.0002474784851074219,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "findings": [],
+            "triaged": 0,
+            "economic": {
+              "decision": "SKIP",
+              "reason": "no_attempts",
+              "max_profit_eth": 0.0,
+              "max_profit_usd": 0.0,
+              "gas_cost_usd_est": 0.0,
+              "net_usd_est": 0.0
+            }
+          }
+        },
+        "report": {
+          "phase_name": "report",
+          "start_time": 1766988540.8110297,
+          "end_time": 1766988540.8112938,
+          "duration_seconds": 0.00026416778564453125,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "reports": []
+          }
+        },
+        "meta": {
+          "phase_name": "meta",
+          "start_time": 1766988540.814743,
+          "end_time": 1766988540.8325102,
+          "duration_seconds": 0.01776719093322754,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "run_id": "ffa8472c",
+            "program": "Threshold Network",
+            "timestamp": "2025-12-29T06:09:00.832132+00:00",
+            "metrics": {
+              "recon": {
+                "assets_discovered": 39,
+                "live_hosts": 0
+              },
+              "hypotheses": {
+                "total_generated": 0,
+                "by_type": {}
+              },
+              "exploitation": {
+                "tested": 0,
+                "confirmed": 0,
+                "confirmation_rate": 0
+              },
+              "findings": {
+                "total": 0,
+                "by_severity": {}
+              }
+            },
+            "analysis": {
+              "effective_types": {},
+              "ineffective_types": {},
+              "success_rates": {},
+              "top_performing": [],
+              "hypothesis_effectiveness": {}
+            },
+            "recommendations": [
+              "Low confirmation rate - consider improving hypothesis quality or testing methodology",
+              "No findings - consider expanding attack surface or trying new techniques",
+              "AI Insights: "
+            ]
+          }
+        }
+      },
+      "total_api_calls": 0,
+      "total_cache_hits": 0,
+      "total_cache_misses": 0,
+      "total_errors": 0,
+      "cache_hit_rate": 0.0,
+      "successful_phases": 8,
+      "failed_phases": 1
+    },
+    "quality_metrics": {}
+  }
+}
