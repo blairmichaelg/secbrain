@@ -1,0 +1,15 @@
+{
+  "run_id": "14c16b46",
+  "phase": "static",
+  "success": true,
+  "duration_seconds": 0.003274,
+  "errors": [],
+  "data": {
+    "findings": [],
+    "correlations": [],
+    "scanner": "semgrep",
+    "source_path": "targets/thresholdnetwork/instascope/src",
+    "auto_detected": false
+  },
+  "timestamp": "2026-01-05T06:10:08.613325+00:00"
+}

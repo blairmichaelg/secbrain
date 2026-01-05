@@ -1,0 +1,20 @@
+{
+  "run_id": "14c16b46",
+  "phase": "triage",
+  "success": true,
+  "duration_seconds": 0.000132,
+  "errors": [],
+  "data": {
+    "findings": [],
+    "triaged": 0,
+    "economic": {
+      "decision": "SKIP",
+      "reason": "no_attempts",
+      "max_profit_eth": 0.0,
+      "max_profit_usd": 0.0,
+      "gas_cost_usd_est": 0.0,
+      "net_usd_est": 0.0
+    }
+  },
+  "timestamp": "2026-01-05T06:10:08.613382+00:00"
+}
