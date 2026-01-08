@@ -4,7 +4,13 @@ This guide helps you get started with invariant testing for your smart contracts
 
 ## Prerequisites
 
-- Foundry installed (`curl -L https://foundry.paradigm.xyz | bash && foundryup`)
+- Foundry installed
+  ```bash
+  # Recommended: Install via your package manager
+  # Or from source: https://book.getfoundry.sh/getting-started/installation
+  curl -L https://foundry.paradigm.xyz | bash
+  foundryup
+  ```
 - Basic understanding of Solidity
 - Smart contracts to test
 

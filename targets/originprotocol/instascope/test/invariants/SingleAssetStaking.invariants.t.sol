@@ -132,9 +132,14 @@ contract StakingHandler is Test {
         // Ensure actor has tokens
         uint256 actorBalance = token.balanceOf(actor);
         if (actorBalance < amount) {
-            // Mint tokens if needed
-            vm.prank(actor);
-            MockERC20(address(token)).mint(actor, amount - actorBalance);
+            // Mint tokens if needed (assumes token has a public mint function)
+            // In production, replace with proper token allocation mechanism
+            try MockERC20(address(token)).mint(actor, amount - actorBalance) {
+                // Minting succeeded
+            } catch {
+                // Token doesn't support mint or isn't MockERC20, skip this operation
+                return;
+            }
         }
         
         // Approve staking contract

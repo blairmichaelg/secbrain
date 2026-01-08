@@ -105,18 +105,20 @@ contract ERC20Handler is Test {
         address actor = _getRandomActor(actorSeed);
         
         // Bound amount to prevent overflow
-        uint256 currentSupply = token.totalSupply();
-        if (currentSupply >= type(uint256).max - amount) {
-            amount = type(uint256).max - currentSupply;
-        }
         amount = bound(amount, 0, 1000e18);
+        
+        // Additional check to prevent overflow
+        uint256 currentSupply = token.totalSupply();
+        if (currentSupply > type(uint256).max - amount) {
+            // Skip minting if it would overflow
+            return;
+        }
         
         vm.prank(actor);
         token.mint(actor, amount);
         
-        unchecked {
-            ghost_mintSum += amount;
-        }
+        // Safe to add since we checked for overflow above
+        ghost_mintSum += amount;
     }
     
     function burn(uint256 actorSeed, uint256 amount) external {
@@ -126,9 +128,8 @@ contract ERC20Handler is Test {
         vm.prank(actor);
         token.burn(actor, amount);
         
-        unchecked {
-            ghost_burnSum += amount;
-        }
+        // Safe to add since amount is bounded
+        ghost_burnSum += amount;
     }
     
     function transfer(uint256 fromSeed, uint256 toSeed, uint256 amount) external {
@@ -140,9 +141,8 @@ contract ERC20Handler is Test {
         vm.prank(from);
         token.transfer(to, amount);
         
-        unchecked {
-            ghost_transferSum += amount;
-        }
+        // Safe to add since we're tracking cumulative transfers
+        ghost_transferSum += amount;
     }
     
     function approve(uint256 ownerSeed, uint256 spenderSeed, uint256 amount) external {
