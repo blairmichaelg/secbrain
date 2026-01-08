@@ -1,13 +1,16 @@
 # SecBrain
 
-**Multi-agent security bounty system with research integration, advisor models, and guarded tooling.**
-
 [![Security Scan](https://github.com/blairmichaelg/secbrain/actions/workflows/security-scan.yml/badge.svg)](https://github.com/blairmichaelg/secbrain/actions/workflows/security-scan.yml)
 [![Solidity Security](https://github.com/blairmichaelg/secbrain/actions/workflows/solidity-security.yml/badge.svg)](https://github.com/blairmichaelg/secbrain/actions/workflows/solidity-security.yml)
 [![Code Quality](https://github.com/blairmichaelg/secbrain/actions/workflows/code-quality.yml/badge.svg)](https://github.com/blairmichaelg/secbrain/actions/workflows/code-quality.yml)
 [![Python Testing](https://github.com/blairmichaelg/secbrain/actions/workflows/python-testing.yml/badge.svg)](https://github.com/blairmichaelg/secbrain/actions/workflows/python-testing.yml)
 [![Foundry Fuzzing](https://github.com/blairmichaelg/secbrain/actions/workflows/foundry-fuzzing.yml/badge.svg)](https://github.com/blairmichaelg/secbrain/actions/workflows/foundry-fuzzing.yml)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+
+> **Multi-agent security bounty system with research integration, advisor models, and guarded tooling.**
+
+---
 
 ## Overview
 
@@ -471,8 +474,18 @@ MIT
 
 ---
 
-**Need help?** Check the [documentation](docs/README.md) or open an issue!
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with cutting-edge AI models and security research
+- Powered by open-source tools: Foundry, Slither, Semgrep, and more
+- Inspired by the security research and bug bounty community
 
 ---
 
-*Last updated: December 25, 2024*
+**Need help?** Check the [documentation](docs/README.md) or [open an issue](https://github.com/blairmichaelg/secbrain/issues)!
+
+**Last updated:** January 8, 2026

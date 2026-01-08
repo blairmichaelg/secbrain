@@ -8,20 +8,29 @@ version = "0.1.0"
 description = "Multi-agent security bounty system with research integration, advisor models, and guarded tooling"
 readme = "README.md"
 requires-python = ">=3.11"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
-    { name = "SecBrain Team" }
+    { name = "SecBrain Team", email = "secbrain@example.com" }
 ]
-keywords = ["security", "bug-bounty", "agents", "ai", "vulnerability-research"]
+maintainers = [
+    { name = "SecBrain Team", email = "secbrain@example.com" }
+]
+keywords = ["security", "bug-bounty", "agents", "ai", "vulnerability-research", "defi", "smart-contracts", "fuzzing"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
     "Topic :: Security",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
 ]
 
 [project.urls]
@@ -29,6 +38,7 @@ Homepage = "https://github.com/blairmichaelg/secbrain"
 Repository = "https://github.com/blairmichaelg/secbrain"
 Issues = "https://github.com/blairmichaelg/secbrain/issues"
 Documentation = "https://github.com/blairmichaelg/secbrain#documentation"
+Changelog = "https://github.com/blairmichaelg/secbrain/blob/main/CHANGELOG.md"
 
 dependencies = [
     "typer>=0.9.0",
