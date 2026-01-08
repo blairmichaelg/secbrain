@@ -209,10 +209,12 @@ secbrain/
 ├── secbrain/                 # Main Python package
 │   ├── agents/              # AI agent implementations
 │   ├── cli/                 # CLI interface (typer)
+│   ├── config/              # Configuration models
 │   ├── core/                # Core functionality
 │   ├── insights/            # Analytics and insights
-│   ├── research/            # Research integration (Perplexity)
-│   ├── tools/               # Security tools integration
+│   ├── models/              # Data models
+│   ├── tools/               # Security tools and research integration (Perplexity)
+│   ├── utils/               # Utility functions
 │   ├── workflows/           # Workflow orchestration
 │   └── tests/               # Test suite
 ├── scripts/                 # Utility scripts
@@ -317,7 +319,7 @@ python -m pip install -e ".[dev]"
 ### Using Research Integration
 
 ```python
-from secbrain.research.perplexity import PerplexityResearch
+from secbrain.tools.perplexity_research import PerplexityResearch
 
 # Use with rate limiting and caching
 research = PerplexityResearch(
