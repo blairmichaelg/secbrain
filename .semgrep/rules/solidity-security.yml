@@ -1,12 +1,17 @@
 rules:
   - id: solidity-reentrancy-external-call
-    patterns:
-      - pattern-either:
-          - pattern: "$ADDR.call{value: $AMOUNT}(...)"
-          - pattern: $ADDR.delegatecall(...)
+    pattern-either:
+      - pattern: $ADDR.call(...)
+      - pattern: $ADDR.delegatecall(...)
+      - pattern: payable($ADDR).transfer(...)
+      - pattern: payable($ADDR).send(...)
     message: |
-      Potential reentrancy vulnerability with external call detected.
-      State changes should be made before external calls (Checks-Effects-Interactions pattern).
+      External call detected - check for reentrancy vulnerabilities.
+      Follow the Checks-Effects-Interactions pattern:
+      1. Perform checks (require statements)
+      2. Update state variables
+      3. Make external calls
+      Consider using ReentrancyGuard or similar protection.
     severity: WARNING
     languages: [solidity]
     metadata:
@@ -27,18 +32,21 @@ rules:
   - id: solidity-unchecked-low-level-call
     patterns:
       - pattern-either:
-          - pattern: "$ADDR.call{...}(...)"
+          - pattern: $ADDR.call(...)
           - pattern: $ADDR.delegatecall(...)
           - pattern: $ADDR.staticcall(...)
       - pattern-not-inside: |
-          ($SUCCESS, ...) = $ADDR.call{...}(...);
+          ($SUCCESS, ...) = $ADDR.call(...);
           require($SUCCESS, ...);
       - pattern-not-inside: |
-          ($SUCCESS, ...) = $ADDR.call{...}(...);
-          if (!$SUCCESS) { ... }
+          ($SUCCESS, ...) = $ADDR.delegatecall(...);
+          require($SUCCESS, ...);
+      - pattern-not-inside: |
+          ($SUCCESS, ...) = $ADDR.staticcall(...);
+          require($SUCCESS, ...);
     message: |
       Low-level call return value not checked.
-      Always check the return value of low-level calls.
+      Always check the return value of low-level calls (call, delegatecall, staticcall).
     severity: ERROR
     languages: [solidity]
     metadata:
@@ -52,7 +60,7 @@ rules:
         - vuln
     fix: |
       Check the return value:
-      (bool success, bytes memory data) = addr.call{value: amount}("");
+      (bool success, bytes memory data) = addr.call("");
       require(success, "Call failed");
 
   - id: solidity-tx-origin-auth
@@ -94,21 +102,12 @@ rules:
         - vuln
 
   - id: solidity-unprotected-selfdestruct
-    patterns:
-      - pattern: selfdestruct(...)
-      - pattern-not-inside: |
-          function $FUNC(...) ... $MODIFIER ... {
-            ...
-            selfdestruct(...);
-          }
-      - pattern-not-inside: |
-          require(msg.sender == ..., ...);
-          ...
-          selfdestruct(...);
+    pattern: selfdestruct(...)
     message: |
-      selfdestruct without access control detected.
-      Ensure only authorized addresses can destroy the contract.
-    severity: ERROR
+      selfdestruct detected - ensure it has proper access control.
+      Verify that only authorized addresses can destroy the contract.
+      Use modifiers like onlyOwner or require statements to protect this function.
+    severity: WARNING
     languages: [solidity]
     metadata:
       category: security
@@ -147,21 +146,12 @@ rules:
       Use Chainlink VRF or similar oracle-based randomness:
       import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
-  - id: solidity-integer-overflow
-    patterns:
-      - pattern-either:
-          - pattern: $X + $Y
-          - pattern: $X - $Y
-          - pattern: $X * $Y
-      - pattern-inside: |
-          pragma solidity ^0.$VERSION.$PATCH;
-          ...
-      - metavariable-comparison:
-          metavariable: $VERSION
-          comparison: $VERSION < 8
+  - id: solidity-old-version
+    pattern-regex: 'pragma\s+solidity\s+[\^~]?0\.[0-7]\.'
     message: |
-      Integer overflow/underflow possible in Solidity < 0.8.0.
-      Use SafeMath library or upgrade to Solidity 0.8.0+.
+      Using Solidity version < 0.8.0 detected.
+      Versions before 0.8.0 do not have built-in overflow/underflow protection.
+      Consider upgrading to Solidity 0.8.0+ or use SafeMath library.
     severity: WARNING
     languages: [solidity]
     metadata:
@@ -174,17 +164,13 @@ rules:
       subcategory:
         - vuln
 
-  - id: solidity-delegatecall-to-untrusted
-    patterns:
-      - pattern: $ADDR.delegatecall(...)
-      - pattern-not-inside: |
-          address constant $TRUSTED = ...;
-          ...
-          $TRUSTED.delegatecall(...);
+  - id: solidity-delegatecall-usage
+    pattern: $ADDR.delegatecall(...)
     message: |
-      delegatecall to untrusted contract can lead to complete contract takeover.
-      Ensure the target address is trusted and cannot be modified.
-    severity: ERROR
+      delegatecall usage detected - ensure the target address is trusted.
+      delegatecall to untrusted contracts can lead to complete contract takeover.
+      Verify the target address is immutable and from a trusted source.
+    severity: WARNING
     languages: [solidity]
     metadata:
       category: security
@@ -200,23 +186,16 @@ rules:
       address public immutable implementation;
       implementation.delegatecall(data);
 
-  - id: solidity-unprotected-ether-withdrawal
-    patterns:
-      - pattern-either:
-          - pattern: payable($ADDR).transfer(...)
-          - pattern: payable($ADDR).send(...)
-          - pattern: "$ADDR.call{value: $AMOUNT}(...)"
-      - pattern-not-inside: |
-          modifier $MODIFIER() {
-            ...
-          }
-      - pattern-not-inside: |
-          require(msg.sender == $OWNER);
-          ...
+  - id: solidity-ether-transfer
+    pattern-either:
+      - pattern: payable($ADDR).transfer(...)
+      - pattern: payable($ADDR).send(...)
     message: |
-      Ether withdrawal without proper access control.
-      Add access control modifiers or require statements.
-    severity: ERROR
+      Ether transfer detected - ensure proper access control and error handling.
+      - Use access control modifiers (e.g., onlyOwner) or require statements
+      - Handle return values from send() properly
+      - Consider using call() with proper checks instead of transfer/send
+    severity: WARNING
     languages: [solidity]
     metadata:
       category: security
