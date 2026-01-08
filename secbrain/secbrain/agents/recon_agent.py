@@ -44,7 +44,7 @@ class CompilationRetryHelper:
         self,
         max_retries: int = 3,
         base_wait: float = 2.0,
-        logger=None,
+        logger: Any = None,
     ) -> None:
         self.max_retries = max_retries
         self.base_wait = base_wait
@@ -459,7 +459,7 @@ class ReconAgent(BaseAgent):
         retry_helper = CompilationRetryHelper(max_retries=3, base_wait=2.0, logger=self.logger)
 
         # Compile each contract using its profile
-        async def _compile_contract(contract) -> dict[str, Any]:
+        async def _compile_contract(contract: Any) -> dict[str, Any]:
             async with semaphore:
                 if self._check_kill_switch():
                     return {"killed": True, "assets": [], "compiled": False}

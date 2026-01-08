@@ -59,7 +59,7 @@ def setup_logging(
     console_output: bool = True,
     log_level: str = "INFO",
     workspace_path: Path | None = None,
-):
+) -> Any:
     """
     Set up structured logging for a SecBrain run.
 

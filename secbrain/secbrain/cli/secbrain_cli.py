@@ -709,7 +709,7 @@ def immunefi(
     """
     console.print("[bold blue]SecBrain Immunefi Intelligence[/]")
 
-    async def _run_action():
+    async def _run_action() -> None:
         from secbrain.tools.immunefi_client import ImmunefiClient
 
         client = ImmunefiClient()
@@ -855,7 +855,7 @@ def research(
     """
     console.print("[bold blue]SecBrain Advanced Research[/]")
 
-    async def _run_research():
+    async def _run_research() -> None:
         from secbrain.agents.advanced_research_agent import AdvancedResearchAgent
         from secbrain.core.context import ProgramConfig, RunContext, ScopeConfig
 

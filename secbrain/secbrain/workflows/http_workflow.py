@@ -35,7 +35,7 @@ class HTTPWorkflowResult:
 class MultiStepHTTPWorkflow:
     """Run multiple HTTP steps sequentially with artifact capture."""
 
-    def __init__(self, run_context) -> None:
+    def __init__(self, run_context: Any) -> None:
         self.run_context = run_context
         self.client = SecBrainHTTPClient(run_context)
 

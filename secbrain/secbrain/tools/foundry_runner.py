@@ -84,7 +84,7 @@ class FoundryRunner:
     stubbed body of `_execute_foundry_test` with real forge invocations.
     """
 
-    def __init__(self, run_context, logger=None):
+    def __init__(self, run_context: Any, logger: Any = None) -> None:
         self.run_context = run_context
         self.logger = logger
         self.workspace = Path(run_context.workspace_path) / "exploit_attempts"
