@@ -29,7 +29,7 @@ class HardhatRunner:
     to keep API surface compatible if you decide to add Hardhat parity.
     """
 
-    def __init__(self, run_context, logger=None):
+    def __init__(self, run_context: Any, logger: Any = None) -> None:
         self.run_context = run_context
         self.logger = logger
         self.workspace = Path(run_context.workspace_path) / "hardhat_attempts"

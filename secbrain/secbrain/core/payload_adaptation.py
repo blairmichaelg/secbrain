@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from typing import Any
+
 
 class PayloadMutator:
     """Generate payload variants in response to failure signals."""
 
     @staticmethod
-    def adapt(payload: str, response) -> list[str]:
+    def adapt(payload: str, response: Any) -> list[str]:
         text = (getattr(response, "text", "") or "").lower()
         status = int(getattr(response, "status_code", 0) or 0)
         variants: list[str] = []

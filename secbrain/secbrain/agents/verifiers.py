@@ -10,7 +10,7 @@ import hashlib
 import uuid
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
-from typing import ClassVar, Protocol
+from typing import Any, ClassVar, Protocol
 
 from secbrain.core.verification import (
     EvidenceBundle,
@@ -30,8 +30,8 @@ class ExploitVerifier(ABC):
         target_url: str,
         parameter_name: str,
         payload: str,
-        baseline_response,
-        test_response,
+        baseline_response: Any,
+        test_response: Any,
         trace_id: str,
     ) -> VerificationResult:
         """Verify exploitation by comparing baseline vs. test response."""
@@ -42,8 +42,8 @@ class ExploitVerifier(ABC):
         target_url: str,
         parameter_name: str,
         payload: str,
-        baseline_response,
-        test_response,
+        baseline_response: Any,
+        test_response: Any,
         trace_id: str,
         verification_method: VerificationMethod,
         test_passed: bool,
@@ -85,8 +85,8 @@ class ReflectedXSSVerifier(ExploitVerifier):
         target_url: str,
         parameter_name: str,
         payload: str,
-        baseline_response,
-        test_response,
+        baseline_response: Any,
+        test_response: Any,
         trace_id: str,
     ) -> VerificationResult:
         baseline_contains = payload in getattr(baseline_response, "text", "")
@@ -145,8 +145,8 @@ class SQLiErrorVerifier(ExploitVerifier):
         target_url: str,
         parameter_name: str,
         payload: str,
-        baseline_response,
-        test_response,
+        baseline_response: Any,
+        test_response: Any,
         trace_id: str,
     ) -> VerificationResult:
         baseline_text = (getattr(baseline_response, "text", "") or "").lower()
@@ -202,8 +202,8 @@ class NaiveVerifier(ExploitVerifier):
         target_url: str,
         parameter_name: str,
         payload: str,
-        baseline_response,
-        test_response,
+        baseline_response: Any,
+        test_response: Any,
         trace_id: str,
     ) -> VerificationResult:
         evidence = self._build_evidence_bundle(
@@ -234,8 +234,8 @@ class TimingVerifier(ExploitVerifier):
         target_url: str,
         parameter_name: str,
         payload: str,
-        baseline_response,
-        test_response,
+        baseline_response: Any,
+        test_response: Any,
         trace_id: str,
     ) -> VerificationResult:
         baseline_ms = float(getattr(baseline_response, "duration_ms", 0) or 0)
@@ -324,8 +324,8 @@ class SSTIVerifier(ExploitVerifier):
         target_url: str,
         parameter_name: str,
         payload: str,
-        baseline_response,
-        test_response,
+        baseline_response: Any,
+        test_response: Any,
         trace_id: str,
     ) -> VerificationResult:
         test_text = (getattr(test_response, "text", "") or "")[:1000].lower()
@@ -370,8 +370,8 @@ class PathTraversalVerifier(ExploitVerifier):
         target_url: str,
         parameter_name: str,
         payload: str,
-        baseline_response,
-        test_response,
+        baseline_response: Any,
+        test_response: Any,
         trace_id: str,
     ) -> VerificationResult:
         test_text = (getattr(test_response, "text", "") or "").lower()
@@ -417,8 +417,8 @@ class NoSQLiErrorVerifier(ExploitVerifier):
         target_url: str,
         parameter_name: str,
         payload: str,
-        baseline_response,
-        test_response,
+        baseline_response: Any,
+        test_response: Any,
         trace_id: str,
     ) -> VerificationResult:
         baseline_text = (getattr(baseline_response, "text", "") or "").lower()
