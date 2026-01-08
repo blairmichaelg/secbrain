@@ -83,41 +83,33 @@ rules:
       Use msg.sender for authorization:
       require(msg.sender == owner, "Not authorized");
 
-  - id: solidity-deprecated-suicide
+  - id: solidity-selfdestruct-usage
     pattern-either:
       - pattern: suicide(...)
       - pattern: selfdestruct(...)
     message: |
-      selfdestruct is deprecated and dangerous. 
-      Consider alternative patterns for contract upgrades.
-    severity: WARNING
-    languages: [solidity]
-    metadata:
-      category: security
-      cwe: "CWE-477: Use of Obsolete Function"
-      confidence: HIGH
-      likelihood: LOW
-      impact: MEDIUM
-      subcategory:
-        - vuln
-
-  - id: solidity-unprotected-selfdestruct
-    pattern: selfdestruct(...)
-    message: |
-      selfdestruct detected - ensure it has proper access control.
-      Verify that only authorized addresses can destroy the contract.
-      Use modifiers like onlyOwner or require statements to protect this function.
+      selfdestruct (or deprecated suicide) usage detected.
+      IMPORTANT SECURITY CHECKS:
+      1. Ensure proper access control (use onlyOwner modifier or require statements)
+      2. Consider if selfdestruct is necessary - it's a dangerous operation
+      3. Note: suicide() is deprecated legacy syntax, use selfdestruct()
+      4. Consider alternative upgrade patterns instead of selfdestruct
     severity: WARNING
     languages: [solidity]
     metadata:
       category: security
       cwe: "CWE-284: Improper Access Control"
       owasp: "A01:2021 - Broken Access Control"
-      confidence: MEDIUM
+      confidence: HIGH
       likelihood: MEDIUM
       impact: CRITICAL
       subcategory:
         - vuln
+    fix: |
+      Ensure access control:
+      function destroy() public onlyOwner {
+          selfdestruct(payable(owner));
+      }
 
   - id: solidity-weak-randomness
     patterns:

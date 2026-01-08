@@ -44,12 +44,11 @@ This directory contains custom Semgrep rules for detecting security vulnerabilit
 - **solidity-reentrancy-external-call**: Detects potential reentrancy vulnerabilities
 - **solidity-unchecked-low-level-call**: Identifies unchecked low-level calls
 - **solidity-tx-origin-auth**: Catches dangerous tx.origin usage
-- **solidity-deprecated-suicide**: Warns about deprecated selfdestruct
-- **solidity-unprotected-selfdestruct**: Detects unprotected selfdestruct
+- **solidity-selfdestruct-usage**: Warns about selfdestruct/suicide usage and access control
 - **solidity-weak-randomness**: Identifies weak randomness sources
-- **solidity-integer-overflow**: Detects potential integer overflow (Solidity < 0.8)
-- **solidity-delegatecall-to-untrusted**: Catches unsafe delegatecall usage
-- **solidity-unprotected-ether-withdrawal**: Detects unprotected Ether withdrawals
+- **solidity-old-version**: Detects Solidity versions < 0.8 without overflow protection
+- **solidity-delegatecall-usage**: Catches delegatecall usage requiring review
+- **solidity-ether-transfer**: Detects Ether transfers needing access control checks
 
 ## Usage
 
