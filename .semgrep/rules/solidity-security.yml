@@ -23,11 +23,6 @@ rules:
       impact: CRITICAL
       subcategory:
         - vuln
-    fix: |
-      Follow the Checks-Effects-Interactions pattern:
-      1. Perform checks (require statements)
-      2. Update state variables
-      3. Make external calls
 
   - id: solidity-unchecked-low-level-call
     patterns:
@@ -36,13 +31,7 @@ rules:
           - pattern: $ADDR.delegatecall(...)
           - pattern: $ADDR.staticcall(...)
       - pattern-not-inside: |
-          ($SUCCESS, ...) = $ADDR.call(...);
-          require($SUCCESS, ...);
-      - pattern-not-inside: |
-          ($SUCCESS, ...) = $ADDR.delegatecall(...);
-          require($SUCCESS, ...);
-      - pattern-not-inside: |
-          ($SUCCESS, ...) = $ADDR.staticcall(...);
+          ($SUCCESS, ...) = $ADDR.$FUNC(...);
           require($SUCCESS, ...);
     message: |
       Low-level call return value not checked.
@@ -139,7 +128,7 @@ rules:
       import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
   - id: solidity-old-version
-    pattern-regex: 'pragma\s+solidity\s+[\^~]?0\.[0-7]\.'
+    pattern-regex: 'pragma\s+solidity\s+[\\^~><=]*0\.[0-7]\.'
     message: |
       Using Solidity version < 0.8.0 detected.
       Versions before 0.8.0 do not have built-in overflow/underflow protection.
