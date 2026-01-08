@@ -165,13 +165,14 @@ class Settings(BaseSettings):
 query = f"SELECT * FROM users WHERE name = '{user_input}'"
 
 # GOOD: Parameterized queries or proper validation
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 class UserQuery(BaseModel):
     name: str
     
-    @validator('name')
-    def validate_name(cls, v):
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v: str) -> str:
         if not v.replace('_', '').isalnum():
             raise ValueError('Invalid name format')
         return v
