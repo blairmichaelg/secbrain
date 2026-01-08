@@ -35,7 +35,7 @@ The weekly comprehensive audit workflow runs every Sunday at 1 AM UTC and perfor
 
 ## Related Documentation
 
-- [Automated Agent Suite](../automated-agents.md)
+- [Automated Agent Suite](../../secbrain/docs/automated-agents.md)
 - [Security Scan Workflow](../../.github/workflows/security-scan.yml)
 - [Comprehensive Audit Workflow](../../.github/workflows/comprehensive-audit.yml)
 
