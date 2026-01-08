@@ -18,6 +18,23 @@ SecBrain is a CLI-first Python project that automates bug bounty workflows using
 - **Advisor oversight**: Gemini model reviews critical decisions
 - **Guarded execution**: ACLs, rate limits, kill-switch, and human approval checkpoints
 
+### 🛡️ NEW: DeFi Security Templates
+
+**Production-ready Solidity templates protecting against latest 2023-2024 exploit patterns:**
+
+- 📘 **[Quick Start Guide](docs/DEFI_SECURITY_QUICKSTART.md)** - Get protected in 10 minutes
+- 📕 **[Complete Protection Guide](docs/DEFI_EXPLOIT_PROTECTION_GUIDE.md)** - Deep dive into all protection patterns  
+- ✅ **[Security Checklist](docs/DEFI_SECURITY_CHECKLIST.md)** - Pre-deployment verification
+- 🔧 **[Templates](docs/testing-examples/)** - Ready-to-use Solidity contracts
+
+**Protections include:**
+- ✅ Read-only reentrancy (Curve Finance attack vector)
+- ✅ Oracle manipulation via flash loans (TWAP + Chainlink)
+- ✅ MEV resistance (sandwich attacks, front-running)
+- ✅ Flash loan detection and prevention
+- ✅ Comprehensive access control
+- ✅ Slippage protection
+
 ## Key Features
 
 - 🔍 **Automated recon** with subfinder, amass, httpx integration
