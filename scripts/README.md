@@ -1,12 +1,54 @@
-# AI Engineer Analysis Scripts
+# SecBrain Scripts
 
-This directory contains scripts that power the dynamic AI-Powered Engineering Agent workflow, as well as example scripts for running SecBrain.
+This directory contains scripts for SecBrain automation, testing, validation, and security analysis.
 
 ## Overview
 
-The AI engineer workflow has been transformed from static, cookie-cutter suggestions to dynamic, context-aware recommendations based on actual codebase analysis and cutting-edge security intelligence.
+The scripts in this directory power various workflows including:
+- AI-powered engineering analysis
+- Security intelligence gathering
+- SBOM generation and compliance checking
+- Example usage demonstrations
+- Testing and validation utilities
 
-## Example Scripts
+## 📝 Script Categories
+
+### Example & Demo Scripts
+
+| Script | Description |
+|--------|-------------|
+| `run_example.sh` | Bash example demonstrating proper RPC URL configuration and SecBrain execution |
+| `run_example.ps1` | PowerShell example with proper quoting and array splatting |
+
+### Testing & Validation Scripts
+
+| Script | Description |
+|--------|-------------|
+| `test_research.py` | Test script for enhanced PerplexityResearch functionality (caching, rate limiting) |
+| `validate-automation.py` | Validates automated agent suite configuration and workflow files |
+| `verify-testing-infrastructure.sh` | Verifies testing infrastructure setup |
+| `test_eth_hash_fix.py` | Tests eth_hash installation and pycryptodome compatibility |
+
+### AI Engineering Scripts
+
+### Security & Compliance Scripts
+
+| Script | Description |
+|--------|-------------|
+| `generate-sbom.sh` | Generates Software Bill of Materials (SBOM) |
+| `check-license-compliance.sh` | Checks license compliance for dependencies |
+| `vendor-risk-assessment.sh` | Performs vendor risk assessment |
+
+### Workflow Scripts
+
+| Script | Description |
+|--------|-------------|
+| `run-bounty-workflows.sh` | Runs bug bounty workflows |
+| `aggregate_results.py` | Aggregates results from multiple analysis runs |
+| `generate_recommendations.py` | Generates context-aware recommendations |
+| `generate-requirements-with-hashes.sh` | Generates requirements.txt with secure hashes |
+
+## 📚 Example Scripts
 
 ### `run_example.sh` (Bash)
 
@@ -46,9 +88,42 @@ chmod +x scripts/run_example.sh
 - Use arrays for command arguments to ensure proper quoting
 - Prefer `scope.yaml` for multiple RPC URLs instead of environment variables
 
-See [docs/TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md) for more details on RPC configuration.
+See [../docs/TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md) for more details on RPC configuration.
 
-## AI Engineering Scripts
+## 🔬 Testing & Validation Scripts
+
+### `test_research.py`
+
+**Purpose:** Test script for enhanced PerplexityResearch functionality.
+
+**Verifies:**
+- TTL-based caching behavior
+- Rate limiting enforcement (10 req/min)
+- Specialized research methods (severity, attack vectors, market conditions)
+- Backward compatibility with existing methods
+
+**Usage:**
+```bash
+python scripts/test_research.py
+```
+
+### `validate-automation.py`
+
+**Purpose:** Validation script for automated agent suite configuration.
+
+**Checks:**
+- Workflow file syntax
+- Configuration file validity
+- Automated agent setup completeness
+
+**Requirements:** pyyaml
+
+**Usage:**
+```bash
+python scripts/validate-automation.py
+```
+
+## 🤖 AI Engineering Scripts
 
 ### 1. `ai_engineer_analysis.py`
 

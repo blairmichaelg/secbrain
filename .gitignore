@@ -1,17 +1,25 @@
+# Dependencies
 node_modules/
 
+# Environment files
 secbrain/secbrain/models/api-keys
 secbrain/.env
 secbrain/.env.*
 secbrain/**/.env
 secbrain/**/.env.*
+.env
+.env.*
+
+# Foundry/Solidity artifacts
 targets/**/instascope/out/
 targets/**/instascope/cache/
 targets/**/instascope/lib/
+
+# Python
 **/__pycache__/
 *.py[cod]
-pwsh.profile.ps1
-claude-review.*
+*$py.class
+*.so
 
 # Tool caches
 .pip-cache/
@@ -123,3 +131,10 @@ INVESTIGATION_COMPLETE.md
 FUNCTIONALITY_VERIFICATION.md
 READY_TO_USE.md
 VISUAL_SECURITY_ANALYSIS.md
+
+# Temporary files
+pwsh.profile.ps1
+claude-review.*
+*.tmp
+*.temp
+
