@@ -55,6 +55,7 @@ contract MockERC20 is IERC20 {
     
     function _transfer(address from, address to, uint256 amount) internal {
         require(_balances[from] >= amount, "Insufficient balance");
+        // Safe: Underflow prevented by require, overflow impossible (transferring existing supply)
         unchecked {
             _balances[from] -= amount;
             _balances[to] += amount;
@@ -62,6 +63,7 @@ contract MockERC20 is IERC20 {
     }
     
     function mint(address to, uint256 amount) external {
+        // Safe: Test-only mock, handler bounds inputs
         _balances[to] += amount;
         _totalSupply += amount;
     }

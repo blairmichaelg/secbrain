@@ -54,6 +54,7 @@ contract SimpleERC20 {
     }
     
     function mint(address to, uint256 amount) external {
+        // Safe: Handler bounds all inputs to prevent overflow in tests
         unchecked {
             balanceOf[to] += amount;
             totalSupply += amount;
