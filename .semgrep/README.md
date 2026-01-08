@@ -128,6 +128,61 @@ The workflow:
 - [OWASP Top 10 2021](https://owasp.org/Top10/)
 - [CWE List](https://cwe.mitre.org/)
 
+## Testing Rules
+
+### Manual Testing
+
+To test rules manually, create sample vulnerable code files and run Semgrep:
+
+```bash
+# Create test files in /tmp
+mkdir -p /tmp/semgrep-test
+
+# Run Semgrep on test files
+semgrep --config .semgrep/rules/ /tmp/semgrep-test/
+```
+
+Example test files:
+
+**Python Test (test_subprocess.py):**
+```python
+import subprocess
+
+# Should trigger subprocess-shell-injection
+subprocess.run("ls -la", shell=True)
+
+# Should trigger unquoted-subprocess-args  
+user_input = input()
+subprocess.run(f"ls {user_input}")
+
+# Safe - should not trigger
+subprocess.run(["ls", "-la"])
+```
+
+**Solidity Test (test_contract.sol):**
+```solidity
+pragma solidity ^0.8.0;
+
+contract Test {
+    // Should trigger solidity-tx-origin-auth
+    function bad() public {
+        require(tx.origin == msg.sender);
+    }
+    
+    // Should trigger solidity-unchecked-low-level-call
+    function badCall(address target) public {
+        target.call("");
+    }
+}
+```
+
+### Integration Testing
+
+Rules are automatically tested in CI/CD via the `security-scan.yml` workflow, which runs on:
+- Every push to main/develop branches
+- Daily at 2 AM UTC
+- Manual workflow dispatch
+
 ## Contributing
 
 When adding new rules:
@@ -136,3 +191,4 @@ When adding new rules:
 3. Add appropriate metadata (CWE, OWASP, severity)
 4. Update this README
 5. Consider adding test cases in the test suite
+6. Run `semgrep --validate --config .semgrep/rules/` to check syntax
