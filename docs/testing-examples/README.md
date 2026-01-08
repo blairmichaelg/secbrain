@@ -1,5 +1,12 @@
 # DeFi Security Templates - Quick Start Guide
 
+## 🚀 NEW: Comprehensive Implementation Guides
+
+**Start here for complete DeFi protection:**
+
+- 📘 **[Quick Start Guide](../DEFI_SECURITY_QUICKSTART.md)** - Get protected in 10 minutes
+- 📕 **[Complete Protection Guide](../DEFI_EXPLOIT_PROTECTION_GUIDE.md)** - Deep dive into all protection patterns
+
 ## Overview
 
 This directory contains production-ready Solidity security templates that implement protections against the latest DeFi exploit patterns (2023-2024).
