@@ -178,7 +178,7 @@ secbrain insights --workspace ./targets/protocol1 --format html --open
 - 🛠️ [Operations Guide](secbrain/docs/ops.md) - Setup and usage
 - 🔒 [Threat Model](secbrain/docs/threat_model.md) - Security considerations
 - 📊 [Insights Guide](secbrain/docs/INSIGHTS-GUIDE.md) - Turn data into actionable insights
-- 🧪 [Invariant Testing Guide](docs/INVARIANT-TESTING-GUIDE.md) - Property-based testing for smart contracts
+- 🧪 [Invariant Testing](docs/INVARIANT_TESTING.md) - Foundry invariant testing for smart contracts
 - 🔧 [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
 
 ### Workflow Optimization & Analysis 🚀
