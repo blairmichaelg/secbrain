@@ -113,9 +113,12 @@ cd secbrain
 # Install with uv (recommended)
 uv sync
 
-# Or with pip
-pip install -e ".[dev]"
+# Or with pip (hash-verified dependencies)
+cd secbrain
+pip install --require-hashes -r requirements.lock
 ```
+
+**Note:** SecBrain uses hash-pinned dependencies for supply chain security. See [DEPENDENCY-MANAGEMENT.md](DEPENDENCY-MANAGEMENT.md) for details on updating and managing dependencies.
 
 ### Set up API keys
 
