@@ -4,11 +4,11 @@
 #
 #    pip-compile --extra=dev --output-file=requirements.txt secbrain/pyproject.toml
 #
-aiosqlite==0.22.0
+aiosqlite==0.22.1
     # via secbrain (secbrain/pyproject.toml)
 annotated-types==0.7.0
     # via pydantic
-anyio==4.12.0
+anyio==4.12.1
     # via
     #   httpx
     #   openai
@@ -16,9 +16,7 @@ attrs==25.4.0
     # via
     #   jsonschema
     #   referencing
-cachetools==6.2.4
-    # via google-auth
-certifi==2025.11.12
+certifi==2026.1.4
     # via
     #   httpcore
     #   httpx
@@ -26,15 +24,21 @@ certifi==2025.11.12
 charset-normalizer==3.4.4
     # via requests
 click==8.3.1
-    # via typer
-coverage[toml]==7.13.0
-    # via pytest-cov
+    # via
+    #   mutmut
+    #   typer
+coverage[toml]==7.13.1
+    # via
+    #   mutmut
+    #   pytest-cov
 cytoolz==1.1.0
     # via eth-utils
 distro==1.9.0
     # via openai
-eth-hash==0.7.1
-    # via eth-utils
+eth-hash[pycryptodome]==0.7.1
+    # via
+    #   eth-utils
+    #   secbrain (secbrain/pyproject.toml)
 eth-typing==5.2.1
     # via eth-utils
 eth-utils==5.3.1
@@ -48,7 +52,7 @@ google-api-core[grpc]==2.28.1
     #   google-generativeai
 google-api-python-client==2.187.0
     # via google-generativeai
-google-auth==2.45.0
+google-auth==2.47.0
     # via
     #   google-ai-generativelanguage
     #   google-api-core
@@ -81,6 +85,8 @@ httpx==0.28.1
     # via
     #   openai
     #   secbrain (secbrain/pyproject.toml)
+hypothesis==6.150.0
+    # via secbrain (secbrain/pyproject.toml)
 idna==3.11
     # via
     #   anyio
@@ -90,16 +96,27 @@ iniconfig==2.3.0
     # via pytest
 jiter==0.12.0
     # via openai
-jsonschema==4.25.1
+jsonschema==4.26.0
     # via secbrain (secbrain/pyproject.toml)
 jsonschema-specifications==2025.9.1
     # via jsonschema
-librt==0.7.4
+libcst==1.8.6
+    # via mutmut
+librt==0.7.7
     # via mypy
-markdown-it-py==4.0.0
-    # via rich
+linkify-it-py==2.0.3
+    # via markdown-it-py
+markdown-it-py[linkify]==4.0.0
+    # via
+    #   mdit-py-plugins
+    #   rich
+    #   textual
+mdit-py-plugins==0.5.0
+    # via textual
 mdurl==0.1.2
     # via markdown-it-py
+mutmut==3.4.0
+    # via secbrain (secbrain/pyproject.toml)
 mypy==1.19.1
     # via secbrain (secbrain/pyproject.toml)
 mypy-extensions==1.1.0
@@ -108,8 +125,10 @@ openai==2.14.0
     # via secbrain (secbrain/pyproject.toml)
 packaging==25.0
     # via pytest
-pathspec==0.12.1
+pathspec==1.0.1
     # via mypy
+platformdirs==4.5.1
+    # via textual
 pluggy==1.6.0
     # via
     #   pytest
@@ -132,6 +151,8 @@ pyasn1==0.6.1
     #   rsa
 pyasn1-modules==0.4.2
     # via google-auth
+pycryptodome==3.23.0
+    # via eth-hash
 pydantic==2.12.5
     # via
     #   eth-utils
@@ -147,10 +168,12 @@ pygments==2.19.2
     # via
     #   pytest
     #   rich
-pyparsing==3.2.5
+    #   textual
+pyparsing==3.3.1
     # via httplib2
 pytest==9.0.2
     # via
+    #   mutmut
     #   pytest-asyncio
     #   pytest-cov
     #   secbrain (secbrain/pyproject.toml)
@@ -161,7 +184,9 @@ pytest-cov==7.0.0
 python-dotenv==1.2.1
     # via pydantic-settings
 pyyaml==6.0.3
-    # via secbrain (secbrain/pyproject.toml)
+    # via
+    #   libcst
+    #   secbrain (secbrain/pyproject.toml)
 referencing==0.37.0
     # via
     #   jsonschema
@@ -171,6 +196,7 @@ requests==2.32.5
 rich==14.2.0
     # via
     #   secbrain (secbrain/pyproject.toml)
+    #   textual
     #   typer
 rpds-py==0.30.0
     # via
@@ -180,19 +206,27 @@ rsa==4.9.1
     # via google-auth
 ruff==0.14.10
     # via secbrain (secbrain/pyproject.toml)
+setproctitle==1.3.7
+    # via mutmut
 shellingham==1.5.4
     # via typer
 sniffio==1.3.1
     # via openai
+sortedcontainers==2.4.0
+    # via hypothesis
 structlog==25.5.0
     # via secbrain (secbrain/pyproject.toml)
+textual==7.0.1
+    # via mutmut
 toolz==1.1.0
     # via cytoolz
 tqdm==4.67.1
     # via
     #   google-generativeai
     #   openai
-typer==0.20.1
+typer==0.21.1
+    # via secbrain (secbrain/pyproject.toml)
+types-pyyaml==6.0.12.20250915
     # via secbrain (secbrain/pyproject.toml)
 typing-extensions==4.15.0
     # via
@@ -206,13 +240,16 @@ typing-extensions==4.15.0
     #   pydantic-core
     #   pytest-asyncio
     #   referencing
+    #   textual
     #   typer
     #   typing-inspection
 typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
+uc-micro-py==1.0.3
+    # via linkify-it-py
 uritemplate==4.2.0
     # via google-api-python-client
-urllib3==2.6.2
+urllib3==2.6.3
     # via requests
