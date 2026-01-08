@@ -76,7 +76,7 @@ gh workflow run comprehensive-security-analysis.yml \
 - 🤖 AI-powered analysis (SecBrain agents)
 - 📊 Automated reporting with GitHub issues
 
-See [Comprehensive Security Analysis Guide](.github/workflows/COMPREHENSIVE_SECURITY_ANALYSIS_README.md) for full documentation.
+See [Comprehensive Security Analysis Guide](docs/guides/COMPREHENSIVE_SECURITY_ANALYSIS_QUICKREF.md) for full documentation.
 
 ### Quick Bounty Hunt Workflow
 
@@ -118,7 +118,7 @@ secbrain run \
   --dry-run
 ```
 
-See [VERIFICATION.md](VERIFICATION.md) for complete verification steps.
+See [VERIFICATION.md](docs/guides/VERIFICATION.md) for complete verification steps.
 
 ### Installation
 
@@ -136,7 +136,7 @@ pip install -e ".[dev]"
 
 ### Set up API keys
 
-**All configured to use FREE tier models!** See [FREE_TIER_MODELS.md](FREE_TIER_MODELS.md) for details.
+**All configured to use FREE tier models!** See [FREE_TIER_MODELS.md](docs/guides/FREE_TIER_MODELS.md) for details.
 
 ```bash
 # Required for research integration (FREE with Perplexity PRO - unlimited)
@@ -199,9 +199,10 @@ secbrain insights --workspace ./targets/protocol1 --format html --open
 - 🔧 [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
 
 ### Workflow Optimization & Analysis 🚀
-- 📈 [**Bounty Workflow Analysis**](BOUNTY_WORKFLOW_ANALYSIS.md) - **Complete workflow analysis, tool inventory, and optimization roadmap**
-- ⚡ [**Workflow Optimization Guide**](WORKFLOW_OPTIMIZATION_GUIDE.md) - **Optimization features, tool usage, and best practices**
-- 📋 [Run Analysis Guidance](RUN_ANALYSIS_GUIDANCE.md) - Debugging zero-finding runs
+- 📈 [**Bounty Workflow Analysis**](docs/guides/BOUNTY_WORKFLOW_ANALYSIS.md) - **Complete workflow analysis, tool inventory, and optimization roadmap**
+- ⚡ [**Workflow Optimization Guide**](docs/guides/WORKFLOW_OPTIMIZATION_GUIDE.md) - **Optimization features, tool usage, and best practices**
+- 📋 [Run Analysis Guidance](docs/guides/RUN_ANALYSIS_GUIDANCE.md) - Debugging zero-finding runs
+- 🔧 [Optimization Guide](docs/guides/OPTIMIZATION-GUIDE.md) - Performance and efficiency best practices
 
 ### Contributing & Quality
 - 🤝 [Contributing Guide](CONTRIBUTING.md) - How to contribute
@@ -211,10 +212,13 @@ secbrain insights --workspace ./targets/protocol1 --format html --open
 - 🤖 [Automated Agents](secbrain/docs/automated-agents.md) - CI/CD automation suite
 
 ### Quick References
-- ⚡ [Automation Quick Ref](AUTOMATION-QUICK-REF.md) - Daily workflows and tools
+- ⚡ [Automation Quick Ref](docs/guides/AUTOMATION-QUICK-REF.md) - Daily workflows and tools
 - 📋 [Testing Quick Ref](docs/TESTING-QUICK-REF.md) - Quick testing commands
 - 📚 [Documentation Index](docs/README.md) - All contributor guides
 - 🎯 [Immunefi Integration Guide](docs/IMMUNEFI_INTEGRATION_GUIDE.md) - Bug bounty platform integration
+- 💰 [Free Tier Models](docs/guides/FREE_TIER_MODELS.md) - Using free API tiers
+- 📦 [Dependency Management](docs/guides/DEPENDENCY-MANAGEMENT.md) - Managing project dependencies
+- ✅ [Verification Guide](docs/guides/VERIFICATION.md) - How to verify installation and setup
 
 ## CLI Commands
 

@@ -6,6 +6,8 @@ Welcome! This directory contains comprehensive guides for contributing to SecBra
 
 This docs directory contains contributor-focused guides. For core project documentation (architecture, workflows, operations), see [secbrain/docs/](../secbrain/docs/).
 
+For workflow optimization and analysis guides, see [guides/](guides/) directory.
+
 ## 🎯 Quick Navigation
 
 | Topic | Guide |
@@ -23,6 +25,22 @@ This docs directory contains contributor-focused guides. For core project docume
 | **Implementation status** | [IMPLEMENTATION-STATUS.md](IMPLEMENTATION-STATUS.md) |
 
 ## 📖 Documentation Categories
+
+### 🚀 Workflow & Optimization Guides
+
+For detailed workflow and optimization documentation, see [guides/](guides/):
+- **[Bounty Workflow Analysis](guides/BOUNTY_WORKFLOW_ANALYSIS.md)** - Complete workflow analysis and optimization roadmap
+- **[Workflow Optimization Guide](guides/WORKFLOW_OPTIMIZATION_GUIDE.md)** - Optimization features and best practices  
+- **[Optimization Guide](guides/OPTIMIZATION-GUIDE.md)** - Performance and efficiency best practices
+- **[Run Analysis Guidance](guides/RUN_ANALYSIS_GUIDANCE.md)** - Debugging zero-finding runs
+- **[Automation Quick Reference](guides/AUTOMATION-QUICK-REF.md)** - Daily workflows and tools
+- **[Comprehensive Security Analysis](guides/COMPREHENSIVE_SECURITY_ANALYSIS_QUICKREF.md)** - Security analysis workflow guide
+
+### 🛠️ Setup & Configuration
+
+- **[Verification Guide](guides/VERIFICATION.md)** - How to verify installation and setup
+- **[Free Tier Models](guides/FREE_TIER_MODELS.md)** - Using free API tiers
+- **[Dependency Management](guides/DEPENDENCY-MANAGEMENT.md)** - Managing project dependencies
 
 ### 🔧 Testing & Quality
 
