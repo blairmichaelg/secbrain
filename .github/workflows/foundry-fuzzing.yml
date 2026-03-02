@@ -92,7 +92,7 @@ jobs:
           cat gas-report.txt
 
       - name: Upload gas report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: gas-report-standard
           path: gas-report.txt
@@ -133,7 +133,7 @@ jobs:
           cat gas-report-ci.txt
 
       - name: Upload CI gas report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: gas-report-ci
           path: gas-report-ci.txt

@@ -153,7 +153,7 @@ jobs:
           echo "📊 Detected $TOTAL_FILES files (complexity: ${COMPLEXITY})"
       
       - name: Upload target repository
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: target-repository
           path: ${{ env.ANALYSIS_DIR }}/target
@@ -227,7 +227,7 @@ jobs:
           semgrep --config=auto . | tee ${{ env.RESULTS_DIR }}/semgrep-output.txt || true
       
       - name: Upload Python analysis results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: python-static-analysis
           path: ${{ env.RESULTS_DIR }}
@@ -298,7 +298,7 @@ jobs:
           slither . --exclude-low --exclude-informational | tee ${{ env.RESULTS_DIR }}/slither-output.txt || true
       
       - name: Upload Solidity analysis results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: solidity-static-analysis
           path: ${{ env.RESULTS_DIR }}
@@ -346,7 +346,7 @@ jobs:
           done
       
       - name: Upload Mythril results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: mythril-analysis
           path: ${{ env.RESULTS_DIR }}
@@ -417,7 +417,7 @@ jobs:
           }
       
       - name: Upload fuzzing results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: foundry-fuzzing
           path: ${{ env.RESULTS_DIR }}
@@ -477,7 +477,7 @@ jobs:
           done
       
       - name: Upload Echidna results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: echidna-fuzzing
           path: ${{ env.RESULTS_DIR }}
@@ -527,7 +527,7 @@ jobs:
           python $GITHUB_WORKSPACE/scripts/ai_engineer_analysis.py . > ${{ env.RESULTS_DIR }}/ai-analysis.json || true
       
       - name: Upload AI analysis results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ai-engineer-analysis
           path: ${{ env.RESULTS_DIR }}
@@ -556,7 +556,7 @@ jobs:
           python scripts/security_intelligence.py > ${{ env.RESULTS_DIR }}/security-intel.json || true
       
       - name: Upload intelligence results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: security-intelligence
           path: ${{ env.RESULTS_DIR }}
@@ -611,7 +611,7 @@ jobs:
             "$SECURITY_INTEL" > ${{ env.RESULTS_DIR }}/recommendations/recommendations.json || true
       
       - name: Upload recommendations
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: recommendations
           path: ${{ env.RESULTS_DIR }}/recommendations
@@ -694,7 +694,7 @@ jobs:
           fi
       
       - name: Upload SecBrain analysis
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: secbrain-agents
           path: ${{ env.RESULTS_DIR }}
@@ -903,7 +903,7 @@ jobs:
           EOF
       
       - name: Upload aggregated results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: comprehensive-analysis-report
           path: ${{ env.RESULTS_DIR }}/aggregated
