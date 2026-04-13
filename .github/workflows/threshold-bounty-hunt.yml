@@ -203,7 +203,7 @@ jobs:
 
       - name: Create GitHub issue for high-value findings
         if: steps.run_secbrain.outputs.run_completed == 'true' && steps.run_secbrain.outputs.findings_count > 0
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');

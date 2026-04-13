@@ -171,7 +171,7 @@ jobs:
       - name: Create Pull Request
         id: create_pr
         if: steps.commit.outputs.has_changes == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -239,7 +239,7 @@ jobs:
 
       - name: Add labels to PR
         if: steps.commit.outputs.has_changes == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
