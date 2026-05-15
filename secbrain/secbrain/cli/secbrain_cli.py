@@ -301,8 +301,11 @@ async def _run_workflow(
         missing_report = tool_checker.get_missing_tools_report()
         if "REQUIRED TOOLS MISSING" in missing_report:
             console.print(f"\n{missing_report}")
-            console.print("[bold red]Cannot proceed: required tools are missing[/]")
-            raise RuntimeError("Required tools are not installed")
+            if dry_run:
+                console.print("[bold yellow]Warning: Required tools missing, but proceeding because dry_run=True[/]")
+            else:
+                console.print("[bold red]Cannot proceed: required tools are missing[/]")
+                raise RuntimeError("Required tools are not installed")
         if "RECOMMENDED TOOLS MISSING" in missing_report:
             console.print(f"\n[dim]{missing_report}[/]")
             console.print(
