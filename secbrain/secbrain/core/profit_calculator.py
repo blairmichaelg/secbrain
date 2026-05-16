@@ -397,23 +397,23 @@ class ProfitCalculator:
             if amount <= 0 or amount > MAX_RAW_AMOUNT:
                 continue
 
-            spec = spec_lookup.get(symbol.lower())
-            if spec is None:
+            token_spec = spec_lookup.get(symbol.lower())
+            if token_spec is None:
                 continue
 
             # Normalize amount
-            normalized = self.normalize_token_amount(amount, spec.decimals)
+            normalized = self.normalize_token_amount(amount, token_spec.decimals)
 
             # Calculate USD value
-            usd_value = self.compute_usd_value(normalized, spec)
+            usd_value = self.compute_usd_value(normalized, token_spec)
             total_usd += usd_value
 
             # Calculate ETH equivalent
-            eth_equiv = self.compute_eth_equiv(normalized, spec)
+            eth_equiv = self.compute_eth_equiv(normalized, token_spec)
             total_eth_equiv += eth_equiv
 
             # Add to breakdown by address
-            breakdown_by_address[spec.address] = usd_value
+            breakdown_by_address[token_spec.address] = usd_value
 
         return (total_eth_equiv, breakdown_by_address, total_usd)
 
@@ -457,13 +457,13 @@ class ProfitCalculator:
             if amount <= 0 or amount > MAX_RAW_AMOUNT:
                 continue
 
-            spec = spec_lookup.get(address)
-            if spec is None:
+            token_spec = spec_lookup.get(address)
+            if token_spec is None:
                 continue
 
             # Normalize and calculate USD value
-            normalized = self.normalize_token_amount(amount, spec.decimals)
-            usd_value = self.compute_usd_value(normalized, spec)
+            normalized = self.normalize_token_amount(amount, token_spec.decimals)
+            usd_value = self.compute_usd_value(normalized, token_spec)
 
             total_usd += usd_value
             breakdown[address] = usd_value

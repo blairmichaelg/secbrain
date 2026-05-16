@@ -149,16 +149,16 @@ class BugBountyWorkflow:
             "logger": self.logger,
         }
 
-        self.supervisor = SupervisorAgent(**common_kwargs)
-        self.ingest_agent = ProgramIngestAgent(**common_kwargs)
-        self.planner_agent = PlannerAgent(**common_kwargs)
-        self.recon_agent = ReconAgent(**common_kwargs)
-        self.hypothesis_agent = VulnHypothesisAgent(**common_kwargs)
-        self.exploit_agent = ExploitAgent(**common_kwargs)
-        self.static_agent = StaticAnalysisAgent(**common_kwargs)
-        self.triage_agent = TriageAgent(**common_kwargs)
-        self.reporting_agent = ReportingAgent(**common_kwargs)
-        self.meta_agent = MetaLearningAgent(**common_kwargs)
+        self.supervisor = SupervisorAgent(run_context=self.run_context, logger=self.logger)
+        self.ingest_agent = ProgramIngestAgent(run_context=self.run_context, logger=self.logger)
+        self.planner_agent = PlannerAgent(run_context=self.run_context, logger=self.logger)
+        self.recon_agent = ReconAgent(run_context=self.run_context, logger=self.logger)
+        self.hypothesis_agent = VulnHypothesisAgent(run_context=self.run_context, logger=self.logger)
+        self.exploit_agent = ExploitAgent(run_context=self.run_context, logger=self.logger)
+        self.static_agent = StaticAnalysisAgent(run_context=self.run_context, logger=self.logger)
+        self.triage_agent = TriageAgent(run_context=self.run_context, logger=self.logger)
+        self.reporting_agent = ReportingAgent(run_context=self.run_context, logger=self.logger)
+        self.meta_agent = MetaLearningAgent(run_context=self.run_context, logger=self.logger)
 
         # Map phases to agents
         self.phase_agents: dict[Phase, Any] = {

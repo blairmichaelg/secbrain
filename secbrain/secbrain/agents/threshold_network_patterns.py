@@ -100,7 +100,7 @@ def _load_threshold_yaml() -> dict:
         return yaml.safe_load(f)
 
 def _parse_threshold_patterns(data: dict) -> dict[str, ThresholdSecurityPattern]:
-    res = {}
+    res: dict[str, ThresholdSecurityPattern] = {}
     if not data:
         return res
     for k, v in data.items():
