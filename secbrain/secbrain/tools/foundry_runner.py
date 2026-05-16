@@ -1,5 +1,9 @@
 """Foundry runner helper for forked exploit attempts.
 
+This module provides tools to invoke forge and evaluate exploit POcs against a target protocol.
+
+Note: Hardhat 3 interop deferred — revisit only if a target program requires Hardhat-specific deployment replay.
+
 This module provides tools for running Foundry-based exploit tests including:
 - Test execution and output parsing
 - Gas cost analysis and profit calculations
