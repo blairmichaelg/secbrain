@@ -12,9 +12,20 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, LiteralString
+
+SCHEMA_VERSION = 2
+
+logger = logging.getLogger(__name__)
+
+def _migrate(data: dict, from_version: int) -> dict:
+    """Migration stub for upgrading schema versions."""
+    logger.warning("Migrating data from schema version %s to %s", from_version, SCHEMA_VERSION)
+    data["schema_version"] = SCHEMA_VERSION
+    return data
 
 try:
     import aiosqlite
@@ -218,6 +229,9 @@ class WorkspaceStorage:
 
     async def save_asset(self, asset: dict[str, Any]) -> None:
         """Save a discovered asset."""
+        metadata = asset.get("metadata", {})
+        metadata["schema_version"] = SCHEMA_VERSION
+        
         await self._execute(
             """
             INSERT OR REPLACE INTO assets (id, run_id, type, value, technologies, metadata, discovered_at)
@@ -229,7 +243,7 @@ class WorkspaceStorage:
                 asset.get("type"),
                 asset.get("value"),
                 json.dumps(asset.get("technologies", [])),
-                json.dumps(asset.get("metadata", {})),
+                json.dumps(metadata),
                 datetime.now(UTC).isoformat(),
             ),
         )
@@ -264,13 +278,22 @@ class WorkspaceStorage:
         for row in rows:
             asset = dict(zip(columns, row, strict=False))
             asset["technologies"] = json.loads(asset.get("technologies", "[]"))
-            asset["metadata"] = json.loads(asset.get("metadata", "{}"))
+            metadata = json.loads(asset.get("metadata", "{}"))
+            asset["metadata"] = metadata
+            asset["schema_version"] = metadata.get("schema_version", 1)
+            
+            if asset.get("schema_version", 1) < SCHEMA_VERSION:
+                asset = _migrate(asset, from_version=asset.get("schema_version", 1))
+                
             assets.append(asset)
 
         return assets
 
     async def save_hypothesis(self, hypothesis: dict[str, Any]) -> None:
         """Save a vulnerability hypothesis."""
+        result = hypothesis.get("result", {})
+        result["schema_version"] = SCHEMA_VERSION
+        
         await self._execute(
             """
             INSERT OR REPLACE INTO hypotheses
@@ -285,7 +308,7 @@ class WorkspaceStorage:
                 hypothesis.get("confidence", 0.5),
                 hypothesis.get("rationale", ""),
                 hypothesis.get("status", "pending"),
-                json.dumps(hypothesis.get("result", {})),
+                json.dumps(result),
                 datetime.now(UTC).isoformat(),
             ),
         )
@@ -314,13 +337,22 @@ class WorkspaceStorage:
         hypotheses = []
         for row in rows:
             hyp = dict(zip(columns, row, strict=False))
-            hyp["result"] = json.loads(hyp.get("result", "{}"))
+            result = json.loads(hyp.get("result", "{}"))
+            hyp["result"] = result
+            hyp["schema_version"] = result.get("schema_version", 1)
+            
+            if hyp.get("schema_version", 1) < SCHEMA_VERSION:
+                hyp = _migrate(hyp, from_version=hyp.get("schema_version", 1))
+                
             hypotheses.append(hyp)
 
         return hypotheses
 
     async def save_finding(self, finding: dict[str, Any]) -> None:
         """Save a confirmed finding."""
+        evidence_list = finding.get("evidence", [])
+        evidence_data = {"data": evidence_list, "schema_version": SCHEMA_VERSION}
+        
         await self._execute(
             """
             INSERT OR REPLACE INTO findings
@@ -336,7 +368,7 @@ class WorkspaceStorage:
                 finding.get("vuln_type"),
                 finding.get("target"),
                 finding.get("description"),
-                json.dumps(finding.get("evidence", [])),
+                json.dumps(evidence_data),
                 datetime.now(UTC).isoformat(),
             ),
         )
@@ -365,7 +397,17 @@ class WorkspaceStorage:
         findings = []
         for row in rows:
             finding = dict(zip(columns, row, strict=False))
-            finding["evidence"] = json.loads(finding.get("evidence", "[]"))
+            evidence_data = json.loads(finding.get("evidence", "{}"))
+            if isinstance(evidence_data, dict) and "data" in evidence_data:
+                finding["evidence"] = evidence_data["data"]
+                finding["schema_version"] = evidence_data.get("schema_version", 1)
+            else:
+                finding["evidence"] = evidence_data if isinstance(evidence_data, list) else []
+                finding["schema_version"] = 1
+                
+            if finding.get("schema_version", 1) < SCHEMA_VERSION:
+                finding = _migrate(finding, from_version=finding.get("schema_version", 1))
+                
             findings.append(finding)
 
         return findings
