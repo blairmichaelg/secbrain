@@ -1,0 +1,489 @@
+REENTRANCY_PATTERNS:
+  classic_reentrancy:
+    pattern_type: classic_reentrancy
+    severity: critical
+    description: Classic reentrancy attack via external call before state update
+    detection_heuristics:
+    - external call
+    - state update after call
+    - balance transfer
+    - call.value
+    - transfer
+    - send
+    mitigation_code: "\n// Use OpenZeppelin's ReentrancyGuard\nimport \"@openzeppelin/contracts/security/ReentrancyGuard.sol\"\
+      ;\n\ncontract Secure is ReentrancyGuard {\n    function withdraw(uint256 amount)\
+      \ external nonReentrant {\n        // Checks-Effects-Interactions pattern\n\
+      \        require(balances[msg.sender] >= amount, \"Insufficient balance\");\n\
+      \        balances[msg.sender] -= amount;  // Effect before interaction\n   \
+      \     (bool success, ) = msg.sender.call{value: amount}(\"\");\n        require(success,\
+      \ \"Transfer failed\");\n    }\n}\n"
+    references:
+    - https://consensys.github.io/smart-contract-best-practices/attacks/reentrancy/
+  read_only_reentrancy:
+    pattern_type: read_only_reentrancy
+    severity: high
+    description: Read-only reentrancy via view function calls during state changes
+      (2023 attack vector)
+    detection_heuristics:
+    - view function
+    - external call in modifier
+    - getters during state change
+    - balanceof
+    - totalsupply
+    mitigation_code: "\n// Protect view functions from read-only reentrancy\nimport\
+      \ \"@openzeppelin/contracts/security/ReentrancyGuard.sol\";\n\ncontract Secure\
+      \ is ReentrancyGuard {\n    // Add nonReentrant to view functions that read\
+      \ critical state\n    function getBalance(address user) external view nonReentrant\
+      \ returns (uint256) {\n        return balances[user];\n    }\n\n    // Or use\
+      \ a reentrancy lock for all state-reading functions\n    modifier nonReentrantView()\
+      \ {\n        require(_status != _ENTERED, \"ReentrancyGuard: reentrant call\"\
+      );\n        _;\n    }\n}\n"
+    references:
+    - https://github.com/pcaversaccio/reentrancy-attacks#read-only-reentrancy
+    - https://chainsecurity.com/curve-lp-oracle-manipulation-post-mortem/
+  cei_violation:
+    pattern_type: checks_effects_interactions_violation
+    severity: high
+    description: Violation of Checks-Effects-Interactions pattern
+    detection_heuristics:
+    - interaction before effect
+    - call before state change
+    - transfer before update
+    mitigation_code: "\n// Follow Checks-Effects-Interactions (CEI) pattern\nfunction\
+      \ withdraw(uint256 amount) external {\n    // 1. Checks\n    require(balances[msg.sender]\
+      \ >= amount, \"Insufficient balance\");\n    require(amount > 0, \"Amount must\
+      \ be positive\");\n\n    // 2. Effects (update state BEFORE external calls)\n\
+      \    balances[msg.sender] -= amount;\n    emit Withdrawal(msg.sender, amount);\n\
+      \n    // 3. Interactions (external calls LAST)\n    (bool success, ) = msg.sender.call{value:\
+      \ amount}(\"\");\n    require(success, \"Transfer failed\");\n}\n"
+    references:
+    - https://fravoll.github.io/solidity-patterns/checks_effects_interactions.html
+FLASH_LOAN_PATTERNS:
+  flash_loan_price_manipulation:
+    pattern_type: flash_loan_price_manipulation
+    severity: critical
+    description: Flash loan attack to manipulate price oracles
+    detection_heuristics:
+    - flash loan
+    - price oracle
+    - spot price
+    - reserve manipulation
+    - liquidity check
+    mitigation_code: "\n// Protect against flash loan price manipulation\nimport \"\
+      @chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol\";\n\ncontract\
+      \ Secure {\n    AggregatorV3Interface internal priceFeed;\n    uint256 constant\
+      \ MAX_PRICE_DEVIATION = 5; // 5% max deviation\n    uint256 constant TWAP_PERIOD\
+      \ = 1800; // 30 minutes\n\n    function getSecurePrice() public view returns\
+      \ (uint256) {\n        // Use Chainlink oracle with staleness check\n      \
+      \  (\n            uint80 roundId,\n            int256 price,\n            ,\n\
+      \            uint256 updatedAt,\n            uint80 answeredInRound\n      \
+      \  ) = priceFeed.latestRoundData();\n\n        require(price > 0, \"Invalid\
+      \ price\");\n        require(answeredInRound >= roundId, \"Stale price\");\n\
+      \        require(block.timestamp - updatedAt < 3600, \"Price too old\");\n\n\
+      \        // Additional: Check price deviation\n        uint256 twapPrice = getTWAP(TWAP_PERIOD);\n\
+      \        uint256 deviation = abs(uint256(price), twapPrice) * 100 / twapPrice;\n\
+      \        require(deviation <= MAX_PRICE_DEVIATION, \"Price deviation too high\"\
+      );\n\n        return uint256(price);\n    }\n\n    function getTWAP(uint256\
+      \ period) internal view returns (uint256) {\n        // Implement TWAP calculation\n\
+      \        // This prevents flash loan manipulation\n    }\n}\n"
+    references:
+    - https://blog.chain.link/flash-loans-and-the-importance-of-tamper-proof-oracles/
+  same_block_borrow_repay:
+    pattern_type: same_block_borrow_repay
+    severity: high
+    description: Same-block borrow and repay detection for flash loan attacks
+    detection_heuristics:
+    - borrow
+    - repay
+    - block.number
+    - flashloan
+    - onflashloan
+    mitigation_code: "\n// Detect and prevent same-block borrow/repay attacks\ncontract\
+      \ Secure {\n    mapping(address => uint256) public lastBorrowBlock;\n    mapping(address\
+      \ => uint256) public lastActionBlock;\n\n    function borrow(uint256 amount)\
+      \ external {\n        require(\n            block.number > lastActionBlock[msg.sender],\n\
+      \            \"Same block action prevented\"\n        );\n\n        lastBorrowBlock[msg.sender]\
+      \ = block.number;\n        lastActionBlock[msg.sender] = block.number;\n\n \
+      \       // Borrow logic...\n    }\n\n    function sensitiveAction() external\
+      \ {\n        require(\n            block.number > lastBorrowBlock[msg.sender],\n\
+      \            \"Cannot act in same block as borrow\"\n        );\n\n        lastActionBlock[msg.sender]\
+      \ = block.number;\n        // Sensitive action logic...\n    }\n}\n"
+    references:
+    - https://github.com/crytic/building-secure-contracts/tree/master/not-so-smart-contracts/flash_loan_attack
+ACCESS_CONTROL_PATTERNS:
+  role_based_access:
+    pattern_type: role_based_access_needed
+    severity: high
+    description: Multi-level role-based access control needed instead of simple Ownable
+    detection_heuristics:
+    - onlyowner
+    - owner
+    - admin
+    - restricted function
+    mitigation_code: "\n// Use OpenZeppelin's AccessControl for role-based permissions\n\
+      import \"@openzeppelin/contracts/access/AccessControl.sol\";\n\ncontract Secure\
+      \ is AccessControl {\n    bytes32 public constant ADMIN_ROLE = keccak256(\"\
+      ADMIN_ROLE\");\n    bytes32 public constant OPERATOR_ROLE = keccak256(\"OPERATOR_ROLE\"\
+      );\n    bytes32 public constant PAUSER_ROLE = keccak256(\"PAUSER_ROLE\");\n\n\
+      \    constructor() {\n        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);\n\
+      \        _grantRole(ADMIN_ROLE, msg.sender);\n    }\n\n    function criticalOperation()\
+      \ external onlyRole(ADMIN_ROLE) {\n        // Only admins can execute\n    }\n\
+      \n    function operatorAction() external onlyRole(OPERATOR_ROLE) {\n       \
+      \ // Only operators can execute\n    }\n\n    function pause() external onlyRole(PAUSER_ROLE)\
+      \ {\n        // Only pausers can execute\n    }\n}\n"
+    references:
+    - https://docs.openzeppelin.com/contracts/4.x/access-control
+FRONT_RUNNING_PATTERNS:
+  commit_reveal:
+    pattern_type: missing_commit_reveal
+    severity: medium
+    description: Commit-reveal scheme needed to prevent front-running
+    detection_heuristics:
+    - commit
+    - bid
+    - auction
+    - vote
+    - random
+    - lottery
+    - commit
+    - reveal
+    mitigation_code: "\n// Implement commit-reveal scheme\ncontract Secure {\n   \
+      \ mapping(address => bytes32) public commitments;\n    mapping(address => uint256)\
+      \ public revealDeadline;\n\n    function commit(bytes32 commitment) external\
+      \ {\n        require(commitments[msg.sender] == 0, \"Already committed\");\n\
+      \        commitments[msg.sender] = commitment;\n        revealDeadline[msg.sender]\
+      \ = block.timestamp + 1 hours;\n    }\n\n    function reveal(uint256 value,\
+      \ bytes32 salt) external {\n        require(commitments[msg.sender] != 0, \"\
+      No commitment\");\n        require(block.timestamp <= revealDeadline[msg.sender],\
+      \ \"Reveal deadline passed\");\n\n        bytes32 hash = keccak256(abi.encodePacked(msg.sender,\
+      \ value, salt));\n        require(hash == commitments[msg.sender], \"Invalid\
+      \ reveal\");\n\n        delete commitments[msg.sender];\n        // Process\
+      \ revealed value...\n    }\n}\n"
+    references:
+    - https://github.com/ethereumbook/ethereumbook/blob/develop/09smart-contracts-security.asciidoc#commit-and-reveal
+  eip712_signature:
+    pattern_type: missing_eip712_signature
+    severity: medium
+    description: EIP-712 typed data signatures for protection against signature replay
+    detection_heuristics:
+    - signature
+    - ecrecover
+    - permit
+    - meta-transaction
+    mitigation_code: "\n// Use EIP-712 for signed messages\nimport \"@openzeppelin/contracts/utils/cryptography/EIP712.sol\"\
+      ;\n\ncontract Secure is EIP712 {\n    bytes32 public constant PERMIT_TYPEHASH\
+      \ =\n        keccak256(\"Permit(address owner,address spender,uint256 value,uint256\
+      \ nonce,uint256 deadline)\");\n\n    mapping(address => uint256) public nonces;\n\
+      \n    constructor() EIP712(\"SecureToken\", \"1\") {}\n\n    function permit(\n\
+      \        address owner,\n        address spender,\n        uint256 value,\n\
+      \        uint256 deadline,\n        uint8 v,\n        bytes32 r,\n        bytes32\
+      \ s\n    ) external {\n        require(block.timestamp <= deadline, \"Signature\
+      \ expired\");\n\n        bytes32 structHash = keccak256(\n            abi.encode(PERMIT_TYPEHASH,\
+      \ owner, spender, value, nonces[owner]++, deadline)\n        );\n\n        bytes32\
+      \ hash = _hashTypedDataV4(structHash);\n        address signer = ECDSA.recover(hash,\
+      \ v, r, s);\n        require(signer == owner, \"Invalid signature\");\n\n  \
+      \      // Process permit...\n    }\n}\n"
+    references:
+    - https://eips.ethereum.org/EIPS/eip-712
+ORACLE_SECURITY_PATTERNS:
+  chainlink_staleness:
+    pattern_type: stale_price_data
+    severity: high
+    description: Chainlink price feed staleness checks required
+    detection_heuristics:
+    - latestrounddata
+    - chainlink
+    - price feed
+    - oracle
+    mitigation_code: "\n// Implement Chainlink staleness checks\nimport \"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol\"\
+      ;\n\ncontract Secure {\n    AggregatorV3Interface internal priceFeed;\n    uint256\
+      \ public constant STALENESS_THRESHOLD = 3600; // 1 hour\n\n    function getLatestPrice()\
+      \ public view returns (uint256) {\n        (\n            uint80 roundId,\n\
+      \            int256 price,\n            ,\n            uint256 updatedAt,\n\
+      \            uint80 answeredInRound\n        ) = priceFeed.latestRoundData();\n\
+      \n        // Check for stale data\n        require(answeredInRound >= roundId,\
+      \ \"Stale price: round not complete\");\n        require(block.timestamp - updatedAt\
+      \ <= STALENESS_THRESHOLD, \"Stale price: too old\");\n        require(price\
+      \ > 0, \"Invalid price: must be positive\");\n\n        return uint256(price);\n\
+      \    }\n}\n"
+    references:
+    - https://docs.chain.link/data-feeds/historical-data
+  multi_oracle_consensus:
+    pattern_type: no_multi_oracle_consensus
+    severity: medium
+    description: Multi-oracle consensus for critical price data
+    detection_heuristics:
+    - single oracle
+    - price feed
+    - critical price
+    mitigation_code: "\n// Implement multi-oracle consensus\ncontract Secure {\n \
+      \   AggregatorV3Interface[] public priceFeeds;\n    uint256 public constant\
+      \ MAX_PRICE_DEVIATION = 3; // 3%\n\n    function getConsensusPrice() public\
+      \ view returns (uint256) {\n        require(priceFeeds.length >= 3, \"Need at\
+      \ least 3 oracles\");\n\n        uint256[] memory prices = new uint256[](priceFeeds.length);\n\
+      \n        // Collect prices from all oracles\n        for (uint256 i = 0; i\
+      \ < priceFeeds.length; i++) {\n            (, int256 price, , uint256 updatedAt,\
+      \ ) = priceFeeds[i].latestRoundData();\n            require(price > 0, \"Invalid\
+      \ price\");\n            require(block.timestamp - updatedAt < 3600, \"Stale\
+      \ price\");\n            prices[i] = uint256(price);\n        }\n\n        //\
+      \ Calculate median price\n        uint256 medianPrice = _median(prices);\n\n\
+      \        // Verify all prices are within acceptable deviation\n        for (uint256\
+      \ i = 0; i < prices.length; i++) {\n            uint256 deviation = abs(prices[i],\
+      \ medianPrice) * 100 / medianPrice;\n            require(deviation <= MAX_PRICE_DEVIATION,\
+      \ \"Price deviation too high\");\n        }\n\n        return medianPrice;\n\
+      \    }\n\n    function _median(uint256[] memory values) internal pure returns\
+      \ (uint256) {\n        // Sort and return median\n        _quickSort(values,\
+      \ 0, int256(values.length - 1));\n        return values[values.length / 2];\n\
+      \    }\n}\n"
+    references:
+    - https://blog.chain.link/decentralized-oracle-networks/
+  twap_implementation:
+    pattern_type: missing_twap
+    severity: medium
+    description: Time-Weighted Average Price (TWAP) implementation for manipulation
+      resistance
+    detection_heuristics:
+    - spot price
+    - instant price
+    - uniswap price
+    mitigation_code: "\n// Implement TWAP oracle\nimport \"@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol\"\
+      ;\nimport \"@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol\";\n\
+      \ncontract Secure {\n    IUniswapV3Pool public pool;\n    uint32 public constant\
+      \ TWAP_PERIOD = 1800; // 30 minutes\n\n    function getTWAP() public view returns\
+      \ (uint256) {\n        uint32[] memory secondsAgos = new uint32[](2);\n    \
+      \    secondsAgos[0] = TWAP_PERIOD;\n        secondsAgos[1] = 0;\n\n        (int56[]\
+      \ memory tickCumulatives, ) = pool.observe(secondsAgos);\n\n        int56 tickCumulativesDelta\
+      \ = tickCumulatives[1] - tickCumulatives[0];\n        int24 arithmeticMeanTick\
+      \ = int24(tickCumulativesDelta / int56(uint56(TWAP_PERIOD)));\n\n        uint256\
+      \ quoteAmount = OracleLibrary.getQuoteAtTick(\n            arithmeticMeanTick,\n\
+      \            uint128(1e18),\n            address(token0),\n            address(token1)\n\
+      \        );\n\n        return quoteAmount;\n    }\n}\n"
+    references:
+    - https://docs.uniswap.org/contracts/v3/guides/advanced/price-oracle
+BRIDGE_SECURITY_PATTERNS:
+  bridge_message_forgery:
+    pattern_type: bridge_message_forgery
+    severity: critical
+    description: Cross-chain message forgery allowing unauthorized operations
+    detection_heuristics:
+    - cross-chain
+    - message
+    - relay
+    - bridge
+    - verify message
+    - relayer
+    mitigation_code: "\n// Secure cross-chain message verification\ncontract SecureBridge\
+      \ {\n    mapping(bytes32 => bool) public processedMessages;\n    mapping(address\
+      \ => bool) public trustedRelayers;\n\n    event MessageProcessed(bytes32 indexed\
+      \ messageHash);\n\n    function processMessage(\n        bytes memory message,\n\
+      \        bytes[] memory signatures,\n        uint256 nonce\n    ) external {\n\
+      \        // Prevent replay attacks\n        bytes32 messageHash = keccak256(abi.encodePacked(message,\
+      \ nonce, block.chainid));\n        require(!processedMessages[messageHash],\
+      \ \"Message already processed\");\n\n        // Verify signatures from trusted\
+      \ relayers\n        require(signatures.length >= 3, \"Need at least 3 signatures\"\
+      );\n\n        address[] memory signers = new address[](signatures.length);\n\
+      \        mapping(address => bool) seenSigners;\n        for (uint256 i = 0;\
+      \ i < signatures.length; i++) {\n            address signer = ECDSA.recover(messageHash,\
+      \ signatures[i]);\n            require(trustedRelayers[signer], \"Invalid signer\"\
+      );\n\n            // Prevent duplicate signers with O(1) lookup\n          \
+      \  require(!seenSigners[signer], \"Duplicate signer\");\n            seenSigners[signer]\
+      \ = true;\n            signers[i] = signer;\n        }\n\n        processedMessages[messageHash]\
+      \ = true;\n        emit MessageProcessed(messageHash);\n\n        // Process\
+      \ message...\n    }\n}\n"
+    references:
+    - https://github.com/nomad-xyz/nomad-monorepo/blob/main/packages/contracts-core/contracts/Replica.sol
+  merkle_proof_verification:
+    pattern_type: merkle_proof_manipulation
+    severity: critical
+    description: Merkle proof verification vulnerabilities in bridges
+    detection_heuristics:
+    - merkle
+    - proof
+    - verify
+    - root
+    - leaf
+    mitigation_code: "\n// Secure Merkle proof verification\nimport \"@openzeppelin/contracts/utils/cryptography/MerkleProof.sol\"\
+      ;\n\ncontract SecureBridge {\n    bytes32 public merkleRoot;\n    mapping(bytes32\
+      \ => bool) public claimedLeaves;\n\n    function claimWithProof(\n        bytes32\
+      \ leaf,\n        bytes32[] calldata proof\n    ) external {\n        // Prevent\
+      \ double-claiming\n        require(!claimedLeaves[leaf], \"Already claimed\"\
+      );\n\n        // Verify proof\n        require(\n            MerkleProof.verify(proof,\
+      \ merkleRoot, leaf),\n            \"Invalid Merkle proof\"\n        );\n\n \
+      \       claimedLeaves[leaf] = true;\n\n        // Process claim...\n    }\n\n\
+      \    // Admin function with timelock\n    function updateMerkleRoot(bytes32\
+      \ newRoot) external onlyRole(ADMIN_ROLE) {\n        require(newRoot != bytes32(0),\
+      \ \"Invalid root\");\n        merkleRoot = newRoot;\n    }\n}\n"
+    references:
+    - https://docs.openzeppelin.com/contracts/4.x/api/utils#MerkleProof
+  spv_proof_verification:
+    pattern_type: spv_proof_bypass
+    severity: critical
+    description: Bitcoin SPV proof verification bypass in tBTC-style bridges
+    detection_heuristics:
+    - spv
+    - bitcoin
+    - btc
+    - proof
+    - transaction proof
+    - header
+    mitigation_code: "\n// Secure Bitcoin SPV proof verification (tBTC-style)\ncontract\
+      \ SecureBitcoinBridge {\n    uint256 public constant MIN_CONFIRMATIONS = 6;\n\
+      \    uint256 public constant DIFFICULTY_ADJUSTMENT_INTERVAL = 2016;\n\n    mapping(bytes32\
+      \ => bool) public verifiedTransactions;\n\n    function verifyTransaction(\n\
+      \        bytes memory txBytes,\n        bytes memory merkleProof,\n        bytes\
+      \ memory blockHeader,\n        uint256 blockHeight\n    ) external {\n     \
+      \   // Extract transaction hash\n        bytes32 txHash = sha256(abi.encodePacked(sha256(txBytes)));\n\
+      \        require(!verifiedTransactions[txHash], \"Transaction already verified\"\
+      );\n\n        // Verify Merkle proof\n        bytes32 merkleRoot = extractMerkleRoot(blockHeader);\n\
+      \        require(verifyMerkleProof(txHash, merkleProof, merkleRoot), \"Invalid\
+      \ Merkle proof\");\n\n        // Verify block header\n        require(verifyBlockHeader(blockHeader,\
+      \ blockHeight), \"Invalid block header\");\n\n        // Require minimum confirmations\n\
+      \        require(\n            getCurrentBlockHeight() >= blockHeight + MIN_CONFIRMATIONS,\n\
+      \            \"Insufficient confirmations\"\n        );\n\n        verifiedTransactions[txHash]\
+      \ = true;\n\n        // Process verified transaction...\n    }\n\n    function\
+      \ verifyBlockHeader(bytes memory header, uint256 height) internal view returns\
+      \ (bool) {\n        // Verify proof of work\n        bytes32 headerHash = sha256(abi.encodePacked(sha256(header)));\n\
+      \        uint256 target = extractTarget(header);\n        require(uint256(headerHash)\
+      \ < target, \"Invalid proof of work\");\n\n        // Additional checks: difficulty\
+      \ adjustment, timestamp, etc.\n        return true;\n    }\n}\n"
+    references:
+    - https://docs.threshold.network/applications/tbtc-v2/tbtc-v2-technical-design
+  cross_chain_replay_protection:
+    pattern_type: cross_chain_replay
+    severity: high
+    description: Cross-chain replay attack protection
+    detection_heuristics:
+    - chain id
+    - nonce
+    - replay
+    - cross-chain
+    mitigation_code: "\n// Prevent cross-chain replay attacks\ncontract SecureBridge\
+      \ {\n    mapping(bytes32 => bool) public processedMessages;\n    uint256 public\
+      \ nonce;\n\n    function processMessage(\n        bytes memory message,\n  \
+      \      uint256 messageNonce,\n        uint256 sourceChainId,\n        bytes\
+      \ memory signature\n    ) external {\n        // Include chain IDs in message\
+      \ hash\n        bytes32 messageHash = keccak256(\n            abi.encodePacked(\n\
+      \                message,\n                messageNonce,\n                sourceChainId,\n\
+      \                block.chainid,  // Destination chain ID\n                address(this)\
+      \   // Contract address\n            )\n        );\n\n        require(!processedMessages[messageHash],\
+      \ \"Message already processed\");\n        require(messageNonce == nonce + 1,\
+      \ \"Invalid nonce\");\n\n        // Verify signature\n        address signer\
+      \ = ECDSA.recover(messageHash, signature);\n        require(trustedRelayer[signer],\
+      \ \"Unauthorized signer\");\n\n        processedMessages[messageHash] = true;\n\
+      \        nonce = messageNonce;\n\n        // Process message...\n    }\n}\n"
+    references:
+    - https://eips.ethereum.org/EIPS/eip-155
+DAO_GOVERNANCE_PATTERNS:
+  governance_flash_loan:
+    pattern_type: governance_flash_loan_attack
+    severity: critical
+    description: Flash loan attack to temporarily gain voting power for malicious
+      proposals
+    detection_heuristics:
+    - governance
+    - vote
+    - proposal
+    - voting power
+    - delegate
+    - flash loan vulnerable
+    mitigation_code: "\n// Protect governance from flash loan attacks\nimport \"@openzeppelin/contracts/governance/Governor.sol\"\
+      ;\nimport \"@openzeppelin/contracts/governance/extensions/GovernorVotes.sol\"\
+      ;\n\ncontract SecureGovernor is Governor, GovernorVotes {\n    uint256 public\
+      \ constant VOTING_DELAY = 1 days;  // Delay before voting starts\n    uint256\
+      \ public constant VOTING_PERIOD = 3 days;  // Voting duration\n\n    constructor(IVotes\
+      \ _token) Governor(\"SecureDAO\") GovernorVotes(_token) {}\n\n    function votingDelay()\
+      \ public pure override returns (uint256) {\n        return VOTING_DELAY;  //\
+      \ Prevents flash loan attacks\n    }\n\n    function votingPeriod() public pure\
+      \ override returns (uint256) {\n        return VOTING_PERIOD;\n    }\n\n   \
+      \ // Use snapshot-based voting (voting power at proposal creation)\n    function\
+      \ _getVotes(\n        address account,\n        uint256 blockNumber,\n     \
+      \   bytes memory /*params*/\n    ) internal view override returns (uint256)\
+      \ {\n        return token.getPastVotes(account, blockNumber);\n    }\n}\n"
+    references:
+    - https://blog.openzeppelin.com/protect-your-users-with-smart-contract-timelocks
+  timelock_protection:
+    pattern_type: timelock_bypass
+    severity: high
+    description: Timelock bypass allowing immediate execution of critical operations
+    detection_heuristics:
+    - timelock
+    - delay
+    - execute
+    - queue
+    - governance
+    mitigation_code: "\n// Implement secure timelock for governance\nimport \"@openzeppelin/contracts/governance/TimelockController.sol\"\
+      ;\n\ncontract SecureDAO {\n    TimelockController public timelock;\n    uint256\
+      \ public constant MIN_DELAY = 2 days;\n\n    constructor(address[] memory proposers,\
+      \ address[] memory executors) {\n        timelock = new TimelockController(\n\
+      \            MIN_DELAY,\n            proposers,\n            executors,\n  \
+      \          address(this)  // Admin (can change roles)\n        );\n    }\n\n\
+      \    function executeProposal(\n        address target,\n        uint256 value,\n\
+      \        bytes calldata data,\n        bytes32 predecessor,\n        bytes32\
+      \ salt\n    ) external {\n        // Must be scheduled first with MIN_DELAY\n\
+      \        timelock.execute(target, value, data, predecessor, salt);\n    }\n\n\
+      \    function scheduleProposal(\n        address target,\n        uint256 value,\n\
+      \        bytes calldata data,\n        bytes32 predecessor,\n        bytes32\
+      \ salt,\n        uint256 delay\n    ) external onlyRole(PROPOSER_ROLE) {\n \
+      \       require(delay >= MIN_DELAY, \"Delay too short\");\n        timelock.schedule(target,\
+      \ value, data, predecessor, salt, delay);\n    }\n}\n"
+    references:
+    - https://docs.openzeppelin.com/contracts/4.x/api/governance#TimelockController
+  quorum_protection:
+    pattern_type: quorum_manipulation
+    severity: high
+    description: Quorum manipulation through supply changes or voting power concentration
+    detection_heuristics:
+    - quorum
+    - voting threshold
+    - minimum votes
+    - total supply
+    mitigation_code: "\n// Secure quorum implementation\nimport \"@openzeppelin/contracts/governance/Governor.sol\"\
+      ;\n\ncontract SecureGovernor is Governor {\n    uint256 public constant QUORUM_PERCENTAGE\
+      \ = 4;  // 4% of total supply\n    uint256 public constant MIN_QUORUM_VOTES\
+      \ = 1_000_000e18;  // Minimum absolute quorum\n\n    function quorum(uint256\
+      \ blockNumber) public view override returns (uint256) {\n        uint256 totalSupply\
+      \ = token.getPastTotalSupply(blockNumber);\n        uint256 percentageQuorum\
+      \ = (totalSupply * QUORUM_PERCENTAGE) / 100;\n\n        // Use the higher of\
+      \ percentage-based or absolute minimum\n        return percentageQuorum > MIN_QUORUM_VOTES\
+      \ ? percentageQuorum : MIN_QUORUM_VOTES;\n    }\n\n    // Additional: Prevent\
+      \ quorum manipulation via supply changes\n    function propose(\n        address[]\
+      \ memory targets,\n        uint256[] memory values,\n        bytes[] memory\
+      \ calldatas,\n        string memory description\n    ) public override returns\
+      \ (uint256) {\n        // Check proposer has minimum voting power\n        uint256\
+      \ proposerVotes = getVotes(msg.sender, block.number - 1);\n        require(\n\
+      \            proposerVotes >= proposalThreshold(),\n            \"Proposer votes\
+      \ below threshold\"\n        );\n\n        return super.propose(targets, values,\
+      \ calldatas, description);\n    }\n}\n"
+    references:
+    - https://docs.openzeppelin.com/contracts/4.x/governance
+  delegation_safety:
+    pattern_type: delegation_attack
+    severity: medium
+    description: Delegation attack allowing unauthorized voting power transfer
+    detection_heuristics:
+    - delegate
+    - delegatebysig
+    - voting power
+    - transfer votes
+    mitigation_code: "\n// Secure delegation implementation\nimport \"@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol\"\
+      ;\n\ncontract SecureGovernanceToken is ERC20Votes {\n    // Minimum delegation\
+      \ period before votes become active\n    uint256 public constant DELEGATION_DELAY\
+      \ = 1 days;\n\n    mapping(address => uint256) public delegationTimestamp;\n\
+      \n    constructor() ERC20(\"SecureDAO\", \"SDAO\") ERC20Permit(\"SecureDAO\"\
+      ) {}\n\n    function delegate(address delegatee) public override {\n       \
+      \ super.delegate(delegatee);\n        delegationTimestamp[msg.sender] = block.timestamp;\n\
+      \    }\n\n    function delegateBySig(\n        address delegatee,\n        uint256\
+      \ nonce,\n        uint256 expiry,\n        uint8 v,\n        bytes32 r,\n  \
+      \      bytes32 s\n    ) public override {\n        super.delegateBySig(delegatee,\
+      \ nonce, expiry, v, r, s);\n        delegationTimestamp[_msgSender()] = block.timestamp;\n\
+      \    }\n\n    // Override to enforce delegation delay\n    function _getVotes(\n\
+      \        address account,\n        uint256 blockNumber,\n        bytes memory\
+      \ params\n    ) internal view override returns (uint256) {\n        // Only\
+      \ enforce the delegation delay for current block queries.\n        // Historical\
+      \ snapshots cannot reliably enforce a time-based delay using the current timestamp.\n\
+      \        if (blockNumber == block.number) {\n            if (block.timestamp\
+      \ < delegationTimestamp[account] + DELEGATION_DELAY) {\n                return\
+      \ 0;  // Votes not active yet\n            }\n        }\n        return super._getVotes(account,\
+      \ blockNumber, params);\n    }\n}\n"
+    references:
+    - https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#ERC20Votes

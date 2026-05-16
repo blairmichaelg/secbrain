@@ -1,0 +1,541 @@
+TBTC_BRIDGE_PATTERNS:
+  bitcoin_peg_manipulation:
+    pattern_type: bitcoin_peg_manipulation
+    severity: critical
+    description: Manipulation of Bitcoin peg mechanism to mint unbacked tBTC or prevent
+      redemptions
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - mint
+    - mintTBTC
+    - optimisticMint
+    - requestRedemption
+    - bridge deposit
+    - BTC transaction proof
+    - SPV proof verification
+    exploitation_steps:
+    - 1. Find flaw in Bitcoin SPV proof verification
+    - 2. Craft malicious Bitcoin transaction proof
+    - 3. Submit proof to bridge to mint unbacked tBTC
+    - '4. Alternative: Block legitimate redemptions by manipulating proof validation'
+    mitigation_strategies:
+    - Rigorous SPV proof validation with multiple confirmations
+    - Time-delayed optimistic minting with challenge period
+    - Guardian oversight for large mints
+    - Rate limiting on mint operations
+    - Multi-oracle consensus for Bitcoin transaction confirmation
+    references:
+    - https://docs.threshold.network/applications/tbtc-v2
+    - https://immunefi.com/bug-bounty/thresholdnetwork/
+    affected_contracts:
+    - TBTC
+    - TBTCVault
+    - Bridge
+  wallet_registry_compromise:
+    pattern_type: wallet_registry_compromise
+    severity: critical
+    description: Compromise of wallet registry to control Bitcoin wallets or signing
+      groups
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - registerWallet
+    - updateWallet
+    - walletOwner
+    - signingGroup
+    - operator registration
+    - wallet public key
+    exploitation_steps:
+    - 1. Find access control flaw in wallet registration
+    - 2. Register malicious wallet or compromise existing wallet
+    - 3. Gain control of signing authority
+    - 4. Steal deposited Bitcoin or prevent redemptions
+    mitigation_strategies:
+    - Strict access controls on wallet registry modifications
+    - Multi-signature requirements for wallet updates
+    - Time-delayed wallet changes with governance oversight
+    - Operator stake slashing for malicious behavior
+    references:
+    - https://docs.threshold.network/staking-and-running-a-node/threshold-stake
+    affected_contracts:
+    - WalletRegistry
+    - WalletCoordinator
+    - Bridge
+  redemption_proof_forgery:
+    pattern_type: redemption_proof_forgery
+    severity: critical
+    description: Forging redemption proofs to steal Bitcoin from the bridge
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - requestRedemption
+    - proveRedemption
+    - submitRedemptionProof
+    - Bitcoin transaction proof
+    - redemption verification
+    exploitation_steps:
+    - 1. Analyze redemption proof verification logic
+    - 2. Craft forged proof that bypasses validation
+    - 3. Submit forged proof to claim Bitcoin
+    - 4. Drain bridge funds through repeated false redemptions
+    mitigation_strategies:
+    - Cryptographic proof verification with multiple validators
+    - Challenge period for redemptions
+    - Rate limiting and anomaly detection
+    - Guardian monitoring of large redemptions
+    references:
+    - https://docs.threshold.network/applications/tbtc-v2/tbtc-v2-technical-design
+    affected_contracts:
+    - Bridge
+    - TBTCVault
+    - RedemptionWatchtower
+THRESHOLD_CRYPTO_PATTERNS:
+  threshold_signature_manipulation:
+    pattern_type: threshold_signature_manipulation
+    severity: critical
+    description: Manipulation of threshold signature scheme to bypass multi-party
+      signing
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - threshold signature
+    - ECDSA
+    - signing group
+    - signature aggregation
+    - submitSignature
+    - verifySignature
+    exploitation_steps:
+    - 1. Identify flaw in signature aggregation or verification
+    - 2. Manipulate signature components to bypass threshold requirement
+    - 3. Execute unauthorized transactions with forged signatures
+    mitigation_strategies:
+    - Formal verification of signature scheme implementation
+    - Multiple independent signature verification layers
+    - Operator stake requirements to prevent malicious signing
+    - Slashing mechanism for invalid signatures
+    references:
+    - https://docs.threshold.network/app-development/threshold-access-control
+    affected_contracts:
+    - WalletRegistry
+    - Bridge
+    - ECDSA
+  dkg_protocol_attack:
+    pattern_type: dkg_protocol_attack
+    severity: critical
+    description: Attack on Distributed Key Generation protocol to compromise wallet
+      keys
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - DKG
+    - key generation
+    - group formation
+    - operator selection
+    - randomness
+    exploitation_steps:
+    - 1. Exploit randomness source in DKG protocol
+    - 2. Influence operator selection to include malicious nodes
+    - 3. Compromise key shares during generation
+    - 4. Reconstruct private key to steal funds
+    mitigation_strategies:
+    - Secure randomness source (Random Beacon)
+    - Verification of DKG process integrity
+    - Minimum stake requirements for operators
+    - Key rotation and refreshing mechanisms
+    references:
+    - https://docs.threshold.network/staking-and-running-a-node/random-beacon-overview
+    affected_contracts:
+    - WalletRegistry
+    - RandomBeacon
+    - SortitionPool
+  dkg_threshold_raising:
+    pattern_type: dkg_threshold_raising
+    severity: critical
+    description: DKG result submission with polynomial degree higher than expected
+      threshold, causing permanent fund freezing
+    immunefi_category: Permanent freezing of funds (Protocol Insolvency)
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - submitDkgResult
+    - dkgValidator.validate
+    - EcdsaDkgValidator
+    - groupCommitment
+    - groupPubKey
+    - polynomial degree
+    - threshold
+    - commitment.length
+    - result.misbehavedMembers
+    - ECDSA DKG
+    exploitation_steps:
+    - 1. Identify WalletRegistry.submitDkgResult entry point
+    - 2. Check if EcdsaDkgValidator.validate verifies polynomial degree
+    - '3. Verify absence of: require(result.groupCommitment.length == threshold +
+      1)'
+    - 4. Coordinate malicious operators off-chain to produce higher-degree polynomial
+    - 5. Submit DKG result with commitment.length = threshold + 2 (or higher)
+    - 6. If accepted, new wallet cannot sign transactions (permanent fund lock)
+    - 7. All tBTC deposits to compromised wallet are permanently frozen
+    mitigation_strategies:
+    - 'Add explicit check: require(result.groupCommitment.length == threshold + 1,
+      ''Invalid polynomial degree'')'
+    - Validate commitment vector size matches expected threshold parameter
+    - Add pre-condition checks in submitDkgResult before delegation to validator
+    - Implement slashing for operators submitting invalid-degree commitments
+    - Add circuit breakers to pause wallet creation if anomalous commitments detected
+    - Multiple independent validators for DKG result verification
+    references:
+    - https://eprint.iacr.org/2020/852.pdf (FROST DKG vulnerability)
+    - https://github.com/safeheron/safeheron-api-sdk-js/security/advisories
+    - https://docs.threshold.network/app-development/tbtc-contracts-api/ecdsa-api/walletregistry
+    - https://docs.threshold.network/app-development/tbtc-contracts-api/ecdsa-api/ecdsadkgvalidator
+    - 'Trail of Bits: Threshold cryptography implementation audits'
+    affected_contracts:
+    - WalletRegistry
+    - EcdsaDkgValidator
+    - EcdsaDkg
+    - Bridge
+  operator_collusion:
+    pattern_type: operator_collusion
+    severity: high
+    description: Collusion attack where operators combine to bypass threshold requirements
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - operator count
+    - threshold parameter
+    - signature threshold
+    - minimum operators
+    exploitation_steps:
+    - 1. Compromise or collude with enough operators to meet threshold
+    - 2. Execute unauthorized signing operations
+    - 3. Steal funds or disrupt protocol operation
+    mitigation_strategies:
+    - Higher threshold requirements (e.g., 51 of 100 instead of 3 of 5)
+    - Economic incentives against collusion (high stake requirements)
+    - Operator diversity and geographic distribution
+    - Monitoring and anomaly detection for operator behavior
+    references:
+    - https://docs.threshold.network/staking-and-running-a-node/threshold-stake
+    affected_contracts:
+    - WalletRegistry
+    - TokenStaking
+CROSS_CHAIN_PATTERNS:
+  cross_chain_message_forgery:
+    pattern_type: cross_chain_message_forgery
+    severity: critical
+    description: Forging cross-chain messages to execute unauthorized operations
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - cross-chain message
+    - relayer
+    - message verification
+    - bridge message
+    - L2 communication
+    exploitation_steps:
+    - 1. Analyze cross-chain message verification
+    - 2. Craft forged message that bypasses validation
+    - 3. Submit to destination chain to execute malicious operation
+    mitigation_strategies:
+    - Cryptographic message authentication
+    - Multiple relayer consensus
+    - Time-delayed execution with challenge period
+    - Message replay protection
+    references:
+    - https://docs.threshold.network/
+    affected_contracts:
+    - ArbitrumBridge
+    - StarknetBridge
+    - WormholeBridge
+  wormhole_bridge_exploit:
+    pattern_type: wormhole_bridge_exploit
+    severity: critical
+    description: Exploit in Wormhole integration to steal cross-chain assets
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - wormhole
+    - VAA
+    - guardian signature
+    - cross-chain transfer
+    exploitation_steps:
+    - 1. Find vulnerability in Wormhole message verification
+    - 2. Forge or manipulate VAA (Verified Action Approval)
+    - 3. Mint or unlock tokens on destination chain without proper backing
+    mitigation_strategies:
+    - Independent verification of Wormhole messages
+    - Rate limiting on cross-chain transfers
+    - Multi-oracle validation
+    - Circuit breakers for anomalous activity
+    references:
+    - https://immunefi.com/bug-bounty/thresholdnetwork/
+    affected_contracts:
+    - WormholeGateway
+    - Bridge
+STAKING_GOVERNANCE_PATTERNS:
+  staking_reward_manipulation:
+    pattern_type: staking_reward_manipulation
+    severity: high
+    description: Manipulation of staking rewards calculation to steal funds
+    immunefi_category: Theft of unclaimed yield
+    max_bounty_usd: 50000
+    detection_heuristics:
+    - stake
+    - unstake
+    - reward calculation
+    - mintRewards
+    - claimRewards
+    - reward rate
+    exploitation_steps:
+    - 1. Analyze reward calculation logic
+    - 2. Find integer overflow, rounding error, or logic flaw
+    - 3. Stake/unstake in pattern that exploits flaw
+    - 4. Claim inflated rewards
+    mitigation_strategies:
+    - Careful reward math with SafeMath or checked arithmetic
+    - Upper bounds on reward claims
+    - Time-weighted reward calculations
+    - Audit of all reward computation paths
+    references:
+    - https://docs.threshold.network/staking-and-running-a-node/staking-providers
+    affected_contracts:
+    - TokenStaking
+    - RebateStaking
+  governance_vote_buying:
+    pattern_type: governance_vote_buying
+    severity: high
+    description: Flash loan attack to temporarily acquire voting power for malicious
+      proposals
+    immunefi_category: Theft of unclaimed yield
+    max_bounty_usd: 50000
+    detection_heuristics:
+    - governance
+    - voting power
+    - flash loan
+    - snapshot
+    - delegate
+    - proposal
+    exploitation_steps:
+    - 1. Flash loan large amount of governance tokens
+    - 2. Delegate to self to gain voting power
+    - 3. Vote on malicious proposal
+    - 4. Repay flash loan in same transaction
+    mitigation_strategies:
+    - Snapshot-based voting (voting power at specific block)
+    - Time-locked delegation (delay before voting power activates)
+    - Minimum holding period for voters
+    - Quorum and time-delay requirements
+    references:
+    - https://docs.threshold.network/governance/threshold-dao
+    affected_contracts:
+    - TokenholderGovernor
+    - T
+  proxy_upgrade_exploit:
+    pattern_type: proxy_upgrade_exploit
+    severity: critical
+    description: Exploit proxy upgrade mechanism to inject malicious implementation
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - upgradeTo
+    - upgradeToAndCall
+    - proxy
+    - implementation
+    - delegatecall
+    - TransparentUpgradeableProxy
+    exploitation_steps:
+    - 1. Find access control flaw in upgrade function
+    - 2. Deploy malicious implementation contract
+    - 3. Upgrade proxy to point to malicious implementation
+    - 4. Execute theft through malicious code
+    mitigation_strategies:
+    - Multi-sig control over upgrades
+    - Timelock on upgrade execution
+    - Governance voting for upgrades
+    - Immutable critical functions
+    references:
+    - https://docs.openzeppelin.com/contracts/4.x/api/proxy
+    affected_contracts:
+    - TBTC
+    - TBTCVault
+    - Bridge
+    - TokenStaking
+    - WalletRegistry
+TOKEN_MERGER_PATTERNS:
+  vending_machine_exploit:
+    pattern_type: vending_machine_exploit
+    severity: high
+    description: Exploit vending machine contracts that convert KEEP/NU to T tokens
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 50000
+    detection_heuristics:
+    - vending machine
+    - wrap
+    - unwrap
+    - conversion ratio
+    - KEEP
+    - NU
+    - T token
+    exploitation_steps:
+    - 1. Analyze conversion ratio calculation
+    - 2. Find flaw in wrap/unwrap logic
+    - 3. Exploit to get favorable conversion rate
+    - 4. Drain one side of the vending machine
+    mitigation_strategies:
+    - Fixed conversion ratios based on snapshot
+    - One-way conversion (no unwrap)
+    - Supply caps on conversions
+    - Rate limiting
+    references:
+    - https://docs.threshold.network/governance/threshold-dao/dao-tooling
+    affected_contracts:
+    - VendingMachine
+    - T
+ADVANCED_PATTERNS:
+  zk_proof_verification_flaw:
+    pattern_type: zk_proof_verification_flaw
+    severity: critical
+    description: Vulnerabilities in zero-knowledge proof verification for cross-chain
+      operations
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - zk proof
+    - zkSNARK
+    - zkSTARK
+    - verify proof
+    - proof validation
+    - circuit verification
+    exploitation_steps:
+    - 1. Analyze ZK proof verification circuit
+    - 2. Find edge case or malformed proof acceptance
+    - 3. Craft malicious proof that passes verification
+    - 4. Execute unauthorized cross-chain operation
+    mitigation_strategies:
+    - Formal verification of ZK circuits
+    - Multiple independent proof verifiers
+    - Trusted setup validation
+    - Proof challenge period
+    references:
+    - https://docs.threshold.network/
+    affected_contracts:
+    - Bridge
+    - L2Bridge
+  optimistic_challenge_bypass:
+    pattern_type: optimistic_challenge_bypass
+    severity: critical
+    description: Bypass optimistic assumption challenge mechanisms in bridge operations
+    immunefi_category: Direct theft of any user funds
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - challenge
+    - dispute
+    - fraud proof
+    - optimistic
+    - challenge period
+    - finalize
+    exploitation_steps:
+    - 1. Identify optimistic bridge operations
+    - 2. Find weakness in challenge mechanism
+    - 3. Submit fraudulent operation during challenge window
+    - 4. Prevent or bypass valid challenges
+    - 5. Finalize fraudulent operation after timeout
+    mitigation_strategies:
+    - Multiple independent watchers
+    - Economic incentives for challengers
+    - Sufficient challenge periods
+    - Automated fraud detection
+    references:
+    - https://docs.threshold.network/applications/tbtc-v2
+    affected_contracts:
+    - Bridge
+    - TBTCVault
+    - RedemptionWatchtower
+  mev_extraction_vulnerability:
+    pattern_type: mev_extraction_vulnerability
+    severity: high
+    description: MEV extraction vulnerabilities in deposit/withdrawal/redemption operations
+    immunefi_category: Theft of unclaimed yield
+    max_bounty_usd: 50000
+    detection_heuristics:
+    - deposit
+    - withdraw
+    - redemption
+    - front-run
+    - sandwich
+    - atomic arbitrage
+    exploitation_steps:
+    - 1. Monitor mempool for bridge operations
+    - 2. Identify profitable MEV opportunities
+    - 3. Front-run or sandwich user transactions
+    - 4. Extract value from operation ordering
+    mitigation_strategies:
+    - Commit-reveal schemes
+    - Time-delayed operations
+    - Flashbots private transactions
+    - Fair ordering mechanisms
+    references:
+    - https://docs.threshold.network/
+    affected_contracts:
+    - Bridge
+    - TBTCVault
+    - TokenStaking
+  withdrawal_queue_manipulation:
+    pattern_type: withdrawal_queue_manipulation
+    severity: high
+    description: Manipulation of withdrawal queue to gain unfair advantage or grief
+      users
+    immunefi_category: Temporary freezing of funds for at least 1 hour
+    max_bounty_usd: 50000
+    detection_heuristics:
+    - withdrawal queue
+    - withdraw
+    - unstake
+    - exit queue
+    - withdrawal delay
+    exploitation_steps:
+    - 1. Analyze withdrawal queue mechanics
+    - 2. Find queue jumping or griefing vectors
+    - 3. Manipulate queue position or timing
+    - 4. Delay or front-run other withdrawals
+    mitigation_strategies:
+    - FIFO queue enforcement
+    - Proportional withdrawal processing
+    - Anti-griefing mechanisms
+    - Queue size limits
+    references:
+    - https://docs.threshold.network/staking-and-running-a-node
+    affected_contracts:
+    - TokenStaking
+    - RebateStaking
+    - TBTCVault
+  slashing_mechanism_bypass:
+    pattern_type: slashing_mechanism_bypass
+    severity: critical
+    description: Bypass or exploit slashing mechanisms to avoid penalties for malicious
+      behavior
+    immunefi_category: Protocol insolvency
+    max_bounty_usd: 1000000
+    detection_heuristics:
+    - slash
+    - seize
+    - penalize
+    - malicious operator
+    - stake burn
+    exploitation_steps:
+    - 1. Analyze slashing conditions and triggers
+    - 2. Find bypass or exploit in slash execution
+    - 3. Perform malicious operations without penalty
+    - 4. Withdraw stake before slashing occurs
+    mitigation_strategies:
+    - Immediate stake locking on malicious detection
+    - Multiple independent slash enforcers
+    - Economic guarantees for slashing
+    - Timelock on stake withdrawals
+    references:
+    - https://docs.threshold.network/staking-and-running-a-node/threshold-stake
+    affected_contracts:
+    - TokenStaking
+    - WalletRegistry
+    - RandomBeacon
