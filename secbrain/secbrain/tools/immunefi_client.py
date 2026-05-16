@@ -11,13 +11,35 @@ This module provides integration with the Immunefi platform to:
 from __future__ import annotations
 
 import logging
+import json
+import logging
+import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 import httpx
 
 logger = logging.getLogger(__name__)
+
+CACHE_DIR = Path.home() / ".secbrain_cache" / "immunefi"
+CACHE_TTL_SECONDS = 4 * 3600
+
+def _cache_get(key: str) -> dict | None:
+    path = CACHE_DIR / f"{key}.json"
+    if not path.exists():
+        return None
+    if time.time() - path.stat().st_mtime > CACHE_TTL_SECONDS:
+        return None
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return None
+
+def _cache_set(key: str, data: dict) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    (CACHE_DIR / f"{key}.json").write_text(json.dumps(data, indent=2))
 
 
 @dataclass
@@ -459,6 +481,10 @@ class ImmunefiClient:
         if not program:
             return {"error": f"Program {program_id} not found"}
 
+        cached = _cache_get(f"intel_{program_id}")
+        if cached:
+            return cached
+
         # Get trending vulns that might apply
         trends = await self.get_trending_vulnerabilities()
 
@@ -522,6 +548,9 @@ class ImmunefiClient:
             ],
             "similar_programs": similar,
         }
+
+        _cache_set(f"intel_{program_id}", result)
+        return result
 
     async def close(self) -> None:
         """Close the HTTP client."""
