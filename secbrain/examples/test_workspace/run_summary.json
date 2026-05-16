@@ -1,24 +1,428 @@
 {
-  "run_id": "e6dd55a7",
+  "run_id": "8a41aa21",
   "success": true,
   "phases_completed": [
     "ingest",
-    "plan"
+    "plan",
+    "recon",
+    "hypothesis",
+    "static",
+    "triage",
+    "report",
+    "meta"
   ],
-  "phases_failed": [],
+  "phases_failed": [
+    "exploit"
+  ],
   "findings_count": 0,
   "reports_generated": 0,
-  "duration_seconds": 0.000811,
-  "errors": [],
-  "economic": {},
+  "duration_seconds": 0.086369,
+  "errors": [
+    "No hypotheses to test"
+  ],
+  "economic": {
+    "decision": "SKIP",
+    "reason": "no_attempts",
+    "max_profit_eth": 0.0,
+    "max_profit_usd": 0.0,
+    "gas_cost_usd_est": 0.0,
+    "net_usd_est": 0.0
+  },
   "attempts_count": 0,
   "meta_metrics": {
     "hypotheses_count": 0,
     "hypotheses_with_concrete_target": 0,
-    "missing_targets": {},
+    "missing_targets": {
+      "missing_contract_or_function": 0,
+      "total_hypotheses": 0
+    },
     "attempts_count": 0,
     "attempts_with_profit": 0,
-    "economic_decision": null,
-    "total_duration_seconds": 0.000811
+    "economic_decision": "SKIP",
+    "total_duration_seconds": 0.086369,
+    "performance": {
+      "run_id": "8a41aa21",
+      "start_time": 1778884723.8758461,
+      "end_time": 1778884723.9622152,
+      "total_duration_seconds": 0.08636903762817383,
+      "phases": {
+        "ingest": {
+          "phase_name": "ingest",
+          "start_time": 1778884723.8838592,
+          "end_time": 1778884723.8849735,
+          "duration_seconds": 0.0011143684387207031,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "program_name": "Example Corp Bug Bounty",
+            "platform": "hackerone",
+            "domains": [
+              "*.example.com",
+              "api.example.com",
+              "app.example.com"
+            ],
+            "urls": [
+              "https://example.com",
+              "https://api.example.com/v1",
+              "https://app.example.com"
+            ],
+            "focus_areas": [
+              "Authentication",
+              "Authorization",
+              "API Security",
+              "Business Logic"
+            ],
+            "rules": [
+              "No automated scanning without rate limiting",
+              "Do not access other users' data",
+              "Report findings within 24 hours",
+              "No denial of service testing"
+            ],
+            "research": {},
+            "normalized": {
+              "domains": [
+                "*.example.com",
+                "api.example.com",
+                "app.example.com"
+              ],
+              "urls": [
+                "https://example.com",
+                "https://api.example.com/v1",
+                "https://app.example.com"
+              ],
+              "target_types": [
+                "web",
+                "api"
+              ],
+              "excluded_paths": [
+                "/admin/*",
+                "/internal/*",
+                "*.pdf",
+                "*.doc"
+              ],
+              "allowed_methods": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+              ]
+            }
+          }
+        },
+        "plan": {
+          "phase_name": "plan",
+          "start_time": 1778884723.88856,
+          "end_time": 1778884723.8931193,
+          "duration_seconds": 0.00455927848815918,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "plan": {
+              "phases": [
+                {
+                  "phase": "recon",
+                  "objectives": [
+                    "Subdomain enumeration",
+                    "Port scanning",
+                    "Technology detection"
+                  ],
+                  "tools": [
+                    "subfinder",
+                    "httpx",
+                    "nmap"
+                  ],
+                  "time_estimate": "30 minutes",
+                  "success_criteria": [
+                    "Complete asset inventory",
+                    "Technology stack identified"
+                  ]
+                },
+                {
+                  "phase": "hypothesis",
+                  "objectives": [
+                    "Identify vulnerability classes",
+                    "Map attack surface"
+                  ],
+                  "tools": [
+                    "worker_model",
+                    "research"
+                  ],
+                  "time_estimate": "20 minutes",
+                  "success_criteria": [
+                    "Hypothesis list generated",
+                    "Priorities assigned"
+                  ]
+                },
+                {
+                  "phase": "exploit",
+                  "objectives": [
+                    "Test hypotheses",
+                    "Validate vulnerabilities"
+                  ],
+                  "tools": [
+                    "http_client",
+                    "nuclei"
+                  ],
+                  "time_estimate": "60 minutes",
+                  "success_criteria": [
+                    "Hypotheses tested",
+                    "Findings documented"
+                  ]
+                },
+                {
+                  "phase": "triage",
+                  "objectives": [
+                    "Validate findings",
+                    "Assess severity"
+                  ],
+                  "tools": [
+                    "advisor_model"
+                  ],
+                  "time_estimate": "15 minutes",
+                  "success_criteria": [
+                    "Findings validated",
+                    "Severity assigned"
+                  ]
+                },
+                {
+                  "phase": "report",
+                  "objectives": [
+                    "Create PoCs",
+                    "Write reports"
+                  ],
+                  "tools": [
+                    "worker_model",
+                    "research"
+                  ],
+                  "time_estimate": "30 minutes",
+                  "success_criteria": [
+                    "Reports ready for submission"
+                  ]
+                }
+              ],
+              "priority_targets": [
+                "*.example.com",
+                "api.example.com",
+                "app.example.com"
+              ],
+              "risk_considerations": [
+                "Stay within scope boundaries",
+                "Respect rate limits",
+                "Avoid destructive testing"
+              ]
+            },
+            "review": {
+              "approved": true,
+              "concerns": [],
+              "suggestions": [],
+              "risk_level": "medium"
+            },
+            "phases": [
+              "recon",
+              "hypothesis",
+              "exploit",
+              "triage",
+              "report"
+            ]
+          }
+        },
+        "recon": {
+          "phase_name": "recon",
+          "start_time": 1778884723.8990843,
+          "end_time": 1778884723.9040844,
+          "duration_seconds": 0.005000114440917969,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "assets": [
+              {
+                "id": "sub-e405be7c",
+                "type": "subdomain",
+                "value": "[DRY-RUN] Would run: subfinder -d example.com -silent",
+                "metadata": {
+                  "source": "subfinder",
+                  "parent_domain": "*.example.com"
+                }
+              },
+              {
+                "id": "sub-3e5020d8",
+                "type": "subdomain",
+                "value": "[DRY-RUN] Would run: subfinder -d api.example.com -silent",
+                "metadata": {
+                  "source": "subfinder",
+                  "parent_domain": "api.example.com"
+                }
+              },
+              {
+                "id": "sub-f1a89693",
+                "type": "subdomain",
+                "value": "[DRY-RUN] Would run: subfinder -d app.example.com -silent",
+                "metadata": {
+                  "source": "subfinder",
+                  "parent_domain": "app.example.com"
+                }
+              }
+            ],
+            "subdomains_count": 3,
+            "live_hosts_count": 0,
+            "nuclei_findings_count": 0,
+            "technologies": [],
+            "tech_research": {}
+          }
+        },
+        "hypothesis": {
+          "phase_name": "hypothesis",
+          "start_time": 1778884723.9104428,
+          "end_time": 1778884723.9165967,
+          "duration_seconds": 0.00615382194519043,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "hypotheses": [],
+            "top_hypotheses": [],
+            "review": {
+              "reviewed": false
+            },
+            "by_vuln_type": {},
+            "missing_targets": {
+              "missing_contract_or_function": 0,
+              "total_hypotheses": 0
+            }
+          }
+        },
+        "exploit": {
+          "phase_name": "exploit",
+          "start_time": 1778884723.923368,
+          "end_time": 1778884723.924369,
+          "duration_seconds": 0.001001119613647461,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": false,
+          "metadata": {}
+        },
+        "static": {
+          "phase_name": "static",
+          "start_time": 1778884723.9248347,
+          "end_time": 1778884723.925934,
+          "duration_seconds": 0.0010993480682373047,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "skipped": true,
+            "reason": "no_source"
+          }
+        },
+        "triage": {
+          "phase_name": "triage",
+          "start_time": 1778884723.9315534,
+          "end_time": 1778884723.9356377,
+          "duration_seconds": 0.004084348678588867,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "findings": [],
+            "triaged": 0,
+            "economic": {
+              "decision": "SKIP",
+              "reason": "no_attempts",
+              "max_profit_eth": 0.0,
+              "max_profit_usd": 0.0,
+              "gas_cost_usd_est": 0.0,
+              "net_usd_est": 0.0
+            }
+          }
+        },
+        "report": {
+          "phase_name": "report",
+          "start_time": 1778884723.9418664,
+          "end_time": 1778884723.9428627,
+          "duration_seconds": 0.0009963512420654297,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "reports": []
+          }
+        },
+        "meta": {
+          "phase_name": "meta",
+          "start_time": 1778884723.9486825,
+          "end_time": 1778884723.9519997,
+          "duration_seconds": 0.003317117691040039,
+          "api_calls": 0,
+          "cache_hits": 0,
+          "cache_misses": 0,
+          "errors": 0,
+          "success": true,
+          "metadata": {
+            "run_id": "8a41aa21",
+            "program": "Example Corp Bug Bounty",
+            "timestamp": "2026-05-15T22:38:43.949695+00:00",
+            "metrics": {
+              "recon": {
+                "assets_discovered": 3,
+                "live_hosts": 0
+              },
+              "hypotheses": {
+                "total_generated": 0,
+                "by_type": {}
+              },
+              "exploitation": {
+                "tested": 0,
+                "confirmed": 0,
+                "confirmation_rate": 0
+              },
+              "findings": {
+                "total": 0,
+                "by_severity": {}
+              }
+            },
+            "analysis": {
+              "effective_types": {},
+              "ineffective_types": {},
+              "success_rates": {},
+              "top_performing": [],
+              "hypothesis_effectiveness": {}
+            },
+            "recommendations": [
+              "Low confirmation rate - consider improving hypothesis quality or testing methodology",
+              "No findings - consider expanding attack surface or trying new techniques",
+              "AI Insights: [DRY-RUN] Mock response for prompt: Based on this security testing run analysis, provide 2-3 specific recommendations.\n\nMetrics:\n{\n  \"re..."
+            ]
+          }
+        }
+      },
+      "total_api_calls": 0,
+      "total_cache_hits": 0,
+      "total_cache_misses": 0,
+      "total_errors": 0,
+      "cache_hit_rate": 0.0,
+      "successful_phases": 8,
+      "failed_phases": 1
+    },
+    "quality_metrics": {}
   }
 }

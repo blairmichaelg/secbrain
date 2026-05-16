@@ -1,8 +1,8 @@
 {
-  "run_id": "e6dd55a7",
+  "run_id": "8a41aa21",
   "phase": "plan",
   "success": true,
-  "duration_seconds": 0.000174,
+  "duration_seconds": 0.004559,
   "errors": [],
   "data": {
     "plan": {
@@ -90,7 +90,8 @@
       ],
       "priority_targets": [
         "*.example.com",
-        "api.example.com"
+        "api.example.com",
+        "app.example.com"
       ],
       "risk_considerations": [
         "Stay within scope boundaries",
@@ -101,7 +102,8 @@
     "review": {
       "approved": true,
       "concerns": [],
-      "suggestions": []
+      "suggestions": [],
+      "risk_level": "medium"
     },
     "phases": [
       "recon",
@@ -111,5 +113,5 @@
       "report"
     ]
   },
-  "timestamp": "2025-12-25T00:39:18.250714"
+  "timestamp": "2026-05-15T22:38:43.971748+00:00"
 }

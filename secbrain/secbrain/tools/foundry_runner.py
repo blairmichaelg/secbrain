@@ -132,6 +132,16 @@ class FoundryRunner:
         self._compile_cache_dir = Path(run_context.workspace_path) / ".secbrain_cache" / "compile"
         self._compile_cache_dir.mkdir(parents=True, exist_ok=True)
 
+    def _get_forge_binary(self) -> str:
+        """Resolve forge binary path if not globally available."""
+        import shutil
+        if shutil.which("forge"):
+            return "forge"
+        fallback = Path.home() / ".foundry" / "bin" / "forge"
+        if fallback.exists():
+            return str(fallback)
+        return "forge"
+
     async def _compile_with_cache(self, profile: str | None) -> None:
         """Precompile contracts per profile to reduce test latency."""
         if not self.project_root:
@@ -143,7 +153,8 @@ class FoundryRunner:
             return
 
         try:
-            args = ["forge", "build"]
+            forge_bin = self._get_forge_binary()
+            args = [forge_bin, "build"]
             env = os.environ.copy() if profile else None
             if profile and env is not None:
                 env["FOUNDRY_PROFILE"] = profile
@@ -155,7 +166,7 @@ class FoundryRunner:
                 stdout=asyncio.subprocess.DEVNULL,
                 stderr=asyncio.subprocess.DEVNULL,
             )
-            await asyncio.wait_for(proc.communicate(), timeout=120)
+            await asyncio.wait_for(proc.communicate(), timeout=180)
             if proc.returncode == 0:
                 cache_marker.touch()
         except Exception:
@@ -378,6 +389,8 @@ class FoundryRunner:
         match_path: Path | None = None,
     ) -> list[str]:
         base = shlex.split(self.forge_command, posix=os.name != "nt")
+        if base and base[0] == "forge":
+            base[0] = self._get_forge_binary()
         extras: list[str] = []
         if match_path:
             extras.extend(["--match-path", str(match_path.as_posix())])
