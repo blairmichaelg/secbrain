@@ -25,36 +25,6 @@ from typing import Any
 from secbrain.core.foundry_runner import ForgeOutputParser
 
 
-def _install_compile_error_shim() -> None:
-    """Ensure ForgeOutputParser exposes _detect_compile_error (older builds lacked it)."""
-
-    if hasattr(ForgeOutputParser, "_detect_compile_error"):
-        return
-
-    def _detect_compile_error(stdout: str) -> str | None:
-        if not stdout:
-            return None
-        lowered = stdout.lower()
-        markers = (
-            "compiler run failed",
-            "compilation failed",
-            "error (2314):",
-            "error (6933):",
-        )
-        for marker in markers:
-            if marker in lowered:
-                for line in stdout.splitlines():
-                    if marker.strip() in line.lower():
-                        return line.strip() or "compiler_error"
-                return "compiler_error"
-        return None
-
-    ForgeOutputParser._detect_compile_error = staticmethod(_detect_compile_error)  # type: ignore[method-assign,unused-ignore]
-
-
-_install_compile_error_shim()
-
-
 @dataclass
 class FoundryRunResult:
     status: str
@@ -411,7 +381,9 @@ class FoundryRunner:
         attack_body: str,
     ) -> Path:
         """Write a minimal Exploit.t.sol harness into the Foundry project and copy it into attempt_dir."""
-        assert self.project_root is not None  # caller checks before invoking
+        if self.project_root is None:
+            raise RuntimeError("project_root is not set")
+            
         foundry_toml = "[profile.default]\n"
         if rpc_url:
             foundry_toml += f'eth_rpc_url = "{rpc_url}"\n'
