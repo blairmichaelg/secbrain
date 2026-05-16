@@ -218,6 +218,8 @@ class ReconToolRunner:
         args = ["-d", domain, "-silent"]
 
         if output_file:
+            if not output_file.parent.exists():
+                return ToolResult(tool="subfinder", success=False, output="", parsed_data=[], duration_ms=0, error="Output file parent directory does not exist")
             args.extend(["-o", str(output_file)])
 
         result = await self._run_command("subfinder", args, timeout)
@@ -298,9 +300,13 @@ class ReconToolRunner:
         rate: int = 100,
     ) -> ToolResult:
         """Run ffuf for fuzzing."""
+        wordlist_path = Path(wordlist)
+        if not wordlist_path.is_file():
+            return ToolResult(tool="ffuf", success=False, output="", parsed_data=[], duration_ms=0, error="Wordlist file not found or invalid")
+
         args = [
             "-u", url,
-            "-w", wordlist,
+            "-w", str(wordlist_path),
             "-rate", str(rate),
             "-o", "-",
             "-of", "json",
