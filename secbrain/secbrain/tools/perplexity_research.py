@@ -64,6 +64,7 @@ class PerplexityResearch:
         self.model = model
         self.max_calls_per_run = max_calls_per_run
         self._call_count = 0
+        self._semaphore = asyncio.Semaphore(5)
 
         # Rate limiting state
         self._request_times: list[float] = []
@@ -218,9 +219,10 @@ Prioritize data from within the last 6 months (from {datetime.now(UTC).strftime(
                 ],
             }
 
-            response = await self.client.post("/chat/completions", json=payload)
-            response.raise_for_status()
-            data = response.json()
+            async with self._semaphore:
+                response = await self.client.post("/chat/completions", json=payload)
+                response.raise_for_status()
+                data = response.json()
 
             answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
             sources = data.get("citations", [])
@@ -245,6 +247,17 @@ Prioritize data from within the last 6 months (from {datetime.now(UTC).strftime(
                 "error": True,
                 "error_detail": str(e),
             }
+
+    async def research_batch(
+        self,
+        questions: list[str],
+        context: str,
+        run_context: RunContext,
+        ttl_hours: int = 24,
+    ) -> list[dict[str, Any] | Exception]:
+        """Run multiple research queries concurrently with semaphore limiting."""
+        tasks = [self.ask_research(q, context, run_context, ttl_hours) for q in questions]
+        return await asyncio.gather(*tasks, return_exceptions=True)
 
     # ============================================================
     # SPECIALIZED SECURITY RESEARCH METHODS
