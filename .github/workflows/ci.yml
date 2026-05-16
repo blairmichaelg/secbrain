@@ -1,0 +1,32 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install -e secbrain/secbrain/
+          pip install mypy types-PyYAML
+      - name: Import smoke test
+        run: |
+          python -c "from secbrain.agents.exploit_agent import ExploitAgent"
+          python -c "from secbrain.agents.exploit_agent_base import BaseExploitAgent"
+          python -c "from secbrain.agents.exploit_agent_strategies import ExploitStrategiesMixin"
+          python -c "from secbrain.agents.exploit_agent_runner import ExploitRunnerMixin"
+          python -c "from secbrain.tools.perplexity_research import PerplexityResearch"
+          python -c "from secbrain.tools.immunefi_client import ImmunefiClient"
+          python -c "from secbrain.tools.storage import WorkspaceStorage"
+          python -c "from secbrain.tools.recon_cli_wrappers import ReconToolRunner"
+      - name: mypy check (no regressions)
+        run: |
+          mypy secbrain/secbrain/ --ignore-missing-imports 2>&1 | tee mypy_out.txt
+          count=$(grep -c "error:" mypy_out.txt || true)
+          echo "Error count: $count"
+          [ "$count" -lt 130 ]
