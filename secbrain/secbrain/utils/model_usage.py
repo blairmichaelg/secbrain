@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import fcntl
 from datetime import datetime, UTC
 from pathlib import Path
 from typing import Dict, Any
@@ -11,6 +12,18 @@ logger = logging.getLogger(__name__)
 
 CACHE_DIR = Path.home() / ".secbrain_cache"
 PRO_USAGE_FILE = CACHE_DIR / "pro_daily.json"
+
+
+def _load_usage_from_locked_file(handle: Any, today: str) -> dict[str, Any]:
+    handle.seek(0)
+    try:
+        data = json.load(handle)
+    except (json.JSONDecodeError, IOError):
+        return {"date": today, "count": 0}
+
+    if isinstance(data, dict) and data.get("date") == today:
+        return data
+    return {"date": today, "count": 0}
 
 def get_premium_model_with_cap(tier_name: str = "premium", fallback_tier: str = "reason") -> str:
     """
@@ -29,16 +42,12 @@ def get_premium_model_with_cap(tier_name: str = "premium", fallback_tier: str = 
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         
         today = datetime.now(UTC).strftime("%Y-%m-%d")
-        usage: dict[str, Any] = {"date": today, "count": 0}
-        
-        if PRO_USAGE_FILE.exists():
+        with open(PRO_USAGE_FILE, "a+", encoding="utf-8") as f:
+            fcntl.flock(f, fcntl.LOCK_SH)
             try:
-                with open(PRO_USAGE_FILE, "r") as f:
-                    data = json.load(f)
-                    if isinstance(data, dict) and data.get("date") == today:
-                        usage = data
-            except (json.JSONDecodeError, IOError):
-                pass
+                usage = _load_usage_from_locked_file(f, today)
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
                 
         count = int(usage.get("count", 0))
         if count >= 45:
@@ -59,18 +68,15 @@ def increment_premium_usage() -> None:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         today = datetime.now(UTC).strftime("%Y-%m-%d")
         
-        usage: dict[str, Any] = {"date": today, "count": 0}
-        if PRO_USAGE_FILE.exists():
+        with open(PRO_USAGE_FILE, "a+", encoding="utf-8") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
             try:
-                with open(PRO_USAGE_FILE, "r") as f:
-                    data = json.load(f)
-                    if isinstance(data, dict) and data.get("date") == today:
-                        usage = data
-            except (json.JSONDecodeError, IOError):
-                pass
-                
-        usage["count"] = int(usage.get("count", 0)) + 1
-        with open(PRO_USAGE_FILE, "w") as f:
-            json.dump(usage, f)
+                usage = _load_usage_from_locked_file(f, today)
+                usage["count"] = int(usage.get("count", 0)) + 1
+                f.seek(0)
+                f.truncate()
+                json.dump(usage, f)
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
     except Exception as e:
         logger.error("Error incrementing premium usage: %s", e)
