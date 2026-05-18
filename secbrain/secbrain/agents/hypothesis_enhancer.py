@@ -9,11 +9,13 @@ from eth_utils import is_address  # type: ignore[attr-defined]
 from secbrain.agents.immunefi_intelligence import ImmunefiIntelligence
 from secbrain.agents.research_orchestrator import ResearchOrchestrator, ResearchQuery
 from secbrain.agents.threshold_network_patterns import ThresholdNetworkPatterns
+from secbrain.config.constants import AGENT_MODEL_TIERS
 
 # Confidence threshold for high-confidence hypotheses
 HIGH_CONFIDENCE_THRESHOLD = 0.7
 
 
+# Tier: fast — gated via ModelUsage daily cap
 class HypothesisEnhancer:
     """
     Enhance hypotheses using:
@@ -29,6 +31,8 @@ class HypothesisEnhancer:
         # Keep both for backward-compat with older tests/consumers
         self.research_orch = research_orch
         self.research = research_orch
+        self.model_tier = AGENT_MODEL_TIERS["hypothesis_enhancer"]
+        self.research.model_tier = self.model_tier
 
     async def enhance_contract_hypotheses(
         self,
@@ -263,6 +267,7 @@ class HypothesisEnhancer:
                 priority=8,
                 phase="exploit",
                 tags=[original_hypothesis['vuln_type'], "amplification"],
+                metadata={"model_tier": self.model_tier},
             )
             await self.research.queue_research(query)
             results = await self.research.execute_batch(max_queries=1)
@@ -297,6 +302,7 @@ class HypothesisEnhancer:
                 priority=8,
                 phase="exploit",
                 tags=[original_hypothesis['vuln_type'], "access_control"],
+                metadata={"model_tier": self.model_tier},
             )
             await self.research.queue_research(query)
             results = await self.research.execute_batch(max_queries=1)

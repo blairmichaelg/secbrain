@@ -25,6 +25,7 @@ MODEL_TIERS: Dict[str, str] = {
 
 AGENT_MODEL_TIERS: Dict[str, str] = {
     "advanced_research": "premium",
+    "hypothesis_enhancer": "fast",
 }
 
 class LLMConfig:

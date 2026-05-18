@@ -65,11 +65,13 @@ class ResearchOrchestrator:
         research_client: PerplexityResearch | None = None,
         max_concurrent: int = 3,
         priority_threshold: int = 5,
+        model_tier: str | None = None,
     ):
         self.run_context = run_context
         self.research_client = research_client
         self.max_concurrent = max_concurrent
         self.priority_threshold = priority_threshold
+        self.model_tier = model_tier
 
         # Query management
         self._pending_queries: dict[str, ResearchQuery] = {}
@@ -199,6 +201,7 @@ class ResearchOrchestrator:
                         question=query.question,
                         context=query.context,
                         run_context=self.run_context,
+                        model_tier=query.metadata.get("model_tier", self.model_tier),
                     )
                 else:
                     response = await self.research_client.research(  # type: ignore[attr-defined]
