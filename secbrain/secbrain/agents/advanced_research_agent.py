@@ -14,6 +14,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from secbrain.config.constants import AGENT_MODEL_TIERS
+
 if TYPE_CHECKING:
     from secbrain.core.context import RunContext
     from secbrain.tools.perplexity_research import PerplexityResearch
@@ -50,6 +52,7 @@ class ResearchFinding:
         }
 
 
+# Tier: premium — gated via ModelUsage daily cap
 class AdvancedResearchAgent:
     """
     Agent for advanced vulnerability research and discovery.
@@ -69,6 +72,7 @@ class AdvancedResearchAgent:
     ):
         self.run_context = run_context
         self.research_client = research_client
+        self.model_tier = AGENT_MODEL_TIERS["advanced_research"]
         self.findings: list[ResearchFinding] = []
 
     async def research_emerging_patterns(
@@ -112,6 +116,7 @@ class AdvancedResearchAgent:
                     context="Security research for bug bounty hunting",
                     run_context=self.run_context,
                     ttl_hours=24,  # Cache for 24 hours
+                    model_tier=self.model_tier,
                 )
 
                 # Parse research result into findings
@@ -367,6 +372,7 @@ class AdvancedResearchAgent:
                     context=f"Deep security analysis of {protocol_name}",
                     run_context=self.run_context,
                     ttl_hours=48,  # Cache protocol research for 48 hours
+                    model_tier=self.model_tier,
                 )
 
                 findings.append(ResearchFinding(
@@ -423,6 +429,7 @@ class AdvancedResearchAgent:
                     context="Cross-protocol vulnerability correlation",
                     run_context=self.run_context,
                     ttl_hours=24,
+                    model_tier=self.model_tier,
                 )
 
                 findings.append(ResearchFinding(

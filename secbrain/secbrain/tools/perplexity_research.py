@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 
+from secbrain.config.constants import MODEL_TIERS
+
 if TYPE_CHECKING:
     from secbrain.core.context import RunContext
 
@@ -143,6 +145,7 @@ class PerplexityResearch:
         context: str,
         run_context: RunContext,
         ttl_hours: int = 24,
+        model_tier: str | None = None,
     ) -> dict[str, Any]:
         """
         Ask a research question with TTL-aware caching.
@@ -152,6 +155,7 @@ class PerplexityResearch:
             context: Additional context (target info, phase, etc.)
             run_context: Current run context for caching and limits
             ttl_hours: Cache TTL in hours (default: 24)
+            model_tier: Optional tier override for tier-routed research calls
 
         Returns:
             {
@@ -200,8 +204,21 @@ class PerplexityResearch:
         # Enforce rate limiting
         await self._enforce_rate_limit()
 
+        premium_model_used = False
         # Fallback chain: sonar-pro -> sonar -> gemini-2.5-flash
         models_to_try = ["sonar-pro", "sonar", "gemini-2.5-flash"]
+        if model_tier == "premium":
+            from secbrain.utils.model_usage import get_premium_model_with_cap
+
+            selected_model = get_premium_model_with_cap(
+                tier_name="premium",
+                fallback_tier="reason",
+            )
+            premium_model_used = "gemini-2.5-pro" in selected_model.lower()
+            models_to_try = [selected_model]
+        elif model_tier and model_tier in MODEL_TIERS:
+            models_to_try = [MODEL_TIERS[model_tier]]
+
         last_exception = None
 
         for attempt_idx, model_name in enumerate(models_to_try):
@@ -210,7 +227,17 @@ class PerplexityResearch:
                 
                 # Handle Gemini fallback separately if it's in the chain
                 if "gemini" in model_name:
-                    return await self._call_gemini_fallback(question, context, run_context)
+                    result = await self._call_gemini_fallback(
+                        question,
+                        context,
+                        run_context,
+                        model_name=model_name,
+                    )
+                    if premium_model_used:
+                        from secbrain.utils.model_usage import increment_premium_usage
+
+                        increment_premium_usage()
+                    return result
 
                 prompt = f"""Context: {context}
 
@@ -286,6 +313,7 @@ Prioritize data from within the last 6 months (from {datetime.now(UTC).strftime(
         question: str,
         context: str,
         run_context: RunContext,
+        model_name: str | None = None,
     ) -> dict[str, Any]:
         """Fallback to Gemini 2.5 Flash for research when Perplexity fails."""
         try:
@@ -295,7 +323,8 @@ Prioritize data from within the last 6 months (from {datetime.now(UTC).strftime(
                 raise ValueError("GEMINI_API_KEY not set")
             
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel("gemini-2.5-flash")
+            model_name = model_name or MODEL_TIERS["reason"]
+            model = genai.GenerativeModel(model_name)
             
             prompt = f"Context: {context}\n\nQuestion: {question}\n\nProvide a technical security research answer."
             response = await asyncio.to_thread(model.generate_content, prompt)
@@ -304,7 +333,7 @@ Prioritize data from within the last 6 months (from {datetime.now(UTC).strftime(
                 "answer": response.text,
                 "sources": ["gemini-internal-knowledge"],
                 "cached": False,
-                "model_used": "gemini-2.5-flash",
+                "model_used": model_name,
             }
         except Exception as e:
             raise RuntimeError(f"Gemini fallback failed: {e}") from e

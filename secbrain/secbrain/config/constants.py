@@ -22,6 +22,11 @@ MODEL_TIERS: Dict[str, str] = {
     "premium": os.getenv("SECBRAIN_MODEL_PREMIUM", "gemini-2.5-pro"),
     "research": "sonar-pro",
 }
+
+AGENT_MODEL_TIERS: Dict[str, str] = {
+    "advanced_research": "premium",
+}
+
 class LLMConfig:
     """LLM-related configuration.
 
