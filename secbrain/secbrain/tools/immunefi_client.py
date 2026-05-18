@@ -522,7 +522,7 @@ class ImmunefiClient:
 
         similar = sorted(similar, key=lambda x: int(str(x["max_bounty"])), reverse=True)[:5]
 
-        return {
+        result = {
             "program": {
                 "id": program.id,
                 "name": program.name,

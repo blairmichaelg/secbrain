@@ -351,7 +351,7 @@ Respond with JSON:
   ]
 }}"""
 
-        response = await self._call_advisor(prompt)
+        response = await self._call_advisor(prompt, tier="premium")
 
         try:
             if "```" in response:

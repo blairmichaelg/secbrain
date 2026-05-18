@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 import os
 import time
 import warnings
@@ -21,6 +22,9 @@ import httpx
 
 if TYPE_CHECKING:
     from secbrain.core.context import RunContext
+
+
+logger = logging.getLogger(__name__)
 
 
 class PerplexityResearch:
@@ -196,11 +200,19 @@ class PerplexityResearch:
         # Enforce rate limiting
         await self._enforce_rate_limit()
 
-        # Make the API call
-        try:
-            self._call_count += 1
+        # Fallback chain: sonar-pro -> sonar -> gemini-2.5-flash
+        models_to_try = ["sonar-pro", "sonar", "gemini-2.5-flash"]
+        last_exception = None
 
-            prompt = f"""Context: {context}
+        for attempt_idx, model_name in enumerate(models_to_try):
+            try:
+                self._call_count += 1
+                
+                # Handle Gemini fallback separately if it's in the chain
+                if "gemini" in model_name:
+                    return await self._call_gemini_fallback(question, context, run_context)
+
+                prompt = f"""Context: {context}
 
 Question: {question}
 
@@ -208,45 +220,94 @@ Provide a focused, technical answer relevant to security research and bug bounty
 Include specific techniques, tools, CVE references, exploit dates, and profit amounts when applicable.
 Prioritize data from within the last 6 months (from {datetime.now(UTC).strftime('%B %Y')})."""
 
-            payload = {
-                "model": self.model,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "You are a security research assistant specializing in smart contract exploitation and bug bounty hunting. Provide accurate, actionable information with sources and specific data points.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-            }
+                payload = {
+                    "model": model_name,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "You are a security research assistant specializing in smart contract exploitation and bug bounty hunting. Provide accurate, actionable information with sources and specific data points.",
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                }
 
-            async with self._semaphore:
-                response = await self.client.post("/chat/completions", json=payload)
-                response.raise_for_status()
-                data = response.json()
+                async with self._semaphore:
+                    # Exponential backoff within the model attempt if needed
+                    for backoff_attempt in range(3):
+                        try:
+                            response = await self.client.post("/chat/completions", json=payload)
+                            if response.status_code == 429: # Rate limit
+                                wait = (2 ** backoff_attempt) + 1
+                                await asyncio.sleep(wait)
+                                continue
+                            response.raise_for_status()
+                            break
+                        except httpx.HTTPStatusError as e:
+                            if e.response.status_code >= 500 and backoff_attempt < 2:
+                                await asyncio.sleep(2 ** backoff_attempt)
+                                continue
+                            raise
 
-            answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-            sources = data.get("citations", [])
+                    data = response.json()
 
-            result = {
-                "answer": answer,
-                "sources": sources,
-                "cached": False,
-            }
+                answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                sources = data.get("citations", [])
 
-            # Cache the result with timestamp
-            run_context.cache_research(cache_key, result)
-            self._cache_ttl[cache_key] = datetime.now(UTC)
+                result = {
+                    "answer": answer,
+                    "sources": sources,
+                    "cached": False,
+                    "model_used": model_name,
+                }
 
-            return result
+                # Cache the result with timestamp
+                run_context.cache_research(cache_key, result)
+                self._cache_ttl[cache_key] = datetime.now(UTC)
 
-        except httpx.HTTPError as e:
+                return result
+
+            except Exception as e:
+                last_exception = e
+                logger.warning(f"Research attempt with {model_name} failed: {e}")
+                if attempt_idx < len(models_to_try) - 1:
+                    await asyncio.sleep(1) # Small pause before next tier
+                    continue
+
+        return {
+            "answer": f"[ERROR] All research tiers failed. Last error: {last_exception!s}",
+            "sources": [],
+            "cached": False,
+            "error": True,
+            "error_detail": str(last_exception),
+        }
+
+    async def _call_gemini_fallback(
+        self,
+        question: str,
+        context: str,
+        run_context: RunContext,
+    ) -> dict[str, Any]:
+        """Fallback to Gemini 2.5 Flash for research when Perplexity fails."""
+        try:
+            import google.generativeai as genai
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if not api_key:
+                raise ValueError("GEMINI_API_KEY not set")
+            
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel("gemini-2.5-flash")
+            
+            prompt = f"Context: {context}\n\nQuestion: {question}\n\nProvide a technical security research answer."
+            response = await asyncio.to_thread(model.generate_content, prompt)
+            
             return {
-                "answer": f"[ERROR] Research failed: {e!s}",
-                "sources": [],
+                "answer": response.text,
+                "sources": ["gemini-internal-knowledge"],
                 "cached": False,
-                "error": True,
-                "error_detail": str(e),
+                "model_used": "gemini-2.5-flash",
             }
+        except Exception as e:
+            raise RuntimeError(f"Gemini fallback failed: {e}") from e
 
     async def research_batch(
         self,
@@ -254,10 +315,10 @@ Prioritize data from within the last 6 months (from {datetime.now(UTC).strftime(
         context: str,
         run_context: RunContext,
         ttl_hours: int = 24,
-    ) -> list[dict[str, Any] | Exception]:
+    ) -> list[Any]:
         """Run multiple research queries concurrently with semaphore limiting."""
         tasks = [self.ask_research(q, context, run_context, ttl_hours) for q in questions]
-        return await asyncio.gather(*tasks, return_exceptions=True)
+        return list(await asyncio.gather(*tasks, return_exceptions=True))
 
     # ============================================================
     # SPECIALIZED SECURITY RESEARCH METHODS

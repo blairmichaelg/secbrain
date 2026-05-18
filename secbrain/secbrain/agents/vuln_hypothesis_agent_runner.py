@@ -205,18 +205,36 @@ class VulnHypothesisRunnerMixin(_Base):
             except Exception as e:
                 self._log_error("research_attack_vectors_failed", error=str(e))
 
-        prompt = f"""Contract: {name} ({address})
-Chain: {chain_id}
-Protocol: {protocol_type}
-Functions (sample): {', '.join(functions_preview[:8])}
+        system_prompt = """You are a senior smart contract security researcher. 
+Your goal is to generate high-quality vulnerability hypotheses using the Plan-and-Solve architecture.
+
+Follow these steps for every analysis:
+1. **Understand**: Analyze the protocol type, sample functions, and real-world attack context provided.
+2. **Plan**: Outline a strategy to find specific vulnerabilities common in this protocol type (e.g., flash-loan oracle manipulation for DeFi, message forgery for bridges).
+3. **Solve**: Generate 3-5 concrete hypotheses based on your plan.
+
+Each hypothesis must be a JSON object with:
+- `vuln_type`: One of the predefined vulnerability types.
+- `confidence`: 0.0 to 1.0.
+- `contract_address`: The target contract.
+- `function_signature`: The specific function to target.
+- `rationale`: Why this is likely vulnerable.
+- `test_approach`: How to verify it using a Foundry test.
+- `exploit_notes`: Key technical details for payload generation.
+
+Return ONLY a JSON array of hypotheses."""
+
+        prompt = f"""Target Contract: {name} ({address})
+Chain ID: {chain_id}
+Protocol Type: {protocol_type}
+Functions Sample: {', '.join(functions_preview[:15])}
 
 {research_context}
 
-Generate 3-5 exploit hypotheses as a JSON array.
-Focus on {protocol_type}-specific high-severity issues."""
+Deconstruct the contract's purpose and provide your Plan-and-Solve analysis."""
 
         async with self._contract_llm_sem:
-            response = await self._call_worker(prompt)
+            response = await self._call_worker(prompt, system=system_prompt, tier="fast")
 
         raw_hypotheses = await self._parse_hypotheses_with_validation(
             response=response,
@@ -453,7 +471,7 @@ Focus on {protocol_type}-specific high-severity issues."""
                 break
             except (json.JSONDecodeError, ValidationError) as e:
                 if attempt < max_retries - 1:
-                    response = await self._call_worker(f"JSON response malformed or failed validation: {e!s}. Fix and return ONLY a JSON array.")
+                    response = await self._call_worker(f"JSON response malformed or failed validation: {e!s}. Fix and return ONLY a JSON array.", tier="fast")
                 continue
             except Exception:
                 if attempt == max_retries - 1: parsed = []
@@ -525,7 +543,7 @@ Focus on {protocol_type}-specific high-severity issues."""
         metadata = asset.get("metadata", {})
         tech_list = metadata.get("technologies", []) + technologies
         prompt = f"Analyze web asset: {url}. Tech: {tech_list[:10]}. Return JSON array of hypotheses."
-        response = await self._call_worker(prompt)
+        response = await self._call_worker(prompt, tier="fast")
         try:
             if "```" in response:
                 json_str = response.split("```")[1]

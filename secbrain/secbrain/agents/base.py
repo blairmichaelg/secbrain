@@ -121,16 +121,24 @@ class BaseAgent(ABC):
         self,
         prompt: str,
         system: str | None = None,
+        tier: str | None = None,
         **kwargs: Any,
     ) -> str:
-        """Call the worker model."""
+        """Call the worker model, optionally specifying a tier."""
+        from secbrain.config.constants import MODEL_TIERS
+        
+        # Use tier-specific model if provided, otherwise default to current worker_model
+        model_override = None
+        if tier and tier in MODEL_TIERS:
+            model_override = MODEL_TIERS[tier]
+            
         if not self.worker_model:
             return "[NO WORKER MODEL] " + prompt[:100]
 
         cache_key: str | None = None
         try:
             if hasattr(self.run_context, "get_cached_llm"):
-                raw_key = f"{system or ''}|||{prompt}"
+                raw_key = f"{system or ''}|||{tier or ''}|||{prompt}"
                 cache_key = hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
                 cached = self.run_context.get_cached_llm(cache_key)
                 if cached is not None:
@@ -141,6 +149,7 @@ class BaseAgent(ABC):
         response = await self.worker_model.generate(
             prompt=prompt,
             system=system,
+            model=model_override,
             **kwargs,
         )
         content = response.content
@@ -155,19 +164,37 @@ class BaseAgent(ABC):
         self,
         prompt: str,
         system: str | None = None,
+        tier: str | None = None,
         **kwargs: Any,
     ) -> str:
-        """Call the advisor model for critical decisions."""
+        """Call the advisor model for critical decisions, optionally specifying a tier."""
+        from secbrain.config.constants import MODEL_TIERS
+        from secbrain.utils.model_usage import get_premium_model_with_cap, increment_premium_usage
+        
+        # Use tier-specific model if provided
+        model_override = None
+        if tier and tier in MODEL_TIERS:
+            if tier == "premium":
+                model_override = get_premium_model_with_cap(tier_name="premium", fallback_tier="reason")
+            else:
+                model_override = MODEL_TIERS[tier]
+            
         if not self.advisor_model:
             return "[NO ADVISOR MODEL] " + prompt[:100]
 
-        self._log("advisor_call", prompt_preview=prompt[:100])
+        self._log("advisor_call", prompt_preview=prompt[:100], tier=tier)
 
         response = await self.advisor_model.generate(
             prompt=prompt,
             system=system,
+            model=model_override,
             **kwargs,
         )
+        
+        # Increment usage if premium was used
+        if tier == "premium" and response.success:
+             increment_premium_usage()
+             
         return response.content
 
     async def _research(

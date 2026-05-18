@@ -78,7 +78,7 @@ premium:
     base_url: https://api.together.xyz/v1
   advisor:
     provider: gemini
-    model: gemini-2.0-flash  # FREE with Google PRO subscription
+    model: gemini-2.5-flash  # FREE with Google PRO subscription
 
 # Alternative provider configurations (uncomment to use)
 

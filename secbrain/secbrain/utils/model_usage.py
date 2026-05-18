@@ -1,0 +1,76 @@
+"""Model usage tracking and tier enforcement."""
+
+import json
+import logging
+import os
+from datetime import datetime, UTC
+from pathlib import Path
+from typing import Dict, Any
+
+logger = logging.getLogger(__name__)
+
+CACHE_DIR = Path.home() / ".secbrain_cache"
+PRO_USAGE_FILE = CACHE_DIR / "pro_daily.json"
+
+def get_premium_model_with_cap(tier_name: str = "premium", fallback_tier: str = "reason") -> str:
+    """
+    Get the premium model, with a daily cap check.
+    If cap is reached, falls back to the reasoning tier.
+    """
+    from secbrain.config.constants import MODEL_TIERS
+    
+    model = MODEL_TIERS.get(tier_name, "gemini-2.5-pro")
+    
+    # Only enforce cap for gemini-2.5-pro
+    if "gemini-2.5-pro" not in model.lower():
+        return model
+        
+    try:
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
+        usage: dict[str, Any] = {"date": today, "count": 0}
+        
+        if PRO_USAGE_FILE.exists():
+            try:
+                with open(PRO_USAGE_FILE, "r") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict) and data.get("date") == today:
+                        usage = data
+            except (json.JSONDecodeError, IOError):
+                pass
+                
+        count = int(usage.get("count", 0))
+        if count >= 45:
+            logger.warning(
+                "WARNING: %s daily cap reached (%d/45), falling back to %s tier",
+                model, usage["count"], fallback_tier
+            )
+            return MODEL_TIERS.get(fallback_tier, "gemini-2.5-flash")
+            
+        return model
+    except Exception as e:
+        logger.error("Error checking premium model cap: %s", e)
+        return model
+
+def increment_premium_usage() -> None:
+    """Increment the daily usage count for premium models."""
+    try:
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
+        
+        usage: dict[str, Any] = {"date": today, "count": 0}
+        if PRO_USAGE_FILE.exists():
+            try:
+                with open(PRO_USAGE_FILE, "r") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict) and data.get("date") == today:
+                        usage = data
+            except (json.JSONDecodeError, IOError):
+                pass
+                
+        usage["count"] = int(usage.get("count", 0)) + 1
+        with open(PRO_USAGE_FILE, "w") as f:
+            json.dump(usage, f)
+    except Exception as e:
+        logger.error("Error incrementing premium usage: %s", e)

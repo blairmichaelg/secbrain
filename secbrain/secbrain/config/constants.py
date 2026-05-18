@@ -11,10 +11,17 @@ All configuration classes are frozen dataclasses to prevent accidental modificat
 """
 
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import ClassVar, Dict
+import os
 
-
-@dataclass(frozen=True)
+# Tiered routing for Free-Tier Optimization
+MODEL_TIERS: Dict[str, str] = {
+    "scan":    os.getenv("SECBRAIN_MODEL_SCAN", "gemini-2.5-flash"),
+    "fast":    os.getenv("SECBRAIN_MODEL_FAST", "gemini-2.5-flash-lite"),
+    "reason":  os.getenv("SECBRAIN_MODEL_REASON", "gemini-2.5-flash"),
+    "premium": os.getenv("SECBRAIN_MODEL_PREMIUM", "gemini-2.5-pro"),
+    "research": "sonar-pro",
+}
 class LLMConfig:
     """LLM-related configuration.
 

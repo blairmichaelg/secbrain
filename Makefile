@@ -1,25 +1,29 @@
-.PHONY: run run-top5 test sync lint typecheck clean
+SHELL := /bin/bash
+.PHONY: run run-top5 test sync lint typecheck clean sync-local
 
 run:
-	wsl bash -c "cd ~/bounty_swarm_pipeline/secbrain && source ../venv/bin/activate && python -m bridge run --top-n 3"
+	cd ~/bounty_swarm_pipeline/secbrain && source ../venv/bin/activate && python -m bridge run --top-n 3
 
 run-top5:
-	wsl bash -c "cd ~/bounty_swarm_pipeline/secbrain && source ../venv/bin/activate && python -m bridge run --top-n 5"
+	cd ~/bounty_swarm_pipeline/secbrain && source ../venv/bin/activate && python -m bridge run --top-n 5
 
 test:
-	wsl bash -c "cd ~/bounty_swarm_pipeline/secbrain && source ../venv/bin/activate && pytest secbrain/tests/ -v"
+	cd ~/bounty_swarm_pipeline/secbrain && source ../venv/bin/activate && pytest secbrain/tests/ -v
 
 lint:
-	wsl bash -c "cd ~/bounty_swarm_pipeline/secbrain && source ../venv/bin/activate && ruff check secbrain/"
+	cd ~/bounty_swarm_pipeline/secbrain && source ../venv/bin/activate && ruff check secbrain/
 
 typecheck:
-	wsl bash -c "cd ~/bounty_swarm_pipeline/secbrain && source ../venv/bin/activate && mypy secbrain/secbrain/"
+	cd ~/bounty_swarm_pipeline/secbrain && source ../venv/bin/activate && mypy secbrain/secbrain/
 
 sync:
-	wsl bash -c "cd ~/bounty_swarm_pipeline/secbrain && git pull && source ../venv/bin/activate && pip install -e secbrain/"
+	cd ~/bounty_swarm_pipeline/secbrain && git pull && source ../venv/bin/activate && pip install -e secbrain/
 
 sync-local:
-	wsl bash -c "rsync -av --exclude 'venv' --exclude '.git' /mnt/c/Users/Michael/.gemini/antigravity/scratch/bounty_swarm_pipeline/secbrain/ ~/bounty_swarm_pipeline/secbrain/"
+	@echo "WARNING: This will overwrite files in WSL (~/bounty_swarm_pipeline/secbrain/) with files from Windows host."
+	@echo "Checking for uncommitted changes in WSL..."
+	@cd ~/bounty_swarm_pipeline/secbrain && if [ -d .git ] && ! git diff --quiet; then echo 'ERROR: Uncommitted changes found in WSL. Commit or stash them first.'; exit 1; fi
+	rsync -av --exclude 'venv' --exclude '.git' /mnt/c/Users/Michael/.gemini/antigravity/scratch/bounty_swarm_pipeline/secbrain/ ~/bounty_swarm_pipeline/secbrain/
 
 clean:
-	wsl bash -c "find ~/bounty_swarm_pipeline/secbrain -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; find ~/bounty_swarm_pipeline/secbrain -name '*.pyc' -delete 2>/dev/null; echo 'Clean done.'"
+	find ~/bounty_swarm_pipeline/secbrain -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; find ~/bounty_swarm_pipeline/secbrain -name '*.pyc' -delete 2>/dev/null; echo 'Clean done.'

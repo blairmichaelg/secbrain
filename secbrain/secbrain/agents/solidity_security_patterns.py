@@ -90,7 +90,7 @@ def _load_solidity_yaml() -> dict:
         return yaml.safe_load(f)
 
 def _parse_solidity_patterns(data: dict) -> dict[str, SecurityPattern]:
-    res = {}
+    res: dict[str, SecurityPattern] = {}
     if not data:
         return res
     for k, v in data.items():

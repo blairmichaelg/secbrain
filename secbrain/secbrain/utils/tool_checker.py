@@ -242,6 +242,9 @@ Verify installation:
         Returns:
             Formatted report with installation guidance
         """
+        missing_required: list[ToolStatus] = []
+        missing_recommended: list[ToolStatus] = []
+
         if phase:
             tools_status = self.check_phase_tools(phase)
             missing_required = [t for t in tools_status["required"] if not t.available]
@@ -255,8 +258,6 @@ Verify installation:
                 all_tools.update(phase_tools["required"])
                 all_tools.update(phase_tools["recommended"])
 
-            missing_required: list[ToolStatus] = []
-            missing_recommended: list[ToolStatus] = []
             for tool in all_tools:
                 status = self.check_tool(tool)
                 if not status.available:
