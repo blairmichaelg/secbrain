@@ -30,8 +30,7 @@ jobs:
           python -c "from secbrain.tools.recon_cli_wrappers import ReconToolRunner"
       - name: Mypy type check
         run: |
-          cd secbrain
-          ERROR_COUNT=$(mypy secbrain/ --ignore-missing-imports 2>&1 | grep -c "error:")
+          ERROR_COUNT=$(mypy secbrain/secbrain/ --ignore-missing-imports 2>&1 | grep -c "error:")
           BASELINE=31
           if [ "$ERROR_COUNT" -gt "$BASELINE" ]; then
             echo "FAIL: mypy errors increased from $BASELINE to $ERROR_COUNT"
