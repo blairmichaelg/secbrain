@@ -23,23 +23,32 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-CACHE_DIR = Path.home() / ".secbrain_cache" / "immunefi"
+import os
+CACHE_DIR = Path.home() / ".cache" / "secbrain" / "immunefi"
 CACHE_TTL_SECONDS = 4 * 3600
 
 def _cache_get(key: str) -> dict | None:
     path = CACHE_DIR / f"{key}.json"
     if not path.exists():
+        logger.info(f"[immunefi_cache] MISS: {key}")
         return None
     if time.time() - path.stat().st_mtime > CACHE_TTL_SECONDS:
+        logger.info(f"[immunefi_cache] MISS: {key}")
         return None
     try:
-        return json.loads(path.read_text())
+        data = json.loads(path.read_text())
+        logger.info(f"[immunefi_cache] HIT: {key}")
+        return data
     except Exception:
+        logger.info(f"[immunefi_cache] MISS: {key}")
         return None
 
 def _cache_set(key: str, data: dict) -> None:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    (CACHE_DIR / f"{key}.json").write_text(json.dumps(data, indent=2))
+    target = CACHE_DIR / f"{key}.json"
+    tmp_target = CACHE_DIR / f"{key}.json.tmp"
+    tmp_target.write_text(json.dumps(data, indent=2))
+    os.replace(tmp_target, target)
 
 
 @dataclass
@@ -481,7 +490,7 @@ class ImmunefiClient:
         if not program:
             return {"error": f"Program {program_id} not found"}
 
-        cached = _cache_get(f"intel_{program_id}")
+        cached = _cache_get(program_id)
         if cached:
             return cached
 
@@ -549,7 +558,7 @@ class ImmunefiClient:
             "similar_programs": similar,
         }
 
-        _cache_set(f"intel_{program_id}", result)
+        _cache_set(program_id, result)
         return result
 
     async def close(self) -> None:
