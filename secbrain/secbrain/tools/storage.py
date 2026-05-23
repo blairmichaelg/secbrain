@@ -1,5 +1,8 @@
 """Storage layer for SecBrain (JSON/SQLite).
 
+Schema version policy: increment SCHEMA_VERSION whenever the structure of any
+stored document changes. Readers warn (but do not crash) on version mismatch.
+
 This module provides persistent storage for SecBrain workflow data including:
 - Recon results and asset discovery data
 - Vulnerability hypotheses
@@ -280,10 +283,15 @@ class WorkspaceStorage:
             asset["technologies"] = json.loads(asset.get("technologies", "[]"))
             metadata = json.loads(asset.get("metadata", "{}"))
             asset["metadata"] = metadata
-            asset["schema_version"] = metadata.get("schema_version", 1)
             
-            if asset.get("schema_version", 1) < SCHEMA_VERSION:
-                asset = _migrate(asset, from_version=asset.get("schema_version", 1))
+            _schema_version = metadata.get("schema_version", 1)
+            asset["schema_version"] = _schema_version
+            if _schema_version < SCHEMA_VERSION:
+                logger.warning(
+                    "storage: document %s has schema v%d, current is v%d — consider re-running analysis",
+                    asset.get("id"), _schema_version, SCHEMA_VERSION,
+                )
+                asset = _migrate(asset, from_version=_schema_version)
                 
             assets.append(asset)
 
@@ -339,10 +347,15 @@ class WorkspaceStorage:
             hyp = dict(zip(columns, row, strict=False))
             result = json.loads(hyp.get("result", "{}"))
             hyp["result"] = result
-            hyp["schema_version"] = result.get("schema_version", 1)
             
-            if hyp.get("schema_version", 1) < SCHEMA_VERSION:
-                hyp = _migrate(hyp, from_version=hyp.get("schema_version", 1))
+            _schema_version = result.get("schema_version", 1)
+            hyp["schema_version"] = _schema_version
+            if _schema_version < SCHEMA_VERSION:
+                logger.warning(
+                    "storage: document %s has schema v%d, current is v%d — consider re-running analysis",
+                    hyp.get("id"), _schema_version, SCHEMA_VERSION,
+                )
+                hyp = _migrate(hyp, from_version=_schema_version)
                 
             hypotheses.append(hyp)
 
@@ -400,13 +413,18 @@ class WorkspaceStorage:
             evidence_data = json.loads(finding.get("evidence", "{}"))
             if isinstance(evidence_data, dict) and "data" in evidence_data:
                 finding["evidence"] = evidence_data["data"]
-                finding["schema_version"] = evidence_data.get("schema_version", 1)
+                _schema_version = evidence_data.get("schema_version", 1)
             else:
                 finding["evidence"] = evidence_data if isinstance(evidence_data, list) else []
-                finding["schema_version"] = 1
+                _schema_version = 1
                 
-            if finding.get("schema_version", 1) < SCHEMA_VERSION:
-                finding = _migrate(finding, from_version=finding.get("schema_version", 1))
+            finding["schema_version"] = _schema_version
+            if _schema_version < SCHEMA_VERSION:
+                logger.warning(
+                    "storage: document %s has schema v%d, current is v%d — consider re-running analysis",
+                    finding.get("id"), _schema_version, SCHEMA_VERSION,
+                )
+                finding = _migrate(finding, from_version=_schema_version)
                 
             findings.append(finding)
 

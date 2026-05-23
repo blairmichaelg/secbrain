@@ -73,7 +73,7 @@ class ContractConfig(BaseModel):
 
     model_config = ConfigDict(strict=True)
 
-    address: str = Field(description="Contract address")
+    address: str | None = Field(None, description="Contract address")
     chain_id: int = Field(default=1, description="Chain ID (1=Mainnet, etc.)")
     name: str | None = Field(None, description="Contract name")
     foundry_profile: str | None = Field(None, description="Foundry profile name for compilation")
