@@ -215,6 +215,11 @@ class ReconToolRunner:
         timeout: int = 300,
     ) -> ToolResult:
         """Run subfinder for subdomain enumeration."""
+        import re
+        # Prevent shell_meta injection, act as allowlist
+        if not re.match(r'^[A-Za-z0-9_\-./]+$', domain):
+            raise ValueError(f"recon: unsafe value rejected: {domain!r}")
+
         args = ["-d", domain, "-silent"]
 
         if output_file:
@@ -242,6 +247,11 @@ class ReconToolRunner:
         timeout: int = 600,
     ) -> ToolResult:
         """Run amass for attack surface mapping."""
+        import re
+        # Prevent shell_meta injection, act as allowlist
+        if not re.match(r'^[A-Za-z0-9_\-./]+$', domain):
+            raise ValueError(f"recon: unsafe value rejected: {domain!r}")
+
         args = ["enum", "-d", domain]
 
         if passive_only:
@@ -300,7 +310,14 @@ class ReconToolRunner:
         rate: int = 100,
     ) -> ToolResult:
         """Run ffuf for fuzzing."""
+        import re
+        # Prevent shell_meta injection, act as allowlist
+        if not re.match(r'^[A-Za-z0-9_\-./:]+$', url):
+            raise ValueError(f"recon: unsafe value rejected: {url!r}")
+
         wordlist_path = Path(wordlist)
+        if not wordlist_path.exists():
+            raise FileNotFoundError(f"recon: contract path not found: {wordlist}")
         if not wordlist_path.is_file():
             return ToolResult(tool="ffuf", success=False, output="", parsed_data=[], duration_ms=0, error="Wordlist file not found or invalid")
 
@@ -332,6 +349,13 @@ class ReconToolRunner:
         timeout: int = 600,
     ) -> ToolResult:
         """Run nmap for port scanning."""
+        import re
+        # Prevent shell_meta injection, act as allowlist
+        if not re.match(r'^[A-Za-z0-9_\-./]+$', target):
+            raise ValueError(f"recon: unsafe value rejected: {target!r}")
+        if not re.match(r'^[0-9,\-]+$', ports):
+            raise ValueError(f"recon: unsafe value rejected: {ports!r}")
+
         args = ["-p", ports, "-sV", "--open", "-oG", "-", target]
 
         result = await self._run_command("nmap", args, timeout)
