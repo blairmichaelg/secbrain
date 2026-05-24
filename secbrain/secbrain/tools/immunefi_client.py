@@ -10,7 +10,6 @@ This module provides integration with the Immunefi platform to:
 
 from __future__ import annotations
 
-import logging
 import json
 import logging
 import time
@@ -24,6 +23,7 @@ import httpx
 logger = logging.getLogger(__name__)
 
 import os
+
 CACHE_DIR = Path.home() / ".cache" / "secbrain" / "immunefi"
 CACHE_TTL_SECONDS = 4 * 3600
 

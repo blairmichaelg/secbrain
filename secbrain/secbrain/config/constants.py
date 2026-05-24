@@ -10,12 +10,12 @@ This module provides configuration classes for various SecBrain subsystems:
 All configuration classes are frozen dataclasses to prevent accidental modification.
 """
 
-from dataclasses import dataclass
-from typing import ClassVar, Dict
 import os
+from dataclasses import dataclass
+from typing import ClassVar
 
 # Tiered routing for Free-Tier Optimization
-MODEL_TIERS: Dict[str, str] = {
+MODEL_TIERS: dict[str, str] = {
     "scan":    os.getenv("SECBRAIN_MODEL_SCAN", "gemini-2.5-flash"),
     "fast":    os.getenv("SECBRAIN_MODEL_FAST", "gemini-2.5-flash-lite"),
     "reason":  os.getenv("SECBRAIN_MODEL_REASON", "gemini-2.5-flash"),
@@ -23,7 +23,7 @@ MODEL_TIERS: Dict[str, str] = {
     "research": "sonar-pro",
 }
 
-AGENT_MODEL_TIERS: Dict[str, str] = {
+AGENT_MODEL_TIERS: dict[str, str] = {
     "advanced_research": "premium",
     "hypothesis_enhancer": "fast",
 }

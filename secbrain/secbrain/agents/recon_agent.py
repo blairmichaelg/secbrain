@@ -13,12 +13,11 @@ from secbrain.agents.recon_agent_runner import ReconRunnerMixin
 class ReconAgent(ReconRunnerMixin, BaseReconAgent):
     """Recon agent composed from base helpers and runner orchestration."""
 
-    pass
 
 
 __all__ = [
-    "ReconAgent",
     "BaseReconAgent",
     "CompilationRetryHelper",
     "NonRetryableCompilationError",
+    "ReconAgent",
 ]

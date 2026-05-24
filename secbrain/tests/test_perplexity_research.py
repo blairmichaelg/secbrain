@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
 
 from secbrain.tools.perplexity_research import PerplexityResearch, create_research_client
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -239,7 +238,6 @@ class TestAskResearch:
         self, research_client: PerplexityResearch, mock_run_context
     ):
         """Test that valid cached results are returned."""
-        from datetime import UTC, datetime
 
         # First call in dry-run to populate cache
         mock_run_context.dry_run = True

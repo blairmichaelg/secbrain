@@ -1,12 +1,11 @@
 """Model usage tracking and tier enforcement."""
 
+import fcntl
 import json
 import logging
-import os
-import fcntl
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ def _load_usage_from_locked_file(handle: Any, today: str) -> dict[str, Any]:
     handle.seek(0)
     try:
         data = json.load(handle)
-    except (json.JSONDecodeError, IOError):
+    except (OSError, json.JSONDecodeError):
         return {"date": today, "count": 0}
 
     if isinstance(data, dict) and data.get("date") == today:

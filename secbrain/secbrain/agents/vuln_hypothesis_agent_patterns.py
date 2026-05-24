@@ -6,10 +6,7 @@ import logging
 import math
 import re
 import uuid
-import json
-from typing import Any, TYPE_CHECKING
-
-from secbrain.agents.oracle_manipulation_detector import OracleManipulationDetector
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from secbrain.agents.vuln_hypothesis_agent_base import BaseVulnHypothesisAgent

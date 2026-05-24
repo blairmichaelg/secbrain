@@ -5,7 +5,7 @@ and truncate repetitive patterns from smart contract source code.
 """
 
 import re
-from typing import Any
+
 
 class ContractSanitizer:
     """Sanitizes contract source code for LLM consumption."""

@@ -6,18 +6,19 @@ import asyncio
 import json
 import logging
 import uuid
-from typing import Any, TYPE_CHECKING
-from jsonschema import validate, ValidationError
+from typing import TYPE_CHECKING, Any
+
 from eth_utils import is_address, to_checksum_address
+from jsonschema import ValidationError, validate
 
 from secbrain.agents.base import AgentResult
 from secbrain.agents.oracle_manipulation_detector import OracleManipulationDetector
 from secbrain.agents.vuln_hypothesis_agent_base import (
-    ProtocolProfile,
-    ABI_PREVIEW_MAX_ENTRIES,
     ABI_JSON_SIZE_LIMIT,
+    ABI_PREVIEW_MAX_ENTRIES,
     ABI_PREVIEW_REDUCED_ENTRIES,
     FUNCTIONS_PREVIEW_LIMIT,
+    ProtocolProfile,
 )
 
 if TYPE_CHECKING:

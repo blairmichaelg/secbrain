@@ -81,12 +81,14 @@ class SecurityPattern:
     references: list[str] = field(default_factory=list)
 
 
-import yaml
 from pathlib import Path
+
+import yaml
+
 
 def _load_solidity_yaml() -> dict:
     yaml_path = Path(__file__).parent.parent / "patterns" / "solidity_patterns.yaml"
-    with open(yaml_path, "r") as f:
+    with open(yaml_path) as f:
         return yaml.safe_load(f)
 
 def _parse_solidity_patterns(data: dict) -> dict[str, SecurityPattern]:
