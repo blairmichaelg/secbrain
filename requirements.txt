@@ -123,9 +123,9 @@ mypy-extensions==1.1.0
     # via mypy
 openai==2.14.0
     # via secbrain (secbrain/pyproject.toml)
-packaging==25.0
+packaging==26.0
     # via pytest
-pathspec==1.0.1
+pathspec==1.0.3
     # via mypy
 platformdirs==4.5.1
     # via textual
@@ -137,7 +137,7 @@ proto-plus==1.27.0
     # via
     #   google-ai-generativelanguage
     #   google-api-core
-protobuf==5.29.5
+protobuf==6.33.5
     # via
     #   google-ai-generativelanguage
     #   google-api-core
@@ -145,7 +145,7 @@ protobuf==5.29.5
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus
-pyasn1==0.6.2
+pyasn1==0.6.3
     # via
     #   pyasn1-modules
     #   rsa
@@ -171,7 +171,7 @@ pygments==2.19.2
     #   textual
 pyparsing==3.3.1
     # via httplib2
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   mutmut
     #   pytest-asyncio
@@ -191,7 +191,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.33.0
     # via google-api-core
 rich==14.2.0
     # via
