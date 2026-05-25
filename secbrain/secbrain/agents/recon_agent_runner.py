@@ -23,6 +23,67 @@ else:
 
 
 class ReconRunnerMixin(_Base):
+    @staticmethod
+    def _install_deps(repo_path: Path, timeout: int = 120) -> tuple[bool, str]:
+        pkg_json = repo_path / "package.json"
+        if not pkg_json.exists():
+            return True, "no package.json, skipping dep install"
+        
+        if (repo_path / "yarn.lock").exists():
+            cmd = ["yarn", "install", "--frozen-lockfile", "--non-interactive"]
+        elif (repo_path / "pnpm-lock.yaml").exists():
+            cmd = ["pnpm", "install", "--frozen-lockfile"]
+        else:
+            cmd = ["npm", "ci"]
+        
+        import subprocess
+        try:
+            result = subprocess.run(
+                cmd,
+                check=False,
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=timeout
+            )
+            return result.returncode == 0, result.stdout + result.stderr
+        except subprocess.TimeoutExpired:
+            return False, f"[TIMEOUT] {cmd[0]} install exceeded {timeout}s for {repo_path}"
+        except Exception as e:
+            return False, str(e)
+
+    @staticmethod
+    def _try_hardhat_compile(repo_path: Path, timeout: int = 180) -> tuple[bool, list[str]]:
+        config_files = ["hardhat.config.js", "hardhat.config.ts"]
+        has_hardhat = any((repo_path / f).exists() for f in config_files)
+        
+        if not has_hardhat:
+            return False, []
+        
+        import subprocess
+        try:
+            result = subprocess.run(
+                ["npx", "hardhat", "compile", "--quiet"],
+                check=False,
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=timeout
+            )
+            
+            if result.returncode != 0:
+                return False, []
+            
+            artifacts = [
+                str(p) for p in (repo_path / "artifacts").rglob("*.json")
+                if ".dbg." not in p.name
+            ]
+            return True, artifacts
+        except subprocess.TimeoutExpired:
+            return False, []
+        except Exception:
+            return False, []
+
     async def run(self, **kwargs: Any) -> AgentResult:
         """Execute reconnaissance phase."""
         self._log("starting_recon")
@@ -116,12 +177,86 @@ class ReconRunnerMixin(_Base):
             except FileNotFoundError:
                 return self._failure("Foundry not installed or not in PATH")
 
-        # Get Foundry root from scope
+        # Determine repository root for dependency installation and fallback
+        repo_root = getattr(self.run_context, "source_path", None)
+        if not repo_root and contracts and hasattr(contracts[0], "source_path") and contracts[0].source_path:
+            repo_root = Path(str(contracts[0].source_path)).parent
+            
         foundry_root = self.run_context.scope.foundry_root
-        if not foundry_root:
-            return self._failure("No foundry_root specified in scope")
+        foundry_root_path = Path(foundry_root) if foundry_root else None
+        
+        # Install dependencies ONCE per repository root before we attempt compilation
+        if repo_root and repo_root.exists():
+            self._log(f"Installing dependencies in {repo_root}")
+            success, output = self._install_deps(repo_root)
+            if not success:
+                self._log(f"Dependency installation failed: {output[:200]}...")
+        elif foundry_root_path and foundry_root_path.exists():
+            self._log(f"Installing dependencies in {foundry_root_path}")
+            success, output = self._install_deps(foundry_root_path)
+            if not success:
+                self._log(f"Dependency installation failed: {output[:200]}...")
 
-        foundry_root_path = Path(foundry_root)
+        # If we have no foundry_root, try Hardhat fallback
+        if not foundry_root_path or not foundry_root_path.exists():
+            if repo_root and repo_root.exists():
+                self._log(f"No Foundry config, attempting Hardhat fallback in {repo_root}")
+                success, hardhat_artifacts = self._try_hardhat_compile(repo_root)
+                if success and hardhat_artifacts:
+                    self._log(f"Hardhat fallback succeeded, found {len(hardhat_artifacts)} artifacts")
+                    # Note: We return success but currently we do not map the hardhat artifact paths back to contracts
+                    # This satisfies the requirement of returning artifacts for hypothesis generation,
+                    # but requires parsing the hardhat json structure, which is complex.
+                    # For now, we'll try to map them to the scope contracts.
+                    
+                    
+                    # Simulating the successful hardhat compilation for all contracts
+                    hardhat_assets = []
+                    for contract in contracts:
+                        # Find matching artifact by contract name
+                        matched_artifact = next((a for a in hardhat_artifacts if f"/{contract.name}.json" in a), None)
+                        if matched_artifact:
+                            import json
+                            try:
+                                with Path(matched_artifact).open(encoding="utf-8") as f:
+                                    artifact_data = json.load(f)
+                                    abi = artifact_data.get("abi", [])
+                                    # Very basic function extraction
+                                    functions = [item.get("name") for item in abi if item.get("type") == "function" and item.get("name")]
+                                    classification = self._classify_contract(contract.name, functions)
+                                    hardhat_assets.append({
+                                        "type": "contract",
+                                        "value": contract.address,
+                                        "name": contract.name,
+                                        "chain_id": contract.chain_id,
+                                        "profile": contract.foundry_profile or "default",
+                                        "status": "compiled",
+                                        "metadata": {
+                                            "source_path": str(contract.source_path) if contract.source_path else None,
+                                            "verified": contract.verified,
+                                            "abi": abi,
+                                            "functions": functions,
+                                            "classification": classification,
+                                            "hardhat_artifact": matched_artifact
+                                        }
+                                    })
+                            except Exception as e:
+                                self._log(f"Failed to parse Hardhat artifact {matched_artifact}: {e}")
+                    
+                    if hardhat_assets:
+                        return self._success(
+                            message=f"Recon complete: compiled {len(hardhat_assets)} contracts via Hardhat",
+                            data={
+                                "assets": hardhat_assets,
+                                "contracts_count": len(contracts),
+                                "compiled_count": len(hardhat_assets),
+                                "failed_count": len(contracts) - len(hardhat_assets),
+                                "hardhat_root": str(repo_root),
+                            },
+                            next_actions=["hypothesis"] if hardhat_assets else [],
+                        )
+            
+            return self._failure("No foundry_root specified in scope and hardhat fallback failed or was not applicable")
 
         # Clean SecBrain-generated tests so they don't break `forge build` in subsequent runs.
         secbrain_test_dir = foundry_root_path / "test" / "secbrain"
