@@ -53,6 +53,45 @@ class ReconRunnerMixin(_Base):
             return False, str(e)
 
     @staticmethod
+    def _try_slither_direct(repo_path: Path, timeout: int = 300) -> tuple[bool, dict]:
+        """Run Slither directly against .sol files — no compiled artifacts needed.
+        Fallback when Foundry and Hardhat both fail or are unavailable.
+        """
+        import json as _json
+        import subprocess
+        import logging
+        logger = logging.getLogger(__name__)
+        sol_files = [
+            f for f in repo_path.rglob("*.sol")
+            if not any(p in f.parts for p in ("test", "tests", "mock", "mocks", "lib", "node_modules"))
+        ]
+        if not sol_files:
+            return False, {}
+        try:
+            result = subprocess.run(
+                [
+                    "slither", ".",
+                    "--json", "-",
+                    "--exclude-dependencies",
+                    "--filter-paths", "test,mock,lib,node_modules",
+                ],
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                check=False
+            )
+            # Slither exits 1 when it finds issues — that's still a valid result
+            if result.returncode not in (0, 1):
+                return False, {}
+            return True, _json.loads(result.stdout)
+        except subprocess.TimeoutExpired:
+            logger.warning(f"[TIMEOUT] slither direct exceeded {timeout}s for {repo_path}")
+            return False, {}
+        except (FileNotFoundError, _json.JSONDecodeError):
+            return False, {}
+
+    @staticmethod
     def _try_hardhat_compile(repo_path: Path, timeout: int = 180) -> tuple[bool, list[str]]:
         config_files = ["hardhat.config.js", "hardhat.config.ts"]
         has_hardhat = any((repo_path / f).exists() for f in config_files)
@@ -256,7 +295,43 @@ class ReconRunnerMixin(_Base):
                             next_actions=["hypothesis"] if hardhat_assets else [],
                         )
             
-            return self._failure("No foundry_root specified in scope and hardhat fallback failed or was not applicable")
+            if repo_root and repo_root.exists():
+                self._log(f"Hardhat skipped/failed, attempting Slither direct in {repo_root}")
+                success, slither_data = self._try_slither_direct(repo_root)
+                if success and slither_data:
+                    self._log("Slither direct fallback succeeded")
+                    slither_assets = []
+                    for contract in contracts:
+                        # Find matching issues or just pass the whole slither output
+                        classification = self._classify_contract(contract.name, [])
+                        slither_assets.append({
+                            "type": "contract",
+                            "value": contract.address,
+                            "name": contract.name,
+                            "chain_id": contract.chain_id,
+                            "profile": contract.foundry_profile or "default",
+                            "status": "compiled_slither",
+                            "metadata": {
+                                "source_path": str(contract.source_path) if contract.source_path else None,
+                                "verified": contract.verified,
+                                "classification": classification,
+                                "slither_data": slither_data
+                            }
+                        })
+                    if slither_assets:
+                        return self._success(
+                            message=f"Recon complete: analyzed {len(slither_assets)} contracts via Slither direct",
+                            data={
+                                "assets": slither_assets,
+                                "contracts_count": len(contracts),
+                                "compiled_count": len(slither_assets),
+                                "failed_count": 0,
+                                "slither_root": str(repo_root),
+                            },
+                            next_actions=["hypothesis"],
+                        )
+            
+            return self._failure("No foundry_root specified in scope and all fallbacks failed")
 
         # Clean SecBrain-generated tests so they don't break `forge build` in subsequent runs.
         secbrain_test_dir = foundry_root_path / "test" / "secbrain"
@@ -460,6 +535,49 @@ class ReconRunnerMixin(_Base):
             all_assets.extend(res.get("assets") or [])
             if res.get("compiled") and res.get("address"):
                 compiled_contracts.append(res["address"])
+
+        if len(compiled_contracts) == 0:
+            repo_root = getattr(self.run_context, "source_path", None)
+            if not repo_root and contracts and hasattr(contracts[0], "source_path") and contracts[0].source_path:
+                repo_root = Path(str(contracts[0].source_path)).parent
+            
+            if repo_root and repo_root.exists():
+                self._log(f"Foundry compilation failed for all, attempting Slither direct in {repo_root}")
+                success, slither_data = self._try_slither_direct(repo_root)
+                if success and slither_data:
+                    self._log("Slither direct fallback succeeded")
+                    slither_assets = []
+                    for contract in contracts:
+                        classification = self._classify_contract(contract.name, [])
+                        slither_assets.append({
+                            "type": "contract",
+                            "value": contract.address,
+                            "name": contract.name,
+                            "chain_id": contract.chain_id,
+                            "profile": contract.foundry_profile or "default",
+                            "status": "compiled_slither",
+                            "metadata": {
+                                "source_path": str(contract.source_path) if contract.source_path else None,
+                                "verified": contract.verified,
+                                "classification": classification,
+                                "slither_data": slither_data
+                            }
+                        })
+                    if slither_assets:
+                        return self._success(
+                            message=f"Recon complete: analyzed {len(slither_assets)} contracts via Slither direct fallback",
+                            data={
+                                "assets": slither_assets,
+                                "contracts_count": len(contracts),
+                                "compiled_count": len(slither_assets),
+                                "failed_count": 0,
+                                "slither_root": str(repo_root),
+                            },
+                            next_actions=["hypothesis"],
+                        )
+            
+            # If slither fallback also fails, return the failed assets
+            return self._failure("All contracts failed compilation and slither direct fallback failed")
 
         return self._success(
             message=f"Contract recon complete: {len(compiled_contracts)}/{len(contracts)} contracts compiled",
