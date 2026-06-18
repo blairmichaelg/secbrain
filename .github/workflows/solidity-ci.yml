@@ -38,6 +38,6 @@ jobs:
 
       - name: Slither (best-effort)
         continue-on-error: true
-        uses: crytic/slither-action@v0.4.1
+        uses: crytic/slither-action@v0.4.2
         with:
           target: .
