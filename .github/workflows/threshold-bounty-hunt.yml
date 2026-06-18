@@ -315,7 +315,7 @@ jobs:
 
       - name: Upload workspace artifacts
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: threshold-bounty-workspace
           path: ${{ steps.workspace.outputs.workspace_path }}
