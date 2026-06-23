@@ -11,7 +11,7 @@ httpx>=0.25.0
 
 # Data validation and settings
 pydantic>=2.5.0
-pydantic-settings>=2.1.0
+pydantic-settings>=2.14.2
 
 # Configuration and parsing
 pyyaml>=6.0.0
