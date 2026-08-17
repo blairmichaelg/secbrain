@@ -3,15 +3,15 @@
 # Run: pip-compile --generate-hashes --output-file=requirements-hashed.txt requirements.in
 
 # CLI and UI
-typer>=0.9.0
+typer>=0.27.1
 rich>=13.0.0
 
 # HTTP client
 httpx>=0.25.0
 
 # Data validation and settings
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
+pydantic>=2.13.4
+pydantic-settings>=2.15.0
 
 # Configuration and parsing
 pyyaml>=6.0.0
@@ -29,11 +29,11 @@ structlog>=23.2.0
 
 # Ethereum utilities
 eth-utils>=2.0.0
-eth-hash[pycryptodome]>=0.7.0
+eth-hash[pycryptodome]>=0.8.0
 
 # Development dependencies
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
-pytest-cov>=4.1.0
-ruff>=0.1.0
+pytest>=9.1.1
+pytest-asyncio>=1.4.0
+pytest-cov>=7.1.0
+ruff>=0.16.3
 mypy>=1.7.0
